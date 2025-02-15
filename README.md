@@ -1,4 +1,4 @@
-# OpenGL Learning Project
+# OpenGL Explorations
 
 This repository is a learning project that explores the fundamentals of 3D rendering with OpenGL. It includes a collection of experiments and demonstrations, integrated with ImGui for easy exploration and modification of parameters.
 
