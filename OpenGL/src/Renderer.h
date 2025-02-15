@@ -4,7 +4,7 @@
 
 #include "IndexBuffer.h"
 #include "VertexArray.h"
-#include "Shader.h"
+#include "Shader_t.h"
 
 #define ASSERT(x) if(!(x)) __debugbreak();
 #define GLCall(x) GLClearError();\
@@ -21,4 +21,8 @@ class Renderer
 public:
 	void Clear() const;
 	void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
+	void Draw(const VertexArray& va, const Shader& shader, float vertexCount) const;
+	void DrawLines(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
+	void DrawLines(const VertexArray& va, const Shader& shader, float vertexCount) const;
+	void DrawPatchesTri(const VertexArray& va, const Shader& shader, float vertexCount) const;
 };

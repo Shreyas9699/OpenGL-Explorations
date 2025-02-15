@@ -136,15 +136,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\CameraController.cpp" />
     <ClCompile Include="src\IndexBuffer.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
-    <ClCompile Include="src\Shader.cpp" />
+    <ClCompile Include="src\tests\Material.cpp" />
     <ClCompile Include="src\tests\Test.cpp" />
-    <ClCompile Include="src\tests\TestBatchRendering.cpp" />
+    <ClCompile Include="src\tests\TestCubeRendering.cpp" />
+    <ClCompile Include="src\tests\TestCubeRenderingWTex.cpp" />
+    <ClCompile Include="src\tests\TestFBMPlane.cpp" />
+    <ClCompile Include="src\tests\TestHeightMap.cpp" />
     <ClCompile Include="src\tests\TestSquare.cpp" />
     <ClCompile Include="src\tests\TestClearColor.cpp" />
     <ClCompile Include="src\tests\TestTexture2D.cpp" />
     <ClCompile Include="src\tests\TestTriangle.cpp" />
+    <ClCompile Include="src\tests\TestUVSphere.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\vendor\glm\detail\glm.cpp" />
     <ClCompile Include="src\vendor\imgui\imgui.cpp" />
@@ -159,10 +165,32 @@
     <ClCompile Include="src\VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\shaders\BasicShader.shader" />
+    <None Include="imgui.ini" />
+    <None Include="res\shaders\BasicShaderFS.shader" />
+    <None Include="res\shaders\BasicShaderVS.shader" />
     <None Include="res\shaders\BatchShader.shader" />
-    <None Include="res\shaders\QuadShader.shader" />
-    <None Include="res\shaders\TextureShader.shader" />
+    <None Include="res\shaders\CubrWithLightFS.shader" />
+    <None Include="res\shaders\CubrWithLightVS.shader" />
+    <None Include="res\shaders\CubrWithTexFS.shader" />
+    <None Include="res\shaders\CubrWithTexVS.shader" />
+    <None Include="res\shaders\FBMShader.shader" />
+    <None Include="res\shaders\FBM\FragShaderFBM.glsl" />
+    <None Include="res\shaders\FBM\VertexFBMShader.glsl" />
+    <None Include="res\shaders\Heightmap\heightmapFS.glsl" />
+    <None Include="res\shaders\Heightmap\heightmapTCS.glsl" />
+    <None Include="res\shaders\Heightmap\heightmapTES.glsl" />
+    <None Include="res\shaders\Heightmap\heightmapVS.glsl" />
+    <None Include="res\shaders\lightCubeFS.shader" />
+    <None Include="res\shaders\lightCubeVS.shader" />
+    <None Include="res\shaders\LightSphere\GS.shader" />
+    <None Include="res\shaders\LightSphere\lightSphereFS.shader" />
+    <None Include="res\shaders\LightSphere\lightSphereVS.shader" />
+    <None Include="res\shaders\LightSphere\TCS.shader" />
+    <None Include="res\shaders\LightSphere\TES.shader" />
+    <None Include="res\shaders\QuadShaderFS.shader" />
+    <None Include="res\shaders\QuadShaderVS.shader" />
+    <None Include="res\shaders\TextureShaderFS.shader" />
+    <None Include="res\shaders\TextureShaderVS.shader" />
     <None Include="src\vendor\glm\detail\func_common.inl" />
     <None Include="src\vendor\glm\detail\func_common_simd.inl" />
     <None Include="src\vendor\glm\detail\func_exponential.inl" />
@@ -301,20 +329,24 @@
     <None Include="src\vendor\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Core\MouseButtonCodes.h" />
-    <ClInclude Include="Events\Event.h" />
+    <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\CameraController.h" />
     <ClInclude Include="src\IndexBuffer.h" />
-    <ClInclude Include="Core\Input.h" />
-    <ClInclude Include="Core\KeyCodes.h" />
-    <ClInclude Include="src\NewOrthoCameraController.h" />
     <ClInclude Include="src\Renderer.h" />
-    <ClInclude Include="src\Shader.h" />
+    <ClInclude Include="src\Shader_t.h" />
+    <ClInclude Include="src\tests\Material.h" />
+    <ClInclude Include="src\tests\Sphere.h" />
     <ClInclude Include="src\tests\Test.h" />
-    <ClInclude Include="src\tests\TestBatchRendering.h" />
+    <ClInclude Include="src\tests\TestCubeRendering.h" />
+    <ClInclude Include="src\tests\TestCubeRenderingWTex.h" />
+    <ClInclude Include="src\tests\TestFBMPlane.h" />
+    <ClInclude Include="src\tests\TestHeightMap.h" />
+    <ClInclude Include="src\tests\TestIncludeHeader.h" />
     <ClInclude Include="src\tests\TestSquare.h" />
     <ClInclude Include="src\tests\TestClearColor.h" />
     <ClInclude Include="src\tests\TestTexture2D.h" />
     <ClInclude Include="src\tests\TestTriangle.h" />
+    <ClInclude Include="src\tests\TestUVSphere.h" />
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="Core\Timestep.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
@@ -612,9 +644,27 @@
     <ClInclude Include="src\VertexArray.h" />
     <ClInclude Include="src\VertexBuffer.h" />
     <ClInclude Include="src\VertexBufferLayout.h" />
+    <ClInclude Include="src\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\textures\ashleyNP_heightmap.png" />
+    <Image Include="res\textures\container2.png" />
+    <Image Include="res\textures\container2_emissionMap.png" />
+    <Image Include="res\textures\container2_specular.png" />
+    <Image Include="res\textures\deccan_heightmap.png" />
+    <Image Include="res\textures\gc2_heightmap.png" />
+    <Image Include="res\textures\gc_heightmap.png" />
+    <Image Include="res\textures\himalay_heightmap.png" />
+    <Image Include="res\textures\iceland_heightmap.png" />
+    <Image Include="res\textures\iraklio_heightmap.png" />
+    <Image Include="res\textures\japan_heightmap.png" />
+    <Image Include="res\textures\matrix.jpg" />
+    <Image Include="res\textures\northIndia_heightmap.png" />
+    <Image Include="res\textures\sa_heightmap.png" />
+    <Image Include="res\textures\some_heightmap.png" />
+    <Image Include="res\textures\srilanka_heightmap.png" />
     <Image Include="res\textures\SSanW2.png" />
+    <Image Include="res\textures\taipei_heightmap.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

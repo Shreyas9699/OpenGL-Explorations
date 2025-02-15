@@ -24,59 +24,63 @@ namespace test
             2, 3, 0
         };
 
-        GLCall(glEnable(GL_BLEND));
-        GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-
         m_VA = std::make_unique<VertexArray>();
-        m_VB = std::make_unique<VertexBuffer>(positions, 4 * 4 * sizeof(float));
+        m_VB = std::make_unique<VertexBuffer>(positions, sizeof(positions) * sizeof(float));
         VertexBufferLayout layout;
         layout.Push<float>(2);
         layout.Push<float>(2);
         m_VA->AddBuffer(*m_VB, layout);
-        m_IB = std::make_unique<IndexBuffer>(indices, 6);
+        m_IB = std::make_unique<IndexBuffer>(indices, sizeof(indices));
+        m_Renderer = std::make_unique<Renderer>();
 
-        m_Shader = std::make_unique<Shader>("res/shaders/TextureShader.shader");
+        m_Shader = std::make_unique<Shader>("res/shaders/TextureShaderVS.shader", "res/shaders/TextureShaderFS.shader");
         m_Shader->Bind();
-        m_Shader->SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
+        m_Shader->setVec4("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
         m_Texture = std::make_unique<Texture>("res/textures/SSanW2.png");
-        m_Shader->SetUniform1i("u_Texture", 0);
+        m_Shader->setInt("u_Texture", 0);
 	}
 
-	TestTexture2D::~TestTexture2D() {}
+	TestTexture2D::~TestTexture2D() 
+    {
+        m_VA.reset();
+        m_VB.reset();
+        m_IB.reset();
+        m_Texture.reset();
+        m_Shader->Unbind();
+    }
 
-	void TestTexture2D::OnUpdate(Timestep deltaTime)
+	void TestTexture2D::OnUpdate(Timestep deltaTime, GLFWwindow* win)
 	{}
 
 	void TestTexture2D::OnRender()
 	{
-		GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
-		GLCall(glClear(GL_COLOR_BUFFER_BIT));
-
-        Renderer rendere;
+        glm::mat4 model, mvp;
         m_Texture->Bind();
 
         {
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), m_TranslationA);
-            glm::mat4 mvp = m_Projection * m_View * model;
+            model = glm::translate(glm::mat4(1.0f), m_TranslationA);
+            mvp = m_Projection * m_View * model;
             m_Shader->Bind();
-            m_Shader->SetUniformMat4f("u_MVP", mvp);
-            rendere.Draw(*m_VA, *m_IB, *m_Shader);
+            m_Shader->setMat4("u_MVP", mvp);
+            m_Renderer->Draw(*m_VA, *m_IB, *m_Shader);
         }
 
         {
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), m_TranslationB);
-            glm::mat4 mvp = m_Projection * m_View * model;
+            model = glm::translate(glm::mat4(1.0f), m_TranslationB);
+            mvp = m_Projection * m_View * model;
             m_Shader->Bind();
-            m_Shader->SetUniformMat4f("u_MVP", mvp);
-            rendere.Draw(*m_VA, *m_IB, *m_Shader);
+            m_Shader->setMat4("u_MVP", mvp);
+            m_Renderer->Draw(*m_VA, *m_IB, *m_Shader);
         }
 	}
 
 	void TestTexture2D::OnImGuiRender()
 	{
         ImGuiIO& io = ImGui::GetIO(); (void)io;
-        ImGui::SliderFloat3("Translation A", &m_TranslationA.x, 0.0f, 1280.0f);
-        ImGui::SliderFloat3("Translation B", &m_TranslationB.x, 0.0f, 1280.0f); // Edit 3 floats representing a color
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::Text("FPS: %.1f (%.3f ms)", io.Framerate, 1000.0f / io.Framerate);
+        ImGui::SliderFloat("Translation Ax", &m_TranslationA.x, 0.0f,  1280.0f);
+        ImGui::SliderFloat("Translation Ay", &m_TranslationA.y, 0.0f, 720.0f);
+        ImGui::SliderFloat("Translation Bx", &m_TranslationB.x, 0.0f, 1280.0f);
+        ImGui::SliderFloat("Translation By", &m_TranslationB.y, 0.0f, 720.0f);
 	}
 }

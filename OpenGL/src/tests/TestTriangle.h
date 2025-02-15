@@ -1,12 +1,6 @@
 #pragma once
 
-#include "Test.h"
-#include "VertexArray.h"
-#include "VertexBuffer.h"
-#include "VertexBufferLayout.h"
-#include "IndexBuffer.h"
-#include "Shader.h"
-#include "Renderer.h"
+#include "TestIncludeHeader.h"
 
 #include <memory>
 
@@ -20,11 +14,12 @@ namespace test
 		std::unique_ptr<VertexBuffer> m_VB;
 		std::unique_ptr<IndexBuffer> m_IB;
 		std::unique_ptr<Shader> m_Shader;
+		std::unique_ptr<Renderer> m_Renderer;
 	public:
 		TestTriangle();
 		~TestTriangle();
 
-		void OnUpdate(Timestep deltaTime) override;
+		void OnUpdate(Timestep deltaTime, GLFWwindow* win = nullptr) override;
 		void OnRender() override;
 		void OnImGuiRender() override;
 	};

@@ -14,7 +14,7 @@ namespace test
 	{
 	}
 
-	void TestClearColor::OnUpdate(Timestep deltaTime)
+	void TestClearColor::OnUpdate(Timestep deltaTime, GLFWwindow* win)
 	{}
 
 	void TestClearColor::OnRender()
@@ -25,6 +25,8 @@ namespace test
 
 	void TestClearColor::OnImGuiRender()
 	{
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		ImGui::Text("FPS: %.1f (%.3f ms)", io.Framerate, 1000.0f / io.Framerate);
 		ImGui::ColorEdit4("Clear Color", m_ClearColor);
 	}
 }

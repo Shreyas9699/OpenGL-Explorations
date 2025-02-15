@@ -30,9 +30,6 @@
     <ClCompile Include="src\VertexArray.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Shader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\vendor\stb_image\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -78,12 +75,33 @@
     <ClCompile Include="src\tests\TestSquare.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\tests\TestBatchRendering.cpp">
+    <ClCompile Include="src\tests\TestCubeRendering.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\Material.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\TestCubeRenderingWTex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CameraController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\TestUVSphere.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\TestFBMPlane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\TestHeightMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\shaders\BasicShader.shader" />
+    <None Include="res\shaders\BasicShaderVS.shader" />
     <None Include="src\vendor\glm\detail\func_common.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -492,9 +510,31 @@
     <None Include="src\vendor\glm\gtx\wrap.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="res\shaders\TextureShader.shader" />
-    <None Include="res\shaders\QuadShader.shader" />
+    <None Include="res\shaders\TextureShaderVS.shader" />
+    <None Include="res\shaders\QuadShaderVS.shader" />
     <None Include="res\shaders\BatchShader.shader" />
+    <None Include="imgui.ini" />
+    <None Include="res\shaders\lightCubeVS.shader" />
+    <None Include="res\shaders\FBMShader.shader" />
+    <None Include="res\shaders\CubrWithLightVS.shader" />
+    <None Include="res\shaders\lightCubeFS.shader" />
+    <None Include="res\shaders\CubrWithLightFS.shader" />
+    <None Include="res\shaders\QuadShaderFS.shader" />
+    <None Include="res\shaders\TextureShaderFS.shader" />
+    <None Include="res\shaders\BasicShaderFS.shader" />
+    <None Include="res\shaders\CubrWithTexVS.shader" />
+    <None Include="res\shaders\CubrWithTexFS.shader" />
+    <None Include="res\shaders\FBM\VertexFBMShader.glsl" />
+    <None Include="res\shaders\FBM\FragShaderFBM.glsl" />
+    <None Include="res\shaders\LightSphere\lightSphereFS.shader" />
+    <None Include="res\shaders\LightSphere\lightSphereVS.shader" />
+    <None Include="res\shaders\LightSphere\TCS.shader" />
+    <None Include="res\shaders\LightSphere\TES.shader" />
+    <None Include="res\shaders\LightSphere\GS.shader" />
+    <None Include="res\shaders\Heightmap\heightmapVS.glsl" />
+    <None Include="res\shaders\Heightmap\heightmapFS.glsl" />
+    <None Include="res\shaders\Heightmap\heightmapTCS.glsl" />
+    <None Include="res\shaders\Heightmap\heightmapTES.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Renderer.h">
@@ -510,9 +550,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\VertexArray.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\vendor\stb_image\stb_image.h">
@@ -1409,30 +1446,99 @@
     <ClInclude Include="src\tests\TestSquare.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\tests\TestBatchRendering.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\KeyCodes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Input.h">
+    <ClInclude Include="src\tests\TestCubeRendering.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Core\Timestep.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Core\MouseButtonCodes.h">
+    <ClInclude Include="src\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\NewOrthoCameraController.h">
+    <ClInclude Include="src\tests\TestIncludeHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Events\Event.h">
+    <ClInclude Include="src\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Shader_t.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\Material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\TestCubeRenderingWTex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CameraController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\Sphere.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\TestUVSphere.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\TestFBMPlane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\TestHeightMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\container2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\container2_specular.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\matrix.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\container2_emissionMap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\iceland_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\ashleyNP_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\himalay_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\deccan_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\japan_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\srilanka_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\northIndia_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\gc_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\gc2_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\sa_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\some_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\taipei_heightmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\iraklio_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

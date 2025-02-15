@@ -13,7 +13,7 @@ namespace test
 		TestClearColor();
 		~TestClearColor();
 
-		void OnUpdate(Timestep deltaTime) override;
+		void OnUpdate(Timestep deltaTime, GLFWwindow* win = nullptr) override;
 		void OnRender() override;
 		void OnImGuiRender() override;
 	};
