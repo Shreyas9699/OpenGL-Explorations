@@ -35,6 +35,8 @@ namespace test
 		m_IB.reset();
 		m_Texture.reset();
 		m_Shader->Unbind();
+		m_Shader.reset();
+		m_Renderer.reset();
 	}
 
 	void TestHeightMap::loadTexture()

@@ -50,6 +50,7 @@ namespace test
 		m_ShaderPlane.reset();
 		m_ShaderLightSrc->Unbind();
 		m_ShaderLightSrc.reset();
+		m_Renderer.reset();
 	}
 
 	void TestFBMPlane::GeneratePlane()

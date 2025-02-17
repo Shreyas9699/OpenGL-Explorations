@@ -29,6 +29,8 @@ namespace test
 		m_VB.reset();
 		m_IB.reset();
 		m_Shader->Unbind();
+		m_Shader.reset();
+		m_Renderer.reset();
 	}
 
 	void TestTriangle::OnUpdate(Timestep deltaTime, GLFWwindow* win) {}

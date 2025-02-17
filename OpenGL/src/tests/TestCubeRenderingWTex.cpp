@@ -103,7 +103,9 @@ namespace test
 		m_TextureSpecular.reset();
 		m_EmissionMap.reset();
 		m_ShaderCube->Unbind();
+		m_ShaderCube.reset();
 		m_ShaderLight->Unbind();
+		m_ShaderLight.reset();
 		m_Renderer.reset();
 	}
 

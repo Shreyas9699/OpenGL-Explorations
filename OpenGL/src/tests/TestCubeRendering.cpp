@@ -92,7 +92,9 @@ namespace test
 		m_Sphere.reset();
 		m_Renderer.reset();
 		m_ShaderCube->Unbind();
+		m_ShaderCube.reset();
 		m_ShaderLight->Unbind();
+		m_ShaderLight.reset();
 	}
 
 	void TestCubeRendering::OnUpdate(Timestep deltaTime, GLFWwindow* win)
