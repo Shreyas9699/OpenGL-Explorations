@@ -1,4 +1,4 @@
-// heightmapTES.glsl
+// heightmapTES.glsl (Tessellation Evaluation Shader)
 #version 410 core
 layout(quads, fractional_odd_spacing, ccw) in;
 

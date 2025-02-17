@@ -24,8 +24,17 @@ namespace test
 		Camera m_Camera;
 		CameraController m_cameraController;
 		std::unique_ptr<Renderer> m_Renderer;
+
+		int m_GridSize = 50;
+		float m_PlaneSize = 5.0f;
+		int m_GridSizePrev;
+		float m_PlaneSizePrev;
+		std::vector<float> m_Vertices;
+		std::vector<uint32_t> m_Indices;
+
 		bool isRotating = false;
 		bool isMoving = false;
+		bool isWireFrame = false;
 		bool cusorEnable = false;
 		float lastTtime = 0.0f;
 		float horizontalrotationAngle = 0.0f;
@@ -34,7 +43,8 @@ namespace test
 		glm::vec3 lightPos;
 
 		void handleKeyPress(int key, int scancode, int action, int mods);
-
+		void GeneratePlane();
+		void SliderIntEvent(const char* label, int* value, int min, int max, int step);
 	public:
 		TestFBMPlane(Window* win);
 		~TestFBMPlane();

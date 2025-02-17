@@ -11,63 +11,16 @@ namespace test
 		  m_Camera(glm::vec3(-1.0f, 1.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, 0.0f),
 		  m_cameraController(win->getWindow(), m_Camera)
 	{
-		glfwSetInputMode(m_window->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		//glfwSetInputMode(m_window->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		m_window->setCustomKeyCallback([this](int key, int scancode, int action, int mods)
 			{
 				this->handleKeyPress(key, scancode, action, mods);
 			});
 
-		// generating plane vertices
-		std::vector<float> vertices;
-		int gridSize = 50;
-		float planeSize = 5.0f;
-
-		for (int z = -gridSize / 2; z <= gridSize / 2; z++)
-		{
-			for (int x = -gridSize / 2; x <= gridSize / 2; x++)
-			{
-				float posX = ((float)x / ((float)gridSize / 2)) * (planeSize / 2);
-				float posZ = ((float)z / ((float)gridSize / 2)) * (planeSize / 2);
-
-				vertices.push_back(posX);
-				vertices.push_back(0.0f);
-				vertices.push_back(posZ);
-				vertices.push_back(0.0f);
-				vertices.push_back(1.0f);
-				vertices.push_back(0.0f);
-			}
-		}
-
-		std::vector<uint32_t> indices;
-		for (int z = 0; z < gridSize; z++)
-		{
-			for (int x = 0; x < gridSize; x++)
-			{
-				uint32_t topLeft = z * (gridSize + 1) + x;
-				uint32_t topRight = topLeft + 1;
-				uint32_t bottomLeft = (z + 1) * (gridSize + 1) + x;
-				uint32_t bottomRight = bottomLeft + 1;
-
-				// First triangle
-				indices.push_back(topLeft);
-				indices.push_back(bottomLeft);
-				indices.push_back(topRight);
-
-				// Second triangle
-				indices.push_back(topRight);
-				indices.push_back(bottomLeft);
-				indices.push_back(bottomRight);
-			}
-		}
-
+		m_GridSizePrev = m_GridSize;
+		m_PlaneSizePrev = m_PlaneSize;
 		// setting plane attributes
-		m_plane.VAO = std::make_unique<VertexArray>();
-		m_plane.VBO = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(float));
-		m_plane.IBO = std::make_unique<IndexBuffer>(indices.data(), indices.size());
-		VertexBufferLayout layout1;
-		layout1.Push<float>(3);
-		layout1.Push<float>(3);
-		m_plane.VAO->AddBuffer(*m_plane.VBO, layout1);
+		GeneratePlane();
 
 		// setting sphere(light bulb) attributes
 		m_Sphere = std::make_unique<UVSphere>(0.5f, 64, 32);
@@ -89,9 +42,75 @@ namespace test
 
 	TestFBMPlane::~TestFBMPlane()
 	{
+		m_plane.VAO.reset();
+		m_plane.VBO.reset();
+		m_plane.IBO.reset();
 		m_Sphere.reset();
 		m_ShaderPlane->Unbind();
+		m_ShaderPlane.reset();
 		m_ShaderLightSrc->Unbind();
+		m_ShaderLightSrc.reset();
+	}
+
+	void TestFBMPlane::GeneratePlane()
+	{
+		// generating plane vertices
+		m_Vertices.clear();
+		m_Indices.clear();
+
+		m_plane.VAO.reset();
+		m_plane.VBO.reset();
+		m_plane.IBO.reset();
+
+		int halfGridSize = m_GridSize / 2;
+
+		m_Vertices.reserve(static_cast<size_t>((m_GridSize + 1) * (m_GridSize + 1) * 6));
+		for (int z = -halfGridSize; z <= halfGridSize; z++)
+		{
+			for (int x = -halfGridSize; x <= halfGridSize; x++)
+			{
+				float posX = ((float)x / halfGridSize) * (m_PlaneSize / 2);
+				float posZ = ((float)z / halfGridSize) * (m_PlaneSize / 2);
+
+				m_Vertices.push_back(posX);
+				m_Vertices.push_back(0.0f);
+				m_Vertices.push_back(posZ);
+				m_Vertices.push_back(0.0f);
+				m_Vertices.push_back(1.0f);
+				m_Vertices.push_back(0.0f);
+			}
+		}
+
+		m_Indices.reserve(static_cast<size_t>(m_GridSize * m_GridSize * 6));
+		for (int z = 0; z < m_GridSize; z++)
+		{
+			for (int x = 0; x < m_GridSize; x++)
+			{
+				uint32_t topLeft = static_cast<uint32_t>(z * (m_GridSize + 1) + x);
+				uint32_t topRight = topLeft + 1;
+				uint32_t bottomLeft = static_cast<uint32_t>((z + 1) * (m_GridSize + 1) + x);
+				uint32_t bottomRight = bottomLeft + 1;
+
+				// First triangle
+				m_Indices.push_back(topLeft);
+				m_Indices.push_back(bottomLeft);
+				m_Indices.push_back(topRight);
+
+				// Second triangle
+				m_Indices.push_back(topRight);
+				m_Indices.push_back(bottomLeft);
+				m_Indices.push_back(bottomRight);
+			}
+		}
+
+		// setting plane attributes
+		m_plane.VAO = std::make_unique<VertexArray>();
+		m_plane.VBO = std::make_unique<VertexBuffer>(m_Vertices.data(), m_Vertices.size() * sizeof(float));
+		m_plane.IBO = std::make_unique<IndexBuffer>(m_Indices.data(), m_Indices.size());
+		VertexBufferLayout layout1;
+		layout1.Push<float>(3);
+		layout1.Push<float>(3);
+		m_plane.VAO->AddBuffer(*m_plane.VBO, layout1);
 	}
 
 	void TestFBMPlane::handleKeyPress(int key, int scancode, int action, int mods)
@@ -99,9 +118,14 @@ namespace test
 		if (key == GLFW_KEY_R && action == GLFW_PRESS)
 		{
 			// this flag is used to rotate the plane
-			isRotating = !isRotating;
+			isRotating = !isRotating; 
 		}
 		if (key == GLFW_KEY_T && action == GLFW_PRESS)
+		{
+			// this flag is used to render the plane in wireframe mode
+			isWireFrame = !isWireFrame;
+		}
+		if (key == GLFW_KEY_M && action == GLFW_PRESS)
 		{
 			// this flag is used to handle the FBM plane transformation, ie to have a const or move with time
 			isMoving = !isMoving;
@@ -122,6 +146,12 @@ namespace test
 
 	void TestFBMPlane::OnUpdate(Timestep deltaTime, GLFWwindow* win)
 	{
+		if (m_GridSizePrev != m_GridSize || m_PlaneSizePrev != m_PlaneSize)
+		{
+			m_GridSizePrev = m_GridSize;
+			m_PlaneSizePrev = m_PlaneSize;
+			GeneratePlane();
+		}
 		m_cameraController.Update(deltaTime);
 
 		if (isMoving)
@@ -158,6 +188,14 @@ namespace test
 		m_ShaderPlane->setVec3("objectColor", m_planeColor[0], m_planeColor[1], m_planeColor[2]);
 		m_ShaderPlane->setVec3("viewPos", m_Camera.Position);
 		m_ShaderPlane->Unbind();
+		if (isWireFrame)
+		{
+			GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
+		}
+		else
+		{
+			GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+		}
 		m_Renderer->Draw(*m_plane.VAO, *m_plane.IBO, *m_ShaderPlane);
 
 		// Draw the second cube
@@ -179,7 +217,22 @@ namespace test
 		ImGui::Text("FPS: %.1f (%.3f ms)", io.Framerate, 1000.0f / io.Framerate);
 		ImGui::ColorEdit4("Change Object Color", m_planeColor);
 		ImGui::ColorEdit4("Light Color", lightColor);
-		ImGui::Text("Click on the rendering screen and press\n`R` to enable/disable plane `Rotation`\n`T` to enable/disable `Movement`");;
-		ImGui::Text("Press `Q` to enable/disable Cursor (Mouse pointer)\n");
+		SliderIntEvent("Grid Size", &m_GridSize, 2, 50, 2);
+		ImGui::SliderFloat("Plane Size", &m_PlaneSize, 1.0f, 50.0f);
+		ImGui::Text("Press below keys to enable/disable:\n");
+		ImGui::Text("`R` -> Plane Rotation\n");
+		ImGui::Text("`T` -> Rendering Plane in Wireframe\n");
+		ImGui::Text("`M` -> Plane Movement\n");
+		//ImGui::Text("Press `Q` to enable/disable Cursor (Mouse pointer)\n");
+	}
+
+	void TestFBMPlane::SliderIntEvent(const char* label, int* value, int min, int max, int step)
+	{
+		// Custom Slider Function with step to always get even values
+		ImGui::SliderInt(label, value, min, max);
+		if (*value % 2 != 0)
+		{
+			*value += 1; // Adjust to the next even number
+		}
 	}
 }

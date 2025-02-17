@@ -18,6 +18,7 @@ namespace test
 		//unsigned int texture;
 		//int m_nrChannels;
 		int m_width = 0, m_height = 0;
+		std::vector<float> vertices;
 		std::unique_ptr<VertexArray> m_VA;
 		std::unique_ptr<VertexBuffer> m_VB;
 		std::unique_ptr<IndexBuffer> m_IB;
@@ -34,7 +35,7 @@ namespace test
 		bool showNormals = false;
 
 		const unsigned int NUM_PATCH_PTS = 4;
-		unsigned rez = 20;
+		unsigned int rez = 20;
 
 		//std::vector<const char*> heightmaps = {};
 		float errorMessageTime = 0.0f;
@@ -45,6 +46,8 @@ namespace test
 		std::string currentPath = fs::current_path().string();
 
 		void handleKeyPress(int key, int scancode, int action, int mods);
+		void ShowFileExplorer();
+		void loadTexture();
 
 	public:
 		TestHeightMap(Window* window);
@@ -52,7 +55,6 @@ namespace test
 
 		void OnUpdate(Timestep deltaTime, GLFWwindow* win);
 		void OnRender() override;
-		void ShowFileExplorer();
 		void OnImGuiRender() override;
 	};
 }

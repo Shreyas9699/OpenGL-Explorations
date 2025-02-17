@@ -69,16 +69,16 @@ void CameraController::ProcessMouseMovement(double xpos, double ypos)
 
     if (m_firstMouse) 
     {
-        m_lastX = xpos;
-        m_lastY = ypos;
+        m_lastX = (float)xpos;
+        m_lastY = (float)ypos;
         m_firstMouse = false;
     }
 
-    float xoffset = xpos - m_lastX;
-    float yoffset = m_lastY - ypos;
+    float xoffset = (float)xpos - m_lastX;
+    float yoffset = m_lastY - (float)ypos;
 
-    m_lastX = xpos;
-    m_lastY = ypos;
+    m_lastX = (float)xpos;
+    m_lastY = (float)ypos;
 
     m_camera.ProcessMouseMovement(xoffset, yoffset);
 }

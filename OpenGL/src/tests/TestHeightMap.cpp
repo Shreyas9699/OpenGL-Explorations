@@ -6,8 +6,8 @@ namespace test
 {
 	TestHeightMap::TestHeightMap(Window* window)
 		: m_window(window),
-		m_Camera(glm::vec3(0.0f, 50.0f, 100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), -20.0f, 0.0f, 100.0f),
-		m_cameraController(window->getWindow(), m_Camera)
+		  m_Camera(glm::vec3(0.0f, 50.0f, 100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), -20.0f, 0.0f, 100.0f),
+		  m_cameraController(window->getWindow(), m_Camera)
 	{
 		m_window->setCustomKeyCallback([this](int key, int scancode, int action, int mods)
 			{
@@ -23,6 +23,29 @@ namespace test
 
 		texturePath = "res/textures/deccan_heightmap.png";
 		selectedFile = texturePath;
+		loadTexture();
+
+		glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
+	}
+
+	TestHeightMap::~TestHeightMap()
+	{
+		m_VA.reset();
+		m_VB.reset();
+		m_IB.reset();
+		m_Texture.reset();
+		m_Shader->Unbind();
+	}
+
+	void TestHeightMap::loadTexture()
+	{
+		// clear the variables
+		m_VA.reset();
+		m_VB.reset();
+		m_IB.reset();
+		m_Texture.reset();
+
+		// load texture
 		m_Texture = std::make_unique<Texture>(texturePath.c_str());
 		m_Texture->Bind();
 		m_width = m_Texture->GetWidth();
@@ -32,10 +55,11 @@ namespace test
 		m_Shader->setInt("heightMap", 0);
 		m_Shader->Unbind();
 
-		std::vector<float> vertices;
-		for (unsigned i = 0; i <= rez - 1; i++)
+		vertices.clear();
+		vertices.reserve(rez * rez * 20); // for each loop 3 xyz and 2 uv x 5 times => 20
+		for (unsigned int i = 0; i < rez; i++)
 		{
-			for (unsigned j = 0; j <= rez - 1; j++)
+			for (unsigned int j = 0; j < rez; j++)
 			{
 				vertices.push_back(-m_width / 2.0f + m_width * i / (float)rez); // v.x
 				vertices.push_back(0.0f); // v.y
@@ -65,22 +89,10 @@ namespace test
 
 		m_VA = std::make_unique<VertexArray>();
 		m_VB = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(float));
-
 		VertexBufferLayout layout;
 		layout.Push<float>(3); // positions
 		layout.Push<float>(2); // texCoord
 		m_VA->AddBuffer(*m_VB, layout);
-
-		glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
-	}
-
-	TestHeightMap::~TestHeightMap()
-	{
-		m_VA.reset();
-		m_VB.reset();
-		m_IB.reset();
-		m_Texture.reset();
-		m_Shader->Unbind();
 	}
 
 	void TestHeightMap::handleKeyPress(int key, int scancode, int action, int mods)
@@ -126,58 +138,7 @@ namespace test
 		if (texturePath != selectedFile)
 		{
 			texturePath = selectedFile;
-			m_VA.reset();
-			m_VB.reset();
-			m_IB.reset();
-			m_Texture.reset();
-
-			m_Texture = std::make_unique<Texture>(texturePath.c_str());
-			m_Texture->Bind();
-			m_width = m_Texture->GetWidth();
-			m_height = m_Texture->GetHeight();
-
-			m_Shader->Bind();
-			m_Shader->setInt("heightMap", 0);
-			m_Shader->Unbind();
-
-			std::vector<float> vertices;
-			for (unsigned i = 0; i <= rez - 1; i++)
-			{
-				for (unsigned j = 0; j <= rez - 1; j++)
-				{
-					vertices.push_back(-m_width / 2.0f + m_width * i / (float)rez); // v.x
-					vertices.push_back(0.0f); // v.y
-					vertices.push_back(-m_height / 2.0f + m_height * j / (float)rez); // v.z
-					vertices.push_back(i / (float)rez); // u
-					vertices.push_back(j / (float)rez); // v
-
-					vertices.push_back(-m_width / 2.0f + m_width * (i + 1) / (float)rez); // v.x
-					vertices.push_back(0.0f); // v.y
-					vertices.push_back(-m_height / 2.0f + m_height * j / (float)rez); // v.z
-					vertices.push_back((i + 1) / (float)rez); // u
-					vertices.push_back(j / (float)rez); // v
-
-					vertices.push_back(-m_width / 2.0f + m_width * i / (float)rez); // v.x
-					vertices.push_back(0.0f); // v.y
-					vertices.push_back(-m_height / 2.0f + m_height * (j + 1) / (float)rez); // v.z
-					vertices.push_back(i / (float)rez); // u
-					vertices.push_back((j + 1) / (float)rez); // v
-
-					vertices.push_back(-m_width / 2.0f + m_width * (i + 1) / (float)rez); // v.x
-					vertices.push_back(0.0f); // v.y
-					vertices.push_back(-m_height / 2.0f + m_height * (j + 1) / (float)rez); // v.z
-					vertices.push_back((i + 1) / (float)rez); // u
-					vertices.push_back((j + 1) / (float)rez); // v
-				}
-			}
-
-			m_VA = std::make_unique<VertexArray>();
-			m_VB = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(float));
-
-			VertexBufferLayout layout;
-			layout.Push<float>(3); // positions
-			layout.Push<float>(2); // texCoord
-			m_VA->AddBuffer(*m_VB, layout);
+			loadTexture();
 		}
 	}
 
@@ -201,6 +162,7 @@ namespace test
 		m_Shader->setBool("enableGrid", enableGrid);
 		m_Shader->setBool("isDynamicTess", dynamicTess);
 		m_Shader->setBool("showNormals", showNormals);
+		m_Shader->setVec2("uTexelSize", { 1.0f/m_width, 1.0f/m_height});
 		m_VA->Bind();
 		if (renderPointsOnly)
 		{

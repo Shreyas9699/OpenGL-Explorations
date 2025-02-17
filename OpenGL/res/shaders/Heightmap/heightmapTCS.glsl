@@ -1,4 +1,4 @@
-// heightmapTCS.glsl
+// heightmapTCS.glsl (Tessellation Control Shader)
 #version 410 core
 layout(vertices=4) out;
 in vec2 TexCoord[];

@@ -177,6 +177,7 @@
     <None Include="res\shaders\FBM\FragShaderFBM.glsl" />
     <None Include="res\shaders\FBM\VertexFBMShader.glsl" />
     <None Include="res\shaders\Heightmap\heightmapFS.glsl" />
+    <None Include="res\shaders\Heightmap\heightmapGS.glsl" />
     <None Include="res\shaders\Heightmap\heightmapTCS.glsl" />
     <None Include="res\shaders\Heightmap\heightmapTES.glsl" />
     <None Include="res\shaders\Heightmap\heightmapVS.glsl" />

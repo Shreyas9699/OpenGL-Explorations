@@ -535,6 +535,7 @@
     <None Include="res\shaders\Heightmap\heightmapFS.glsl" />
     <None Include="res\shaders\Heightmap\heightmapTCS.glsl" />
     <None Include="res\shaders\Heightmap\heightmapTES.glsl" />
+    <None Include="res\shaders\Heightmap\heightmapGS.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Renderer.h">
