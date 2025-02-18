@@ -21,7 +21,7 @@ namespace test
 		m_Shader = std::make_unique<Shader>("res/shaders/Heightmap/heightmapVS.glsl", "res/shaders/Heightmap/heightmapFS.glsl",
 			nullptr, "res/shaders/Heightmap/heightmapTCS.glsl", "res/shaders/Heightmap/heightmapTES.glsl");
 
-		texturePath = "res/textures/deccan_heightmap.png";
+		texturePath = "res/textures/height/deccan_heightmap.png";
 		selectedFile = texturePath;
 		loadTexture();
 
@@ -37,6 +37,9 @@ namespace test
 		m_Shader->Unbind();
 		m_Shader.reset();
 		m_Renderer.reset();
+
+		m_window->setCustomKeyCallback(nullptr);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
 	void TestHeightMap::loadTexture()
@@ -189,11 +192,11 @@ namespace test
 	{
 		if (!showFileExplorer) return;
 
-		std::string rootPath = "res/textures";
-		fs::path rootFsPath = fs::absolute(rootPath);
+		std::string rootPath = "res/textures/height";
+		std::filesystem::path rootFsPath = std::filesystem::absolute(rootPath);
 		ImGui::Separator();
 
-		if (fs::absolute(currentPath).string().find(rootFsPath.string()) == std::string::npos)
+		if (std::filesystem::absolute(currentPath).string().find(rootFsPath.string()) == std::string::npos)
 		{
 			currentPath = rootPath;
 		}
@@ -207,7 +210,7 @@ namespace test
 
 		ImGui::Separator();
 
-		for (const auto& entry : fs::directory_iterator(currentPath))
+		for (const auto& entry : std::filesystem::directory_iterator(currentPath))
 		{
 			std::string name = entry.path().filename().string();
 			std::string fullPath = entry.path().string();

@@ -51,6 +51,9 @@ namespace test
 		m_ShaderLightSrc->Unbind();
 		m_ShaderLightSrc.reset();
 		m_Renderer.reset();
+
+		m_window->setCustomKeyCallback(nullptr);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
 	void TestFBMPlane::GeneratePlane()

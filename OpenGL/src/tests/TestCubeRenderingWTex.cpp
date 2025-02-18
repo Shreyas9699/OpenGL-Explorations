@@ -75,9 +75,9 @@ namespace test
 		m_ShaderCube = std::make_unique<Shader>("res/shaders/CubrWithTexVS.shader", "res/shaders/CubrWithTexFS.shader");
 		m_ShaderLight = std::make_unique<Shader>("res/shaders/lightCubeVS.shader", "res/shaders/lightCubeFS.shader");
 
-		m_TextureDiffuse = std::make_unique<Texture>("res/textures/container2.png");
-		m_TextureSpecular = std::make_unique<Texture>("res/textures/container2_specular.png");
-		m_EmissionMap = std::make_unique<Texture>("res/textures/container2_emissionMap.png");
+		m_TextureDiffuse = std::make_unique<Texture>("res/textures/conatiner/container2.png");
+		m_TextureSpecular = std::make_unique<Texture>("res/textures/conatiner/container2_specular.png");
+		m_EmissionMap = std::make_unique<Texture>("res/textures/conatiner/container2_emissionMap.png");
 
 		m_Renderer = std::make_unique<Renderer>();
 

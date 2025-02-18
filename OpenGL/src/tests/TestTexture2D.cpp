@@ -11,7 +11,7 @@ namespace test
           m_TranslationA(200, 200, 0), m_TranslationB(400, 200, 0)
 	{
 
-        float positions[] = {
+        std::vector<float> positions = {
         -50.0f, -50.0f, 0.0f, 0.0f,
          50.0f, -50.0f, 1.0f, 0.0f,
          50.0f,  50.0f, 1.0f, 1.0f,
@@ -19,18 +19,18 @@ namespace test
         };
 
         // using index buffer to draw sq
-        unsigned int indices[] = {
+        std::vector<unsigned int> indices = {
             0, 1, 2,
             2, 3, 0
         };
 
         m_VA = std::make_unique<VertexArray>();
-        m_VB = std::make_unique<VertexBuffer>(positions, sizeof(positions) * sizeof(float));
+        m_VB = std::make_unique<VertexBuffer>(positions.data(), positions.size() * sizeof(float));
         VertexBufferLayout layout;
         layout.Push<float>(2);
         layout.Push<float>(2);
         m_VA->AddBuffer(*m_VB, layout);
-        m_IB = std::make_unique<IndexBuffer>(indices, sizeof(indices));
+        m_IB = std::make_unique<IndexBuffer>(indices.data(), indices.size());
         m_Renderer = std::make_unique<Renderer>();
 
         m_Shader = std::make_unique<Shader>("res/shaders/TextureShaderVS.shader", "res/shaders/TextureShaderFS.shader");
@@ -38,6 +38,7 @@ namespace test
         m_Shader->setVec4("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
         m_Texture = std::make_unique<Texture>("res/textures/SSanW2.png");
         m_Shader->setInt("u_Texture", 0);
+        m_Shader->Unbind();
 	}
 
 	TestTexture2D::~TestTexture2D() 

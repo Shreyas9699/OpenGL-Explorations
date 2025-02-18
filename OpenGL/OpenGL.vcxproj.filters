@@ -99,6 +99,9 @@
     <ClCompile Include="src\tests\TestHeightMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\tests\TestPyramid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\BasicShaderVS.shader" />
@@ -536,6 +539,8 @@
     <None Include="res\shaders\Heightmap\heightmapTCS.glsl" />
     <None Include="res\shaders\Heightmap\heightmapTES.glsl" />
     <None Include="res\shaders\Heightmap\heightmapGS.glsl" />
+    <None Include="res\shaders\3DtexFS.glsl" />
+    <None Include="res\shaders\3DtexVS.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Renderer.h">
@@ -1486,61 +1491,115 @@
     <ClInclude Include="src\tests\TestHeightMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\TestPyramid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\container2.png">
+    <Image Include="res\textures\conatiner\container2.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\container2_specular.png">
+    <Image Include="res\textures\conatiner\container2_specular.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\matrix.jpg">
+    <Image Include="res\textures\conatiner\matrix.jpg">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\container2_emissionMap.png">
+    <Image Include="res\textures\conatiner\container2_emissionMap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\iceland_heightmap.png">
+    <Image Include="res\textures\height\iceland_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\ashleyNP_heightmap.png">
+    <Image Include="res\textures\height\ashleyNP_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\himalay_heightmap.png">
+    <Image Include="res\textures\height\himalay_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\deccan_heightmap.png">
+    <Image Include="res\textures\height\deccan_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\japan_heightmap.png">
+    <Image Include="res\textures\height\japan_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\srilanka_heightmap.png">
+    <Image Include="res\textures\height\srilanka_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\northIndia_heightmap.png">
+    <Image Include="res\textures\height\northIndia_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\gc_heightmap.png">
+    <Image Include="res\textures\height\gc_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\gc2_heightmap.png">
+    <Image Include="res\textures\height\gc2_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\sa_heightmap.png">
+    <Image Include="res\textures\height\sa_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\some_heightmap.png">
+    <Image Include="res\textures\height\some_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\taipei_heightmap.png">
+    <Image Include="res\textures\height\taipei_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\textures\iraklio_heightmap.png">
+    <Image Include="res\textures\height\iraklio_heightmap.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="res\textures\skybox\bsw\back.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\bsw\bottom.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\bsw\front.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\bsw\left.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\bsw\right.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\bsw\top.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\sp3\back.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\sp3\bottom.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\sp3\front.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\sp3\left.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\sp3\right.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\sp3\top.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\skybox\interstellar\back.tga" />
+    <Image Include="res\textures\skybox\interstellar\bottom.tga" />
+    <Image Include="res\textures\skybox\interstellar\front.tga" />
+    <Image Include="res\textures\skybox\interstellar\left.tga" />
+    <Image Include="res\textures\skybox\interstellar\right.tga" />
+    <Image Include="res\textures\skybox\interstellar\top.tga" />
+    <Image Include="res\textures\conatiner\Brick.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="res\textures\skybox\interstellar\README.TXT" />
   </ItemGroup>
 </Project>

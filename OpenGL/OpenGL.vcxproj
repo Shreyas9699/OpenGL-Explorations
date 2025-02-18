@@ -146,6 +146,7 @@
     <ClCompile Include="src\tests\TestCubeRenderingWTex.cpp" />
     <ClCompile Include="src\tests\TestFBMPlane.cpp" />
     <ClCompile Include="src\tests\TestHeightMap.cpp" />
+    <ClCompile Include="src\tests\TestPyramid.cpp" />
     <ClCompile Include="src\tests\TestSquare.cpp" />
     <ClCompile Include="src\tests\TestClearColor.cpp" />
     <ClCompile Include="src\tests\TestTexture2D.cpp" />
@@ -166,6 +167,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="imgui.ini" />
+    <None Include="res\shaders\3DtexFS.glsl" />
+    <None Include="res\shaders\3DtexVS.glsl" />
     <None Include="res\shaders\BasicShaderFS.shader" />
     <None Include="res\shaders\BasicShaderVS.shader" />
     <None Include="res\shaders\BatchShader.shader" />
@@ -333,6 +336,7 @@
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\CameraController.h" />
     <ClInclude Include="src\IndexBuffer.h" />
+    <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\Shader_t.h" />
     <ClInclude Include="src\tests\Material.h" />
@@ -343,6 +347,7 @@
     <ClInclude Include="src\tests\TestFBMPlane.h" />
     <ClInclude Include="src\tests\TestHeightMap.h" />
     <ClInclude Include="src\tests\TestIncludeHeader.h" />
+    <ClInclude Include="src\tests\TestPyramid.h" />
     <ClInclude Include="src\tests\TestSquare.h" />
     <ClInclude Include="src\tests\TestClearColor.h" />
     <ClInclude Include="src\tests\TestTexture2D.h" />
@@ -648,24 +653,46 @@
     <ClInclude Include="src\Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\textures\ashleyNP_heightmap.png" />
-    <Image Include="res\textures\container2.png" />
-    <Image Include="res\textures\container2_emissionMap.png" />
-    <Image Include="res\textures\container2_specular.png" />
-    <Image Include="res\textures\deccan_heightmap.png" />
-    <Image Include="res\textures\gc2_heightmap.png" />
-    <Image Include="res\textures\gc_heightmap.png" />
-    <Image Include="res\textures\himalay_heightmap.png" />
-    <Image Include="res\textures\iceland_heightmap.png" />
-    <Image Include="res\textures\iraklio_heightmap.png" />
-    <Image Include="res\textures\japan_heightmap.png" />
-    <Image Include="res\textures\matrix.jpg" />
-    <Image Include="res\textures\northIndia_heightmap.png" />
-    <Image Include="res\textures\sa_heightmap.png" />
-    <Image Include="res\textures\some_heightmap.png" />
-    <Image Include="res\textures\srilanka_heightmap.png" />
+    <Image Include="res\textures\conatiner\Brick.jpg" />
+    <Image Include="res\textures\height\ashleyNP_heightmap.png" />
+    <Image Include="res\textures\conatiner\container2.png" />
+    <Image Include="res\textures\conatiner\container2_emissionMap.png" />
+    <Image Include="res\textures\conatiner\container2_specular.png" />
+    <Image Include="res\textures\height\deccan_heightmap.png" />
+    <Image Include="res\textures\height\gc2_heightmap.png" />
+    <Image Include="res\textures\height\gc_heightmap.png" />
+    <Image Include="res\textures\height\himalay_heightmap.png" />
+    <Image Include="res\textures\height\iceland_heightmap.png" />
+    <Image Include="res\textures\height\iraklio_heightmap.png" />
+    <Image Include="res\textures\height\japan_heightmap.png" />
+    <Image Include="res\textures\conatiner\matrix.jpg" />
+    <Image Include="res\textures\height\northIndia_heightmap.png" />
+    <Image Include="res\textures\height\sa_heightmap.png" />
+    <Image Include="res\textures\skybox\bsw\back.jpg" />
+    <Image Include="res\textures\skybox\bsw\bottom.jpg" />
+    <Image Include="res\textures\skybox\bsw\front.jpg" />
+    <Image Include="res\textures\skybox\bsw\left.jpg" />
+    <Image Include="res\textures\skybox\bsw\right.jpg" />
+    <Image Include="res\textures\skybox\bsw\top.jpg" />
+    <Image Include="res\textures\skybox\interstellar\back.tga" />
+    <Image Include="res\textures\skybox\interstellar\bottom.tga" />
+    <Image Include="res\textures\skybox\interstellar\front.tga" />
+    <Image Include="res\textures\skybox\interstellar\left.tga" />
+    <Image Include="res\textures\skybox\interstellar\right.tga" />
+    <Image Include="res\textures\skybox\interstellar\top.tga" />
+    <Image Include="res\textures\skybox\sp3\back.jpg" />
+    <Image Include="res\textures\skybox\sp3\bottom.jpg" />
+    <Image Include="res\textures\skybox\sp3\front.jpg" />
+    <Image Include="res\textures\skybox\sp3\left.jpg" />
+    <Image Include="res\textures\skybox\sp3\right.jpg" />
+    <Image Include="res\textures\skybox\sp3\top.jpg" />
+    <Image Include="res\textures\height\some_heightmap.png" />
+    <Image Include="res\textures\height\srilanka_heightmap.png" />
     <Image Include="res\textures\SSanW2.png" />
-    <Image Include="res\textures\taipei_heightmap.png" />
+    <Image Include="res\textures\height\taipei_heightmap.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="res\textures\skybox\interstellar\README.TXT" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

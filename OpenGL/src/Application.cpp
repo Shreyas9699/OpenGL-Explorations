@@ -16,6 +16,7 @@
 #include "tests/TestClearColor.h"
 #include "tests/TestTriangle.h"
 #include "tests/TestTexture2D.h"
+#include "tests/TestPyramid.h"
 #include "tests/TestUVSphere.h"
 #include "tests/TestCubeRendering.h"
 #include "tests/TestSquare.h"
@@ -51,11 +52,12 @@ int main(void)
 
 
     menu->AddTest<test::TestClearColor>("Clear Color");
-    menu->AddTest<test::TestTriangle>("Render Traingle");
-    menu->AddTest<test::TestSquare>("Render Square");
+    menu->AddTest<test::TestTriangle>("Render 2D Traingle");
+    menu->AddTest<test::TestSquare>("Render 2D Square");
     menu->AddTest<test::TestTexture2D>("2D Texture");
+    menu->AddTest<test::TestPyramid>("3D Textured Pyramid", window.getWindow());
     menu->AddTest<test::TestUVSphere>("Render Sphere", window.getWindow());
-    menu->AddTest<test::TestCubeRendering>("Cube Rendering", window.getWindow());
+    menu->AddTest<test::TestCubeRendering>("Material Cube Rendering", window.getWindow());
     menu->AddTest<test::TestCubeWithTex>("Cube With Texture", window.getWindow());
     menu->AddTest<test::TestFBMPlane>("Fractal Brownian Motion Plane", &window);
     menu->AddTest<test::TestHeightMap>("Height Map", &window);
@@ -93,7 +95,7 @@ int main(void)
             currentTest->OnUpdate(deltaTime, window.getWindow());
             currentTest->OnRender();
             ImGui::Begin("Test");
-            if (currentTest != menu && ImGui::Button("<-"))
+            if (currentTest != menu && ImGui::Button("<- or Backspace"))
             {
                 glfwSetInputMode(window.getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                 delete currentTest;

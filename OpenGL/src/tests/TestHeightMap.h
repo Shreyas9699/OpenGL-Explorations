@@ -7,8 +7,6 @@
 #include <stb_image/stb_image.h>
 #include <filesystem>
 
-namespace fs = std::filesystem;
-
 namespace test
 {
 	class TestHeightMap : public Test
@@ -43,7 +41,7 @@ namespace test
 		std::string texturePath;
 		bool showFileExplorer = false;
 		std::string selectedFile;
-		std::string currentPath = fs::current_path().string();
+		std::string currentPath = std::filesystem::current_path().string();
 
 		void handleKeyPress(int key, int scancode, int action, int mods);
 		void ShowFileExplorer();
