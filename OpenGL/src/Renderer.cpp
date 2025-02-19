@@ -1,6 +1,5 @@
 #include "Renderer.h"
 
-
 #include <iostream>
 
 void GLClearError()

@@ -541,6 +541,8 @@
     <None Include="res\shaders\Heightmap\heightmapGS.glsl" />
     <None Include="res\shaders\3DtexFS.glsl" />
     <None Include="res\shaders\3DtexVS.glsl" />
+    <None Include="res\shaders\modelFS.glsl" />
+    <None Include="res\shaders\modelVS.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Renderer.h">
@@ -1491,13 +1493,10 @@
     <ClInclude Include="src\tests\TestHeightMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Mesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\tests\TestPyramid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Model.h">
+    <ClInclude Include="src\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

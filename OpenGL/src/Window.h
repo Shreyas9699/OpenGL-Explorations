@@ -123,10 +123,10 @@ public:
         glfwSwapInterval(0);
 
         // Enable OpenGL features
-        glEnable(GL_BLEND);
+        /*glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_MULTISAMPLE);
+        glEnable(GL_MULTISAMPLE);*/
 
         glfwSetWindowUserPointer(m_window, this);
 
