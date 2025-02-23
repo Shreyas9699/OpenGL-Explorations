@@ -1,0 +1,8 @@
+newmtl rsMaterial1SG
+illum 2
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Ks 0.50 0.50 0.50
+Ns 225.00
+Tf 1.00 1.00 1.00
+Ni 1.00

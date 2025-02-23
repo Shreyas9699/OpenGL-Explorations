@@ -1,0 +1,12 @@
+# Base Material
+newmtl CarBody
+Ka 1.000 1.000 1.000  # Ambient color
+Kd 1.000 1.000 1.000  # Diffuse color
+Ks 0.500 0.500 0.500  # Specular highlights
+Ns 100.000            # Shininess
+d 1.0                 # Opacity
+illum 2               # Lighting model
+
+# Assign the first skin texture (default)
+map_Kd skin01/0000.BMP
+map_d skin01/0000-a.BMP

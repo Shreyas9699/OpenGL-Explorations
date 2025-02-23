@@ -1,7 +1,7 @@
 #pragma once
 #include "TestIncludeHeader.h"
 #include "Sphere.h"
-#include "../src/Window.h"
+#include "Window.h"
 #include <memory>
 
 /*
@@ -14,7 +14,7 @@ namespace test
 	class TestFBMPlane : public Test
 	{
 	private:
-		Window* m_window;
+		Window* m_Window;
 		float m_planeColor[4];
 		float lightColor[4];
 		std::unique_ptr<UVSphere> m_Sphere;
@@ -50,7 +50,7 @@ namespace test
 		~TestFBMPlane();
 
 
-		void OnUpdate(Timestep deltaTime, GLFWwindow* win);
+		void OnUpdate(Timestep deltaTime, GLFWwindow* window = nullptr) override;
 		void OnRender() override;
 		void OnImGuiRender() override;
 	};

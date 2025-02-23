@@ -33,7 +33,7 @@ namespace test
 		m_Renderer.reset();
 	}
 
-	void TestTriangle::OnUpdate(Timestep deltaTime, GLFWwindow* win) {}
+	void TestTriangle::OnUpdate(Timestep deltaTime, GLFWwindow* m_Window) {}
 
 	void TestTriangle::OnRender()
 	{

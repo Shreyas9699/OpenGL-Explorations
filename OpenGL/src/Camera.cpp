@@ -97,3 +97,9 @@ void Camera::printCameraDetails() const
     std::cout << "Zoom: " << Zoom << "\n";
     std::cout << "--------------------------------\n";
 }
+
+void Camera::SetCameraZoom(float val) { Zoom = val; }
+
+void Camera::SetCameraMovementSpeed(float val) { MovementSpeed = val; }
+
+void Camera::SetMouseSensitivity(float val) { MouseSensitivity = val; }

@@ -20,7 +20,7 @@ namespace test
 		TestSquare();
 		~TestSquare();
 
-		void OnUpdate(Timestep deltaTime, GLFWwindow* win = nullptr) override;
+		void OnUpdate(Timestep deltaTime, GLFWwindow* m_Window = nullptr) override;
 		void OnRender() override;
 		void OnImGuiRender() override;
 	};

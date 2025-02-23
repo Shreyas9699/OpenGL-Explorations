@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -26,19 +18,6 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -57,12 +36,6 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -70,56 +43,20 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>src\vendor;src;Core;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLEW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\GLFW\lib-vc2022;$(SolutionDir)Dependencies\GLEW\lib\Release\Win32</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>Core;Events;src;src\vendor;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLEW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\GLFW\lib-vc2022;$(SolutionDir)Dependencies\GLEW\lib\Release\Win32</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLEW_STATIC;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>src;src\vendor;Core;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLEW\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\assimp5\include;$(SolutionDir)Dependencies\GLEW\include;$(SolutionDir)Dependencies\GLFW64\include;Core;src\vendor;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\GLFW\lib-vc2022;$(SolutionDir)Dependencies\GLEW\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\assimp5\lib\Debug;$(SolutionDir)Dependencies\GLEW\lib\Release\x64;$(SolutionDir)Dependencies\GLFW64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;glew32s.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -139,38 +76,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\Camera.cpp" />
-    <ClCompile Include="src\CameraController.cpp" />
-    <ClCompile Include="src\IndexBuffer.cpp" />
-    <ClCompile Include="src\Renderer.cpp" />
-    <ClCompile Include="src\tests\Material.cpp" />
-    <ClCompile Include="src\tests\Test.cpp" />
-    <ClCompile Include="src\tests\TestCubeRendering.cpp" />
-    <ClCompile Include="src\tests\TestCubeRenderingWTex.cpp" />
-    <ClCompile Include="src\tests\TestFBMPlane.cpp" />
-    <ClCompile Include="src\tests\TestHeightMap.cpp" />
-    <ClCompile Include="src\tests\TestPyramid.cpp" />
-    <ClCompile Include="src\tests\TestSquare.cpp" />
-    <ClCompile Include="src\tests\TestClearColor.cpp" />
-    <ClCompile Include="src\tests\TestTexture2D.cpp" />
-    <ClCompile Include="src\tests\TestTriangle.cpp" />
-    <ClCompile Include="src\tests\TestUVSphere.cpp" />
-    <ClCompile Include="src\Texture.cpp" />
-    <ClCompile Include="src\vendor\glm\detail\glm.cpp" />
-    <ClCompile Include="src\vendor\imgui\imgui.cpp" />
-    <ClCompile Include="src\vendor\imgui\imgui_demo.cpp" />
-    <ClCompile Include="src\vendor\imgui\imgui_draw.cpp" />
-    <ClCompile Include="src\vendor\imgui\imgui_impl_glfw.cpp" />
-    <ClCompile Include="src\vendor\imgui\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="src\vendor\imgui\imgui_tables.cpp" />
-    <ClCompile Include="src\vendor\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="src\vendor\stb_image\stb_image.cpp" />
-    <ClCompile Include="src\VertexArray.cpp" />
-    <ClCompile Include="src\VertexBuffer.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="imgui.ini" />
+    <None Include="res\objects\apolloExterior\apollo_exterior-shell-master.mtl" />
+    <None Include="res\objects\apolloExterior\apollo_exterior-top-master.mtl" />
+    <None Include="res\objects\backpack\backpack.mtl" />
+    <None Include="res\objects\ClassicFormula1\cf1car.3ds" />
+    <None Include="res\objects\ClassicFormula1\cf1car.fbx" />
+    <None Include="res\objects\ClassicFormula1\cf1car.mtl" />
+    <None Include="res\objects\ClassicFormula1\oldie.blend" />
+    <None Include="res\objects\dabrovic-sponza\sponza.mtl" />
+    <None Include="res\objects\GoingMerry\GoingMerry.mb" />
+    <None Include="res\objects\GoingMerry\GoingMerry.mtl" />
+    <None Include="res\objects\knight\armor2021.mtl" />
+    <None Include="res\objects\monkey\monkey.mtl" />
+    <None Include="res\objects\ordinary_house\87941 - LICENSE.html" />
+    <None Include="res\objects\ordinary_house\ordinary_house.mtl" />
+    <None Include="res\objects\P-51Mustang\P-51 Mustang.3ds" />
+    <None Include="res\objects\P-51Mustang\P-51 Mustang.c4d" />
+    <None Include="res\objects\porsche\Porsche_911_GT2.max" />
+    <None Include="res\objects\porsche\Porsche_911_GT2.mtl" />
+    <None Include="res\objects\porsche\skin00\index.fsh" />
+    <None Include="res\objects\porsche\skin00\Thumbs.db" />
+    <None Include="res\objects\porsche\skyline_GTR.cob" />
+    <None Include="res\objects\spider\spider.mtl" />
+    <None Include="res\objects\wb\WhiteBeard.mtl" />
     <None Include="res\shaders\3DtexFS.glsl" />
     <None Include="res\shaders\3DtexVS.glsl" />
     <None Include="res\shaders\BasicShaderFS.shader" />
@@ -199,6 +128,8 @@
     <None Include="res\shaders\modelVS.glsl" />
     <None Include="res\shaders\QuadShaderFS.shader" />
     <None Include="res\shaders\QuadShaderVS.shader" />
+    <None Include="res\shaders\shader_glsl.frag" />
+    <None Include="res\shaders\shader_glsl.vert" />
     <None Include="res\shaders\TextureShaderFS.shader" />
     <None Include="res\shaders\TextureShaderVS.shader" />
     <None Include="src\vendor\glm\detail\func_common.inl" />
@@ -339,28 +270,197 @@
     <None Include="src\vendor\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\objects\apolloExterior\x3d-cm-exterior-shell-90k-comp-4k.tif" />
+    <Image Include="res\objects\apolloExterior\x3d-cm-exterior-top-160k-comp-4k.tif" />
+    <Image Include="res\objects\backpack\ao.jpg" />
+    <Image Include="res\objects\backpack\diffuse.jpg" />
+    <Image Include="res\objects\backpack\normal.png" />
+    <Image Include="res\objects\backpack\roughness.jpg" />
+    <Image Include="res\objects\backpack\specular.jpg" />
+    <Image Include="res\objects\ClassicFormula1\55_3DS_LPTT.jpg" />
+    <Image Include="res\objects\ClassicFormula1\body_Base_Color.png" />
+    <Image Include="res\objects\dabrovic-sponza\00_skap.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\01_STUB-bump.jpg" />
+    <Image Include="res\objects\dabrovic-sponza\01_STUB.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\01_St_kp-bump.jpg" />
+    <Image Include="res\objects\dabrovic-sponza\01_St_kp.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\01_S_ba.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\01_S_kap-bump.jpg" />
+    <Image Include="res\objects\dabrovic-sponza\01_S_kap.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\KAMEN-bump.jpg" />
+    <Image Include="res\objects\dabrovic-sponza\KAMEN-stup.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\KAMEN.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\prozor1.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\reljef-bump.jpg" />
+    <Image Include="res\objects\dabrovic-sponza\reljef.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\sp_luk-bump.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\sp_luk.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\vrata_ko.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\vrata_kr.JPG" />
+    <Image Include="res\objects\dabrovic-sponza\x01_st-bump.jpg" />
+    <Image Include="res\objects\dabrovic-sponza\x01_st.JPG" />
+    <Image Include="res\objects\knight\textures\arm_L_arm_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\arm_L_arm_Metallic.jpg" />
+    <Image Include="res\objects\knight\textures\arm_L_arm_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\arm_L_arm_Roughness.jpg" />
+    <Image Include="res\objects\knight\textures\clothes_L_clothes_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\clothes_L_clothes_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\clothes_L_clothes_Roughness.jpg" />
+    <Image Include="res\objects\knight\textures\dagger_L_dagger_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\dagger_L_dagger_Metallic.jpg" />
+    <Image Include="res\objects\knight\textures\dagger_L_dagger_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\dagger_L_dagger_Roughness.jpg" />
+    <Image Include="res\objects\knight\textures\foot-and-cloak_L_cloak_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\foot-and-cloak_L_cloak_Metallic.jpg" />
+    <Image Include="res\objects\knight\textures\foot-and-cloak_L_cloak_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\foot-and-cloak_L_cloak_Roughness.jpg" />
+    <Image Include="res\objects\knight\textures\hand_L_glove_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\hand_L_glove_Metallic.jpg" />
+    <Image Include="res\objects\knight\textures\hand_L_glove_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\hand_L_glove_Roughness.jpg" />
+    <Image Include="res\objects\knight\textures\helm_L_helm_L_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\helm_L_helm_L_Metallic.jpg" />
+    <Image Include="res\objects\knight\textures\helm_L_helm_L_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\helm_L_helm_L_Roughness.jpg" />
+    <Image Include="res\objects\knight\textures\leg_L_leg_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\leg_L_leg_Metallic.jpg" />
+    <Image Include="res\objects\knight\textures\leg_L_leg_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\leg_L_leg_Roughness.jpg" />
+    <Image Include="res\objects\knight\textures\main_L_main_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\main_L_main_Metallic.jpg" />
+    <Image Include="res\objects\knight\textures\main_L_main_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\main_L_main_Roughness.jpg" />
+    <Image Include="res\objects\knight\textures\porch-02_L_Material_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\porch-02_L_Material_Metallic.jpg" />
+    <Image Include="res\objects\knight\textures\porch-02_L_Material_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\porch-02_L_Material_Roughness.jpg" />
+    <Image Include="res\objects\knight\textures\porch01_L_porch_A_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\porch01_L_porch_A_Metallic.jpg" />
+    <Image Include="res\objects\knight\textures\porch01_L_porch_A_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\porch01_L_porch_A_Roughness.jpg" />
+    <Image Include="res\objects\knight\textures\shiled_L_shield_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\shiled_L_shield_Metallic.jpg" />
+    <Image Include="res\objects\knight\textures\shiled_L_shield_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\shiled_L_shield_Roughness.jpg" />
+    <Image Include="res\objects\knight\textures\sword_L_sword_BaseColor.jpg" />
+    <Image Include="res\objects\knight\textures\sword_L_sword_Metallic.jpg" />
+    <Image Include="res\objects\knight\textures\sword_L_sword_Normal.jpg" />
+    <Image Include="res\objects\knight\textures\sword_L_sword_Roughness.jpg" />
+    <Image Include="res\objects\monkey\white.png" />
+    <Image Include="res\objects\ordinary_house\texture1.png" />
+    <Image Include="res\objects\ordinary_house\texture3.png" />
+    <Image Include="res\objects\P-51Mustang\BodyTexture.bmp" />
+    <Image Include="res\objects\porsche\skin00\0000-a.BMP" />
+    <Image Include="res\objects\porsche\skin00\0000.BMP" />
+    <Image Include="res\objects\spider\drkwood2.jpg" />
+    <Image Include="res\objects\spider\engineflare1.jpg" />
+    <Image Include="res\objects\spider\SpiderTex.jpg" />
+    <Image Include="res\objects\spider\wal67ar_small.jpg" />
+    <Image Include="res\objects\spider\wal69ar_small.jpg" />
+    <Image Include="res\objects\wb\body_texture.png" />
+    <Image Include="res\objects\wb\cloak_texture.png" />
+    <Image Include="res\textures\conatiner\Brick.jpg" />
+    <Image Include="res\textures\height\ashleyNP_heightmap.png" />
+    <Image Include="res\textures\conatiner\container2.png" />
+    <Image Include="res\textures\conatiner\container2_emissionMap.png" />
+    <Image Include="res\textures\conatiner\container2_specular.png" />
+    <Image Include="res\textures\height\deccan_heightmap.png" />
+    <Image Include="res\textures\height\gc2_heightmap.png" />
+    <Image Include="res\textures\height\gc_heightmap.png" />
+    <Image Include="res\textures\height\himalay_heightmap.png" />
+    <Image Include="res\textures\height\iceland_heightmap.png" />
+    <Image Include="res\textures\height\iraklio_heightmap.png" />
+    <Image Include="res\textures\height\japan_heightmap.png" />
+    <Image Include="res\textures\conatiner\matrix.jpg" />
+    <Image Include="res\textures\height\northIndia_heightmap.png" />
+    <Image Include="res\textures\height\sa_heightmap.png" />
+    <Image Include="res\textures\skybox\bsw\back.jpg" />
+    <Image Include="res\textures\skybox\bsw\bottom.jpg" />
+    <Image Include="res\textures\skybox\bsw\front.jpg" />
+    <Image Include="res\textures\skybox\bsw\left.jpg" />
+    <Image Include="res\textures\skybox\bsw\right.jpg" />
+    <Image Include="res\textures\skybox\bsw\top.jpg" />
+    <Image Include="res\textures\skybox\interstellar\back.tga" />
+    <Image Include="res\textures\skybox\interstellar\bottom.tga" />
+    <Image Include="res\textures\skybox\interstellar\front.tga" />
+    <Image Include="res\textures\skybox\interstellar\left.tga" />
+    <Image Include="res\textures\skybox\interstellar\right.tga" />
+    <Image Include="res\textures\skybox\interstellar\top.tga" />
+    <Image Include="res\textures\skybox\sp3\back.jpg" />
+    <Image Include="res\textures\skybox\sp3\bottom.jpg" />
+    <Image Include="res\textures\skybox\sp3\front.jpg" />
+    <Image Include="res\textures\skybox\sp3\left.jpg" />
+    <Image Include="res\textures\skybox\sp3\right.jpg" />
+    <Image Include="res\textures\skybox\sp3\top.jpg" />
+    <Image Include="res\textures\height\some_heightmap.png" />
+    <Image Include="res\textures\height\srilanka_heightmap.png" />
+    <Image Include="res\textures\SSanW2.png" />
+    <Image Include="res\textures\height\taipei_heightmap.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="res\objects\backpack\source_attribution.txt" />
+    <Text Include="res\objects\ClassicFormula1\Model Info.txt" />
+    <Text Include="res\objects\ClassicFormula1\README.txt" />
+    <Text Include="res\objects\dabrovic-sponza\copyright.txt" />
+    <Text Include="res\objects\porsche\Porsche_911_GT2.txt" />
+    <Text Include="res\textures\skybox\interstellar\README.TXT" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\CameraController.cpp" />
+    <ClCompile Include="src\IndexBuffer.cpp" />
+    <ClCompile Include="src\Renderer.cpp" />
+    <ClCompile Include="src\tests\Material.cpp" />
+    <ClCompile Include="src\tests\Test.cpp" />
+    <ClCompile Include="src\tests\TestClearColor.cpp" />
+    <ClCompile Include="src\tests\TestCubeRendering.cpp" />
+    <ClCompile Include="src\tests\TestCubeRenderingWTex.cpp" />
+    <ClCompile Include="src\tests\TestFBMPlane.cpp" />
+    <ClCompile Include="src\tests\TestHeightMap.cpp" />
+    <ClCompile Include="src\tests\TestLoadModels.cpp" />
+    <ClCompile Include="src\tests\TestPyramid.cpp" />
+    <ClCompile Include="src\tests\TestSquare.cpp" />
+    <ClCompile Include="src\tests\TestTexture2D.cpp" />
+    <ClCompile Include="src\tests\TestTriangle.cpp" />
+    <ClCompile Include="src\tests\TestUVSphere.cpp" />
+    <ClCompile Include="src\Texture.cpp" />
+    <ClCompile Include="src\vendor\glm\detail\glm.cpp" />
+    <ClCompile Include="src\vendor\imgui\imgui.cpp" />
+    <ClCompile Include="src\vendor\imgui\imgui_demo.cpp" />
+    <ClCompile Include="src\vendor\imgui\imgui_draw.cpp" />
+    <ClCompile Include="src\vendor\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\vendor\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\vendor\imgui\imgui_tables.cpp" />
+    <ClCompile Include="src\vendor\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\vendor\stb_image\stb_image.cpp" />
+    <ClCompile Include="src\VertexArray.cpp" />
+    <ClCompile Include="src\VertexBuffer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Core\Timestep.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\CameraController.h" />
     <ClInclude Include="src\IndexBuffer.h" />
-    <ClInclude Include="src\Mesh.h" />
+    <ClInclude Include="src\load_model_meshes.h" />
     <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\Shader_t.h" />
     <ClInclude Include="src\tests\Material.h" />
     <ClInclude Include="src\tests\Sphere.h" />
     <ClInclude Include="src\tests\Test.h" />
+    <ClInclude Include="src\tests\TestClearColor.h" />
     <ClInclude Include="src\tests\TestCubeRendering.h" />
     <ClInclude Include="src\tests\TestCubeRenderingWTex.h" />
     <ClInclude Include="src\tests\TestFBMPlane.h" />
     <ClInclude Include="src\tests\TestHeightMap.h" />
     <ClInclude Include="src\tests\TestIncludeHeader.h" />
+    <ClInclude Include="src\tests\TestLoadModels.h" />
     <ClInclude Include="src\tests\TestPyramid.h" />
     <ClInclude Include="src\tests\TestSquare.h" />
-    <ClInclude Include="src\tests\TestClearColor.h" />
     <ClInclude Include="src\tests\TestTexture2D.h" />
     <ClInclude Include="src\tests\TestTriangle.h" />
     <ClInclude Include="src\tests\TestUVSphere.h" />
     <ClInclude Include="src\Texture.h" />
-    <ClInclude Include="Core\Timestep.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_vector_relational.hpp" />
@@ -657,48 +757,6 @@
     <ClInclude Include="src\VertexBuffer.h" />
     <ClInclude Include="src\VertexBufferLayout.h" />
     <ClInclude Include="src\Window.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="res\textures\conatiner\Brick.jpg" />
-    <Image Include="res\textures\height\ashleyNP_heightmap.png" />
-    <Image Include="res\textures\conatiner\container2.png" />
-    <Image Include="res\textures\conatiner\container2_emissionMap.png" />
-    <Image Include="res\textures\conatiner\container2_specular.png" />
-    <Image Include="res\textures\height\deccan_heightmap.png" />
-    <Image Include="res\textures\height\gc2_heightmap.png" />
-    <Image Include="res\textures\height\gc_heightmap.png" />
-    <Image Include="res\textures\height\himalay_heightmap.png" />
-    <Image Include="res\textures\height\iceland_heightmap.png" />
-    <Image Include="res\textures\height\iraklio_heightmap.png" />
-    <Image Include="res\textures\height\japan_heightmap.png" />
-    <Image Include="res\textures\conatiner\matrix.jpg" />
-    <Image Include="res\textures\height\northIndia_heightmap.png" />
-    <Image Include="res\textures\height\sa_heightmap.png" />
-    <Image Include="res\textures\skybox\bsw\back.jpg" />
-    <Image Include="res\textures\skybox\bsw\bottom.jpg" />
-    <Image Include="res\textures\skybox\bsw\front.jpg" />
-    <Image Include="res\textures\skybox\bsw\left.jpg" />
-    <Image Include="res\textures\skybox\bsw\right.jpg" />
-    <Image Include="res\textures\skybox\bsw\top.jpg" />
-    <Image Include="res\textures\skybox\interstellar\back.tga" />
-    <Image Include="res\textures\skybox\interstellar\bottom.tga" />
-    <Image Include="res\textures\skybox\interstellar\front.tga" />
-    <Image Include="res\textures\skybox\interstellar\left.tga" />
-    <Image Include="res\textures\skybox\interstellar\right.tga" />
-    <Image Include="res\textures\skybox\interstellar\top.tga" />
-    <Image Include="res\textures\skybox\sp3\back.jpg" />
-    <Image Include="res\textures\skybox\sp3\bottom.jpg" />
-    <Image Include="res\textures\skybox\sp3\front.jpg" />
-    <Image Include="res\textures\skybox\sp3\left.jpg" />
-    <Image Include="res\textures\skybox\sp3\right.jpg" />
-    <Image Include="res\textures\skybox\sp3\top.jpg" />
-    <Image Include="res\textures\height\some_heightmap.png" />
-    <Image Include="res\textures\height\srilanka_heightmap.png" />
-    <Image Include="res\textures\SSanW2.png" />
-    <Image Include="res\textures\height\taipei_heightmap.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="res\textures\skybox\interstellar\README.TXT" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

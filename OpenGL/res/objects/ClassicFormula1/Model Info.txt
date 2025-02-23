@@ -1,0 +1,13 @@
+included formats:
+
+OBJ
+FBX
+3DS
+BLEND(use Blender to open / www.blender.org)
+
+Tris: 198,964
+Verts: 100,154
+Faces: 97,296
+
+If you want to use it as a low-poly (for a game maybe):
+decrease the level of subdivision.

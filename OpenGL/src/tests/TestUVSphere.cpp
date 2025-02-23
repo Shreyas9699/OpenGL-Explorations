@@ -36,7 +36,7 @@ namespace test
 		m_Renderer.reset();
 	}
 
-	void TestUVSphere::OnUpdate(Timestep deltaTime, GLFWwindow* win) 
+	void TestUVSphere::OnUpdate(Timestep deltaTime, GLFWwindow* m_Window)
 	{
 		m_cameraController.Update(deltaTime);
 		if (m_radius != m_prevRadius || m_segment != m_prevSegment || m_rings != m_prevRings)

@@ -4,181 +4,253 @@
 #include <iostream>
 #include <functional> 
 
-struct WindowProperties
-{
-    int xpos, ypos;
-    int width, height;
-};
-
 class Window
 {
-private:
-    std::string m_Title;
-    bool m_Fullscreen;
-    GLFWwindow* m_window;
-    float m_AspectRatio;
-    WindowProperties m_WindowedMode;
-    std::function<void(int, int, int, int)> m_CustomKeyCallback;
-
-    static void framebufferSizeCallback(GLFWwindow* window, int width, int height)
-    {
-        Window* windowInstance = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (windowInstance)
-        {
-            windowInstance->handleFramebufferResize(width, height);
-        }
-    }
-
-    static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-    {
-        Window* windowInstance = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (windowInstance)
-        {
-            windowInstance->handleKeyPress(key, scancode, action, mods);
-        }
-    }
-
 public:
-    Window(const std::string& title, WindowProperties winProp, bool fullscreen = false)
-        : m_Title(title)
-        , m_WindowedMode(winProp)
-        , m_Fullscreen(fullscreen)
-        , m_window(nullptr)
-    {
-        m_AspectRatio = float(winProp.width) / float(winProp.height);
-    }
+	// Constructor 1: Just title (default sizing, windowed mode)
+	Window(const std::string& title = "OpenGL Application")
+		: m_Title(title), m_Fullscreen(false) 
+	{
+		initialize();
+	}
 
-    void setCustomKeyCallback(std::function<void(int, int, int, int)> callback)
-    {
-        m_CustomKeyCallback = callback;
-    }
+	// Constructor 2: Title and fullscreen flag
+	Window(const std::string& title, bool fullscreen)
+		: m_Title(title), m_Fullscreen(fullscreen) 
+	{
+		initialize();
+	}
 
-    void toggleFullscreen()
-    {
-        m_Fullscreen = !m_Fullscreen;
+	// Constructor 3: Title and custom dimensions
+	Window(const std::string& title, int width, int height)
+		: m_Title(title), m_Fullscreen(false), m_WindowWidth(width), m_WindowHeight(height) 
+	{
+		initialize();
+	}
 
-        if (m_Fullscreen)
-        {
-            glfwGetWindowPos(m_window, &m_WindowedMode.xpos, &m_WindowedMode.ypos);
-            glfwGetWindowSize(m_window, &m_WindowedMode.width, &m_WindowedMode.height);
+	// Constructor 4: Title, custom dimensions, and fullscreen flag
+	Window(const std::string& title, int width, int height, bool fullscreen)
+		: m_Title(title), m_Fullscreen(fullscreen), m_WindowWidth(width), m_WindowHeight(height) 
+	{
+		initialize();
+	}
 
-            GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-            const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+	~Window()
+	{
+		if (m_Window)
+		{
+			glfwDestroyWindow(m_Window);
+			m_Window = nullptr;
+		}
+		glfwTerminate();
+	}
 
-            glfwSetWindowMonitor(m_window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-        }
-        else
-        {
-            // Return to windowed mode with previous position and size
-            glfwSetWindowMonitor(m_window, nullptr,
-                m_WindowedMode.xpos, m_WindowedMode.ypos,
-                m_WindowedMode.width, m_WindowedMode.height,
-                0);
-        }
-        m_AspectRatio = static_cast<float>(m_WindowedMode.width) / static_cast<float>(m_WindowedMode.height);
-    }
+	Window& setSize(int width, int height)
+	{
+		// This would need to resize an existing window
+		if (m_Window) {
+			glfwSetWindowSize(m_Window, width, height);
+			m_WindowWidth = width;
+			m_WindowHeight = height;
+			m_AspectRatio = static_cast<float>(width) / static_cast<float>(height);
+		}
+		return *this;
+	}
 
-    void handleFramebufferResize(int width, int height)
-    {
-        m_WindowedMode.width = width;
-        m_WindowedMode.height = height;
-        m_AspectRatio = static_cast<float>(width) / static_cast<float>(height);
-        glViewport(0, 0, width, height);
-    }
+	Window& setHint(int hint, int value)
+	{
+		m_WindowHints[hint] = value;
+		return *this;
+	}
 
-    void handleKeyPress(int key, int scancode, int action, int mods)
-    {
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        {
-            glfwSetWindowShouldClose(m_window, true);
-        }
-        else if (key == GLFW_KEY_F11 && action == GLFW_PRESS)
-        {
-            toggleFullscreen();
-        }
-        if (m_CustomKeyCallback)
-        {
-            m_CustomKeyCallback(key, scancode, action, mods);
-        }
-    }
+	void displayGPUDetails()
+	{
+		std::cout << "Vendor: " << glGetString(GL_VENDOR) << std::endl;
+		std::cout << "GPU: " << glGetString(GL_RENDERER) << std::endl;
+	}
 
-    bool init()
-    {
-        if (!glfwInit())
-        {
-            std::cerr << "Failed to initialize GLFW!" << std::endl;
-            return false;
-        }
-        m_window = glfwCreateWindow(m_WindowedMode.width, m_WindowedMode.height, m_Title.c_str(),
-            m_Fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+	void setCustomKeyCallback(std::function<void(int, int, int, int)> callback)
+	{
+		m_CustomKeyCallback = callback;
+	}
 
-        if (!m_window)
-        {
-            std::cerr << "Failed to create GLFW window!" << std::endl;
-            glfwTerminate();
-            return false;
-        }
+	void toggleFullscreen()
+	{
+		m_Fullscreen = !m_Fullscreen;
 
-        glfwMakeContextCurrent(m_window);
-        glfwSwapInterval(0);
+		if (m_Fullscreen)
+		{
+			glfwGetWindowPos(m_Window, &m_WindowX, &m_WindowY);
+			glfwGetWindowSize(m_Window, &m_WindowWidth,&m_WindowHeight);
 
-        // Enable OpenGL features
-        /*glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_MULTISAMPLE);*/
+			GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
-        glfwSetWindowUserPointer(m_window, this);
+			glfwSetWindowMonitor(m_Window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+		}
+		else
+		{
+			// Return to windowed mode with previous position and size
+			glfwSetWindowMonitor(
+				m_Window, nullptr,
+				m_WindowX, m_WindowY,
+				m_WindowWidth, m_WindowHeight,
+				0);
+		}
+		m_AspectRatio = static_cast<float>(m_WindowWidth) / static_cast<float>(m_WindowHeight);
+	}
 
-        // Use lambda functions to bind the instance
-        glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height)
-            {
-                Window* windowInstance = static_cast<Window*>(glfwGetWindowUserPointer(window));
-                if (windowInstance)
-                {
-                    windowInstance->handleFramebufferResize(width, height);
-                }
-            });
+	void handleFramebufferResize(int width, int height)
+	{
+		m_WindowWidth = width;
+		m_WindowHeight = height;
+		m_AspectRatio = static_cast<float>(width) / static_cast<float>(height);
+		glViewport(0, 0, width, height);
 
-        glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-            Window* windowInstance = static_cast<Window*>(glfwGetWindowUserPointer(window));
-            if (windowInstance)
-            {
-                windowInstance->handleKeyPress(key, scancode, action, mods);
-            }
-            });
+		std::cout << "Resized window size is: " << width << "x" << height << std::endl;
+		std::cout << "Aspect ratio: " << m_AspectRatio << std::endl;
+	}
 
-        //glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	void handleKeyPress(int key, int scancode, int action, int mods)
+	{
+		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		{
+			glfwSetWindowShouldClose(m_Window, true);
+		}
+		else if (key == GLFW_KEY_F11 && action == GLFW_PRESS)
+		{
+			toggleFullscreen();
+		}
+		if (m_CustomKeyCallback)
+		{
+			m_CustomKeyCallback(key, scancode, action, mods);
+		}
+	}
 
-        if (glewInit() != GLEW_OK)
-        {
-            std::cerr << "Failed to initialize GLEW!" << std::endl;
-            glfwTerminate();
-            return false;
-        }
-        glEnable(GL_DEPTH_TEST);
-        return true;
-    }
+	float GetAspectRatio() const 
+	{ 
+		return m_AspectRatio;
+	}
 
-    void OnUpdate()
-    {
-        glfwPollEvents();
-        glfwSwapBuffers(m_window);
-    }
+	GLFWwindow* GetWindow() const 
+	{ 
+		return m_Window; 
+	}
 
-    float getAspectRatio() const { return m_AspectRatio; }
-    GLFWwindow* getWindow() const { return m_window; }
-    void setKeyCallback(GLFWkeyfun callback) { glfwSetKeyCallback(m_window, callback); }
-    void setScrollCallback(GLFWscrollfun callback) { glfwSetScrollCallback(m_window, callback); }
-    void setCursorPositionCallback(GLFWcursorposfun callback) { glfwSetCursorPosCallback(m_window, callback); }
+	void setKeyCallback(GLFWkeyfun callback) 
+	{ 
+		glfwSetKeyCallback(m_Window, callback); 
+	}
 
-    ~Window()
-    {
-        if (m_window)
-        {
-            glfwDestroyWindow(m_window);
-            m_window = nullptr;
-        }
-        glfwTerminate();
-    }
+	void setScrollCallback(GLFWscrollfun callback) 
+	{ 
+		glfwSetScrollCallback(m_Window, callback); 
+	}
+
+	void setCursorPositionCallback(GLFWcursorposfun callback) 
+	{ 
+		glfwSetCursorPosCallback(m_Window, callback); 
+	}
+
+	void Update()
+	{
+		glfwPollEvents();
+		glfwSwapBuffers(m_Window);
+	}
+
+private:
+	std::string m_Title;
+	bool m_Fullscreen;
+	GLFWwindow* m_Window;
+	float m_AspectRatio;
+	int m_WindowX = 100, m_WindowY = 100;
+	int m_WindowWidth = -1, m_WindowHeight = -1;
+
+	std::function<void(int, int, int, int)> m_CustomKeyCallback;
+	std::unordered_map<int, int> m_WindowHints;
+
+	void initialize()
+	{
+		// Set default hints
+		m_WindowHints[GLFW_SAMPLES] = 4;
+		m_WindowHints[GLFW_CONTEXT_VERSION_MAJOR] = 4;
+		m_WindowHints[GLFW_CONTEXT_VERSION_MINOR] = 2;
+		m_WindowHints[GLFW_OPENGL_PROFILE] = GLFW_OPENGL_CORE_PROFILE;
+
+		// Initialize GLFW
+		if (!glfwInit())
+		{
+			throw std::runtime_error("Failed to initialize GLFW!");
+		}
+
+		// Apply hints
+		for (const auto& hint : m_WindowHints)
+		{
+			glfwWindowHint(hint.first, hint.second);
+		}
+
+		if (m_WindowWidth <= 0 || m_WindowHeight <= 0)
+		{
+			const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+			if (mode)
+			{
+				m_WindowWidth = static_cast<int>(mode->width * 0.75f);
+				m_WindowHeight = static_cast<int>(mode->height * 0.75f);
+			}
+			else
+			{
+				m_WindowWidth = 1280;
+				m_WindowHeight = 720;
+			}
+		}
+
+		m_AspectRatio = static_cast<float>(m_WindowWidth) / static_cast<float>(m_WindowHeight);
+
+		// Creating window
+		m_Window = glfwCreateWindow(
+			m_WindowWidth,
+			m_WindowHeight,
+			m_Title.c_str(),
+			m_Fullscreen ? glfwGetPrimaryMonitor() : nullptr,
+			nullptr);
+
+		if (!m_Window)
+		{
+			glfwTerminate();
+			throw std::runtime_error("Failed to create GLFW window!");
+		}
+
+		glfwMakeContextCurrent(m_Window);
+		glfwSwapInterval(0);
+
+		// Set up callbacks
+		glfwSetWindowUserPointer(m_Window, this);
+		glfwSetFramebufferSizeCallback(m_Window, framebufferSizeCallback);
+		glfwSetKeyCallback(m_Window, keyCallback);
+
+		// Initialize GLEW
+		if (glewInit() != GLEW_OK)
+		{
+			glfwTerminate();
+			throw std::runtime_error("Failed to initialize GLEW!");
+		}
+	}
+
+	static void framebufferSizeCallback(GLFWwindow* window, int width, int height)
+	{
+		Window* windowInstance = static_cast<Window*>(glfwGetWindowUserPointer(window));
+		if (windowInstance)
+		{
+			windowInstance->handleFramebufferResize(width, height);
+		}
+	}
+
+	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+	{
+		Window* windowInstance = static_cast<Window*>(glfwGetWindowUserPointer(window));
+		if (windowInstance)
+		{
+			windowInstance->handleKeyPress(key, scancode, action, mods);
+		}
+	}
 };

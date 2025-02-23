@@ -77,6 +77,10 @@ public:
     void ProcessMouseScroll(float yoffset);
     void printCameraDetails() const;
 
+    void SetCameraZoom(float val);
+    void SetCameraMovementSpeed(float val);
+    void SetMouseSensitivity(float val);
+
 private:
     void updateCameraVectors();
 };

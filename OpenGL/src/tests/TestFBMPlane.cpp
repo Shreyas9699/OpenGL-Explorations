@@ -5,14 +5,15 @@
 namespace test
 {
 	TestFBMPlane::TestFBMPlane(Window* win)
-		: m_window(win),
+		: m_Window(win),
 		  m_planeColor{ 0.2f, 0.6f, 0.8f, 1.0f },
 		  lightColor{ 1.0f, 1.0f, 1.0f , 1.0f },
 		  m_Camera(glm::vec3(-1.0f, 1.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, 0.0f),
-		  m_cameraController(win->getWindow(), m_Camera)
+		  m_cameraController(m_Window->GetWindow(), m_Camera)
 	{
+		glEnable(GL_DEPTH_TEST);
 		//glfwSetInputMode(m_window->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		m_window->setCustomKeyCallback([this](int key, int scancode, int action, int mods)
+		m_Window->setCustomKeyCallback([this](int key, int scancode, int action, int mods)
 			{
 				this->handleKeyPress(key, scancode, action, mods);
 			});
@@ -37,7 +38,7 @@ namespace test
 			"res/shaders/LightSphere/lightSphereFS.shader");
 		m_Renderer = std::make_unique<Renderer>();
 
-		lightPos = glm::vec3(0.0f, 1.0f, 0.0f);
+		lightPos = glm::vec3(0.0f, 1.75f, 0.0f);
 	}
 
 	TestFBMPlane::~TestFBMPlane()
@@ -52,8 +53,7 @@ namespace test
 		m_ShaderLightSrc.reset();
 		m_Renderer.reset();
 
-		m_window->setCustomKeyCallback(nullptr);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		m_Window->setCustomKeyCallback(nullptr);
 	}
 
 	void TestFBMPlane::GeneratePlane()
@@ -139,16 +139,16 @@ namespace test
 			cusorEnable = !cusorEnable;
 			if (cusorEnable)
 			{
-				glfwSetInputMode(m_window->getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			}
 			else
 			{
-				glfwSetInputMode(m_window->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			}
 		}
 	}
 
-	void TestFBMPlane::OnUpdate(Timestep deltaTime, GLFWwindow* win)
+	void TestFBMPlane::OnUpdate(Timestep deltaTime, GLFWwindow* window)
 	{
 		if (m_GridSizePrev != m_GridSize || m_PlaneSizePrev != m_PlaneSize)
 		{
@@ -212,6 +212,7 @@ namespace test
 		m_ShaderLightSrc->setMat4("model", model);
 		m_ShaderLightSrc->setVec3("lightColor", lightColor[0], lightColor[1], lightColor[2]);
 		m_ShaderLightSrc->Unbind();
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		m_Renderer->Draw(*m_sphere.VAO, *m_sphere.IBO ,*m_ShaderLightSrc);
 	}
 

@@ -52,7 +52,7 @@ namespace test
 		m_Renderer.reset();
     }
 
-	void TestTexture2D::OnUpdate(Timestep deltaTime, GLFWwindow* win)
+	void TestTexture2D::OnUpdate(Timestep deltaTime, GLFWwindow* m_Window)
 	{}
 
 	void TestTexture2D::OnRender()

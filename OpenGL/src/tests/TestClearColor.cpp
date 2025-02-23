@@ -14,7 +14,7 @@ namespace test
 	{
 	}
 
-	void TestClearColor::OnUpdate(Timestep deltaTime, GLFWwindow* win)
+	void TestClearColor::OnUpdate(Timestep deltaTime, GLFWwindow* m_Window)
 	{}
 
 	void TestClearColor::OnRender()

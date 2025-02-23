@@ -4,16 +4,17 @@
 
 namespace test
 {
-	TestHeightMap::TestHeightMap(Window* window)
-		: m_window(window),
+	TestHeightMap::TestHeightMap(Window* win)
+		: m_Window(win),
 		  m_Camera(glm::vec3(0.0f, 50.0f, 100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), -20.0f, 0.0f, 100.0f),
-		  m_cameraController(window->getWindow(), m_Camera)
+		  m_cameraController(m_Window->GetWindow(), m_Camera)
 	{
-		m_window->setCustomKeyCallback([this](int key, int scancode, int action, int mods)
+		glEnable(GL_DEPTH_TEST);
+		m_Window->setCustomKeyCallback([this](int key, int scancode, int action, int mods)
 			{
 				this->handleKeyPress(key, scancode, action, mods);
 			});
-		glfwSetInputMode(m_window->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);
 		std::cout << "Max available tess level: " << maxTessLevel << std::endl;
@@ -38,7 +39,7 @@ namespace test
 		m_Shader.reset();
 		m_Renderer.reset();
 
-		m_window->setCustomKeyCallback(nullptr);
+		m_Window->setCustomKeyCallback(nullptr);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
@@ -127,17 +128,17 @@ namespace test
 			cusorEnable = !cusorEnable;
 			if (cusorEnable)
 			{
-				glfwSetInputMode(m_window->getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			}
 			else
 			{
-				glfwSetInputMode(m_window->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			}
 		}
 
 	}
 
-	void TestHeightMap::OnUpdate(Timestep deltaTime, GLFWwindow* win)
+	void TestHeightMap::OnUpdate(Timestep deltaTime, GLFWwindow* window)
 	{
 		m_cameraController.Update(deltaTime);
 		if (texturePath != selectedFile)

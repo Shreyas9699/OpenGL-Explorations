@@ -9,8 +9,9 @@ namespace test
 		: m_Window(window),
 		  m_Color{ 1.0f, 0.5f, 0.31f, 1.0f },
 		  m_Camera(glm::vec3(-3.0f, 1.0f, -3.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, 0.0f),
-		  m_cameraController(window, m_Camera)
+		  m_cameraController(m_Window, m_Camera)
 	{
+		glEnable(GL_DEPTH_TEST);
 		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		std::vector<float> pyramidVertices = {
@@ -103,5 +104,4 @@ namespace test
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		ImGui::Text("FPS: %.1f (%.3f ms)", io.Framerate, 1000.0f / io.Framerate);
 	}
-
 }

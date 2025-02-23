@@ -9,6 +9,7 @@ namespace test
 		  m_Camera(glm::vec3(0.5f, 1.0f, 6.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), -90.0f, 0.0f),
 		  m_cameraController(window, m_Camera)
 	{
+		glEnable(GL_DEPTH_TEST);
 		float vertices[] = {
 			// positions          // normals           // texture coords
 			-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
@@ -109,13 +110,8 @@ namespace test
 		m_Renderer.reset();
 	}
 
-	void TestCubeWithTex::OnUpdate(Timestep deltaTime, GLFWwindow* win)
+	void TestCubeWithTex::OnUpdate(Timestep deltaTime, GLFWwindow* m_Window)
 	{
-		if (!win)
-		{
-			std::cout << "Window is not null" << std::endl;
-		}
-		
 		// Update camera settings based on camera movement
 		m_cameraController.Update(deltaTime);
 

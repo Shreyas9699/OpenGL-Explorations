@@ -3,7 +3,7 @@
 #include "Camera.h"
 #include "CameraController.h"
 #include "Texture.h"
-#include "../src/Window.h"
+#include "Window.h"
 #include <stb_image/stb_image.h>
 #include <filesystem>
 
@@ -11,7 +11,7 @@ namespace test
 {
 	class TestHeightMap : public Test
 	{
-		Window* m_window;
+		Window* m_Window;
 		GLint maxTessLevel;
 		//unsigned int texture;
 		//int m_nrChannels;
@@ -48,10 +48,10 @@ namespace test
 		void loadTexture();
 
 	public:
-		TestHeightMap(Window* window);
+		TestHeightMap(Window* win);
 		~TestHeightMap();
 
-		void OnUpdate(Timestep deltaTime, GLFWwindow* win);
+		void OnUpdate(Timestep deltaTime, GLFWwindow* window = nullptr) override;
 		void OnRender() override;
 		void OnImGuiRender() override;
 	};

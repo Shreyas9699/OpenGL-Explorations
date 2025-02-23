@@ -9,6 +9,7 @@ namespace test
 		  m_Camera(glm::vec3(-1.0f, 1.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, 0.0f),
 		  m_cameraController(window, m_Camera)
 	{
+		glEnable(GL_DEPTH_TEST);
 		float vertices[] = {
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -97,7 +98,7 @@ namespace test
 		m_ShaderLight.reset();
 	}
 
-	void TestCubeRendering::OnUpdate(Timestep deltaTime, GLFWwindow* win)
+	void TestCubeRendering::OnUpdate(Timestep deltaTime, GLFWwindow* m_Window)
 	{
 		m_cameraController.Update(deltaTime);
 
@@ -109,8 +110,7 @@ namespace test
 
 	void TestCubeRendering::OnRender()
 	{
-		GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
-		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT););
+		m_Renderer->Clear();
 
 		m_ShaderCube->Bind();
 		m_ShaderCube->setVec3("viewPos", m_Camera.Position);
