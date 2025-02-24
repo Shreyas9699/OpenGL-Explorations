@@ -48,7 +48,21 @@ public:
     void Draw(Shader& shader)
     {
         for (unsigned int i = 0; i < meshes.size(); i++)
+        {
             meshes[i].Draw(shader);
+        }
+    }
+
+    void drawNormals()
+    {
+        for (const auto& mesh : meshes)
+        {
+            // Bind the normal vertices
+            //std::cout << "Inside drawNormals() function \n";
+            glBindVertexArray(mesh.VAO);
+            glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+        }
     }
 
 private:
@@ -245,11 +259,11 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         stbi_image_free(data);
-        std::cout << "    STBI::stbi_load Texture Loaded OK: " << filename << std::endl;
+        std::cout << "    STBI::stbi_load Texture Loaded OK: " << path << std::endl;
     }
     else
     {
-        std::cerr << "    ERROR::STBI::stbi_load failed to load the Texture: " << filename << std::endl;
+        std::cerr << "    ERROR::STBI::stbi_load failed to load the Texture: " << path << std::endl;
         stbi_image_free(data);
     }
 

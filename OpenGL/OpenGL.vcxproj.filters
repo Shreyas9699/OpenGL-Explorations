@@ -477,8 +477,12 @@
     <None Include="res\objects\knight\armor2021.mtl" />
     <None Include="res\objects\apolloExterior\apollo_exterior-top-master.mtl" />
     <None Include="res\objects\apolloExterior\apollo_exterior-shell-master.mtl" />
-    <None Include="res\shaders\modelVertexShader.glsl" />
-    <None Include="res\shaders\modelFragmentShader.glsl" />
+    <None Include="res\shaders\LoadModel\modelVertexShader.glsl" />
+    <None Include="res\shaders\LoadModel\modelFragmentShader.glsl" />
+    <None Include="res\shaders\LoadModel\NormalVS.glsl" />
+    <None Include="res\shaders\LoadModel\NormalFS.glsl" />
+    <None Include="res\shaders\LoadModel\NormalGS.glsl" />
+    <None Include="res\shaders\Heightmap\heightmapNormalFS.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">

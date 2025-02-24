@@ -12,7 +12,8 @@ uniform sampler2D texture_diffuse1;
 uniform vec3 lightPos;
 uniform vec3 camera_position;
 uniform vec3 lightColor;
-//uniform vec3 objectColor;
+uniform bool useTexture;
+uniform vec3 objectColor;
 
 void main()
 {
@@ -34,5 +35,12 @@ void main()
     vec3 specular = specularStrength * spec * lightColor;
 
     vec3 result = ambient + diffuse + specular;
-    FragColor = texture(texture_diffuse1, TexCoords) * vec4(result, 1.0);
+    if(useTexture) 
+    {
+        FragColor = texture(texture_diffuse1, TexCoords) * vec4(result, 1.0);
+    }
+    else
+    {
+        FragColor = vec4(objectColor * result, 1.0);
+    }
 }

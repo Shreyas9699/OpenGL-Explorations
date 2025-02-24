@@ -19,9 +19,11 @@ namespace test
 			});
 		glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		m_Shader = std::make_unique<Shader>("res/shaders/modelVertexShader.glsl", "res/shaders/modelFragmentShader.glsl");
+		m_Shader = std::make_unique<Shader>("res/shaders/LoadModel/modelVertexShader.glsl", "res/shaders/LoadModel/modelFragmentShader.glsl");
+		m_ShaderNormal = std::make_unique<Shader>("res/shaders/LoadModel/NormalVS.glsl", "res/shaders/LoadModel/NormalFS.glsl",
+			"res/shaders/LoadModel/NormalGS.glsl");
 
-		currModelPath = "res/objects/knight/armor2021.obj"; //"res/objects/knight/armor2021.obj";
+		currModelPath = "res/objects/testCube.obj"; //"res/objects/knight/armor2021.obj"; 
 		selectedModel = currModelPath;
 		m_Model = std::make_unique<Model>(std::filesystem::absolute(currModelPath).string());
 	}
@@ -31,6 +33,8 @@ namespace test
 		m_Model.reset();
 		m_Shader->Unbind();
 		m_Shader.reset();
+		m_ShaderNormal->Unbind();
+		m_ShaderNormal.reset();
 
 		m_Window->setCustomKeyCallback(nullptr);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -95,6 +99,7 @@ namespace test
 		m_Shader->use();
 		m_Shader->setVec3("lightPos", 0.0f, 10.0f, 2.0f);
 		m_Shader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		m_Shader->setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
 		m_Shader->setVec3("camera_position", m_Camera.Position);
 
 		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), 0.1f, 10000.0f);
@@ -117,6 +122,18 @@ namespace test
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 		m_Model->Draw(*m_Shader);
+
+		if (showNormals)
+		{
+			m_ShaderNormal->use();
+			m_ShaderNormal->setMat4("projection", projection);
+			m_ShaderNormal->setMat4("view", view);
+			m_ShaderNormal->setMat4("model", model);
+			m_ShaderNormal->setFloat("normal_length", 0.3f); // Adjust length as needed
+
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			m_Model->drawNormals();
+		}
 	}
 
 	void TestLoadModels::ShowFileExplorer()
@@ -176,11 +193,6 @@ namespace test
 			ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
 			ImGui::OpenPopup("File Explorer");
 		}
-		
-		/*if (showFileExplorer)
-		{
-			ShowFileExplorer();
-		}*/
 
 		// Begin the popup
 		if (ImGui::BeginPopupModal("File Explorer", nullptr,
@@ -188,9 +200,8 @@ namespace test
 			ImGuiWindowFlags_NoDocking |
 			ImGuiWindowFlags_NoSavedSettings))
 		{
-			ShowFileExplorer();  // Draw the file explorer contents
+			ShowFileExplorer();
 
-			// Optional: a close button for the popup
 			if (ImGui::Button("Close"))
 			{
 				ImGui::CloseCurrentPopup();
@@ -209,5 +220,10 @@ namespace test
 		ImGui::Text("`T` -> WireFrame View  ->");
 		ImGui::SameLine();
 		ImGui::TextColored(color, " [%s]\n", (isWireFrame) ? "ENABLED" : "DISABLED");
+
+		color = showNormals ? enabledColor : disabledColor;
+		ImGui::Text("`N` -> Normal ->");
+		ImGui::SameLine();
+		ImGui::TextColored(color, " [%s]\n", (showNormals) ? "ENABLED" : "DISABLED");
 	}
 }

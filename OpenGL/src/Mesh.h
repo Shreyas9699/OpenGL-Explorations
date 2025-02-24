@@ -42,6 +42,7 @@ public:
     std::vector<unsigned int> indices;
     std::vector<TextureData>      textures;
     unsigned int VAO;
+    bool hasTextures = false;
 
     // constructor
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<TextureData> textures)
@@ -96,8 +97,9 @@ public:
             glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
             // and finally bind the texture
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
+            hasTextures = true;
         }
-
+        shader.setBool("useTexture", hasTextures);
         // draw mesh
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);

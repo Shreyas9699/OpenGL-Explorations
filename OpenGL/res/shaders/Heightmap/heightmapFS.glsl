@@ -24,23 +24,27 @@ vec3 calculateNormal(vec2 texCoord)
 void main()
 {
     float edgeThreshold = 0.01;
-    // based on rez, the actual grid would be lot more and doesnt look good visuallly, hence halved
-    vec2 uv = TexCoord_TES * numGrids / 32.0f;
+    vec2 uv = TexCoord_TES * numGrids / 32.0;
     vec2 grid = mod(uv, 1.0);
-    float h = (Height + 16)/64.0f;
+    float h = (Height + 16.0)/64.0;
 
-    // Always set the base height color
     vec4 baseColor = vec4(h, h, h, 1.0);
 
     if (enableGrid && (grid.x < edgeThreshold || grid.y < edgeThreshold)) 
     {
         baseColor = vec4(1.0, 0.0, 0.0, 1.0);
     } 
-    if(showNormals)
+
+    if (showNormals)
     {
+        // normal color is not coming properly
         vec3 normal = calculateNormal(TexCoord_TES);
-        vec4 normalColor = vec4(normal * 0.5 + 0.5, 1.0);
-        baseColor = mix(baseColor, normalColor, 0.5); 
+        vec4 normalColor = vec4(1.0, 1.0, 0.0, 1.0);
+        float intensity =  0.0;
+        if(abs(dot(normal, vec3(0.0, 1.0, 0.0))) < 0.99)
+            intensity = 1.0;
+        baseColor = mix(baseColor, normalColor, intensity);
     }
+
     FragColor = baseColor;
 }

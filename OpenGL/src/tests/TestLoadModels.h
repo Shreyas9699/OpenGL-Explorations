@@ -13,6 +13,7 @@ namespace test
 	{
 		Window* m_Window;
 		std::unique_ptr<Shader> m_Shader;
+		std::unique_ptr<Shader> m_ShaderNormal;
 		std::unique_ptr<Model> m_Model;
 		Camera m_Camera;
 		CameraController m_cameraController;

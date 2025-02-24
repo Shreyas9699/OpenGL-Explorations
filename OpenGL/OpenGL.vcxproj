@@ -114,6 +114,7 @@
     <None Include="res\shaders\FBM\VertexFBMShader.glsl" />
     <None Include="res\shaders\Heightmap\heightmapFS.glsl" />
     <None Include="res\shaders\Heightmap\heightmapGS.glsl" />
+    <None Include="res\shaders\Heightmap\heightmapNormalFS.glsl" />
     <None Include="res\shaders\Heightmap\heightmapTCS.glsl" />
     <None Include="res\shaders\Heightmap\heightmapTES.glsl" />
     <None Include="res\shaders\Heightmap\heightmapVS.glsl" />
@@ -122,10 +123,13 @@
     <None Include="res\shaders\LightSphere\GS.shader" />
     <None Include="res\shaders\LightSphere\lightSphereFS.shader" />
     <None Include="res\shaders\LightSphere\lightSphereVS.shader" />
-    <None Include="res\shaders\modelFragmentShader.glsl" />
-    <None Include="res\shaders\modelVertexShader.glsl" />
+    <None Include="res\shaders\LoadModel\modelFragmentShader.glsl" />
+    <None Include="res\shaders\LoadModel\modelVertexShader.glsl" />
     <None Include="res\shaders\LightSphere\TCS.shader" />
     <None Include="res\shaders\LightSphere\TES.shader" />
+    <None Include="res\shaders\LoadModel\NormalFS.glsl" />
+    <None Include="res\shaders\LoadModel\NormalGS.glsl" />
+    <None Include="res\shaders\LoadModel\NormalVS.glsl" />
     <None Include="res\shaders\QuadShaderFS.shader" />
     <None Include="res\shaders\QuadShaderVS.shader" />
     <None Include="res\shaders\shader_glsl.frag" />

@@ -22,6 +22,9 @@ namespace test
 		m_Shader = std::make_unique<Shader>("res/shaders/Heightmap/heightmapVS.glsl", "res/shaders/Heightmap/heightmapFS.glsl",
 			nullptr, "res/shaders/Heightmap/heightmapTCS.glsl", "res/shaders/Heightmap/heightmapTES.glsl");
 
+		m_NormalShader = std::make_unique<Shader>("res/shaders/Heightmap/heightmapVS.glsl", "res/shaders/Heightmap/heightmapFS.glsl",
+			"res/shaders/Heightmap/heightmapGS.glsl", "res/shaders/Heightmap/heightmapTCS.glsl", "res/shaders/Heightmap/heightmapTES.glsl");
+
 		texturePath = "res/textures/height/deccan_heightmap.png";
 		selectedFile = texturePath;
 		loadTexture();
@@ -187,6 +190,21 @@ namespace test
 		}
 		glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
 		m_Shader->Unbind();
+
+		if (showNormals)
+		{
+			m_NormalShader->Bind();
+			// Set the same uniforms as main shader
+			m_NormalShader->setMat4("view", view);
+			m_NormalShader->setMat4("projection", projection);
+			m_NormalShader->setMat4("model", model);
+			m_NormalShader->setVec2("uTexelSize", { 1.0f / m_width, 1.0f / m_height });
+			m_NormalShader->setFloat("normalLength", 2.0f); // Adjust length as needed
+
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
+			m_NormalShader->Unbind();
+		}
 	}
 
 	void TestHeightMap::ShowFileExplorer()
