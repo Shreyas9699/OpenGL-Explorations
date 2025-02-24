@@ -4,7 +4,7 @@
 #include "CameraController.h"
 #include "Texture.h"
 #include "Window.h"
-#include "load_model_meshes.h"
+#include "Model.h"
 #include <filesystem>
 
 namespace test
@@ -13,7 +13,7 @@ namespace test
 	{
 		Window* m_Window;
 		std::unique_ptr<Shader> m_Shader;
-		std::unique_ptr<Model> model_testing;
+		std::unique_ptr<Model> m_Model;
 		Camera m_Camera;
 		CameraController m_cameraController;
 		bool isWireFrame = false;
@@ -21,9 +21,6 @@ namespace test
 		bool cusorEnable = false;
 		bool renderPointsOnly = false;
 		bool showNormals = false;
-
-		const unsigned int NUM_PATCH_PTS = 4;
-		unsigned int rez = 20;
 
 		//std::vector<const char*> heightmaps = {};
 		float errorMessageTime = 0.0f;

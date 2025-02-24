@@ -43,8 +43,6 @@
     <None Include="res\shaders\Heightmap\heightmapGS.glsl" />
     <None Include="res\shaders\3DtexFS.glsl" />
     <None Include="res\shaders\3DtexVS.glsl" />
-    <None Include="res\shaders\modelFS.glsl" />
-    <None Include="res\shaders\modelVS.glsl" />
     <None Include="imgui.ini" />
     <None Include="src\vendor\glm\gtx\associated_min_max.inl">
       <Filter>Header Files</Filter>
@@ -479,6 +477,8 @@
     <None Include="res\objects\knight\armor2021.mtl" />
     <None Include="res\objects\apolloExterior\apollo_exterior-top-master.mtl" />
     <None Include="res\objects\apolloExterior\apollo_exterior-shell-master.mtl" />
+    <None Include="res\shaders\modelVertexShader.glsl" />
+    <None Include="res\shaders\modelFragmentShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">
@@ -1897,13 +1897,16 @@
     <ClInclude Include="Core\Timestep.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\load_model_meshes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\tests\TestLoadModels.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

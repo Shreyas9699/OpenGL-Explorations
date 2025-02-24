@@ -122,10 +122,10 @@
     <None Include="res\shaders\LightSphere\GS.shader" />
     <None Include="res\shaders\LightSphere\lightSphereFS.shader" />
     <None Include="res\shaders\LightSphere\lightSphereVS.shader" />
+    <None Include="res\shaders\modelFragmentShader.glsl" />
+    <None Include="res\shaders\modelVertexShader.glsl" />
     <None Include="res\shaders\LightSphere\TCS.shader" />
     <None Include="res\shaders\LightSphere\TES.shader" />
-    <None Include="res\shaders\modelFS.glsl" />
-    <None Include="res\shaders\modelVS.glsl" />
     <None Include="res\shaders\QuadShaderFS.shader" />
     <None Include="res\shaders\QuadShaderVS.shader" />
     <None Include="res\shaders\shader_glsl.frag" />
@@ -442,7 +442,8 @@
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\CameraController.h" />
     <ClInclude Include="src\IndexBuffer.h" />
-    <ClInclude Include="src\load_model_meshes.h" />
+    <ClInclude Include="src\Mesh.h" />
+    <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\Shader_t.h" />
     <ClInclude Include="src\tests\Material.h" />

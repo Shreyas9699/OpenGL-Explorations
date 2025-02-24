@@ -19,21 +19,16 @@ namespace test
 			});
 		glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		m_Shader = std::make_unique<Shader>("res/shaders/modelVS.glsl", "res/shaders/modelFS.glsl");
+		m_Shader = std::make_unique<Shader>("res/shaders/modelVertexShader.glsl", "res/shaders/modelFragmentShader.glsl");
 
-		m_Shader->use();
-		m_Shader->setVec3("lightPos", 10.0f, 10.0f, 10.0f);
-		m_Shader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-		m_Shader->Unbind();
-
-		currModelPath = "res/objects/model_testing.obj";
+		currModelPath = "res/objects/knight/armor2021.obj"; //"res/objects/knight/armor2021.obj";
 		selectedModel = currModelPath;
-		model_testing = std::make_unique<Model>(currModelPath.c_str());
+		m_Model = std::make_unique<Model>(std::filesystem::absolute(currModelPath).string());
 	}
 
 	TestLoadModels::~TestLoadModels()
 	{
-		model_testing.reset();
+		m_Model.reset();
 		m_Shader->Unbind();
 		m_Shader.reset();
 
@@ -65,16 +60,16 @@ namespace test
 			if (cusorEnable)
 			{
 				glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-				m_Camera.Position = glm::vec3(0.0f, 0.0f, 5.0f);
+				/*m_Camera.Position = glm::vec3(0.0f, 0.0f, 5.0f);
 				m_Camera.Up = glm::vec3(0.0f, 1.0f, 0.0f);
-				m_Camera.Front = glm::vec3(0.0f, 0.0f, 0.0f);
+				m_Camera.Front = glm::vec3(0.0f, 0.0f, 0.0f);*/
 			}
 			else
 			{
 				glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-				m_Camera.Position = glm::vec3(0.0f, 0.0f, 5.0f);
+				/*m_Camera.Position = glm::vec3(0.0f, 0.0f, 5.0f);
 				m_Camera.Up = glm::vec3(0.0f, 1.0f, 0.0f);
-				m_Camera.Front = glm::vec3(0.0f, 0.0f, 0.0f);
+				m_Camera.Front = glm::vec3(0.0f, 0.0f, 0.0f);*/
 			}
 		}
 
@@ -87,21 +82,32 @@ namespace test
 		if (selectedModel != currModelPath)
 		{
 			currModelPath = selectedModel;
-			model_testing.reset();
-			model_testing = std::make_unique<Model>(currModelPath.c_str());
+			m_Model.reset();
+			m_Model = std::make_unique<Model>(std::filesystem::absolute(currModelPath).string());
 		}
 	}
 
 	void TestLoadModels::OnRender()
 	{
-		GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
+		GLCall(glClearColor(0.3f, 0.3f, 0.3f, 1.0f));
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
 		m_Shader->use();
-		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), 0.1f, 100.0f);
-		m_Shader->setMat4("model", glm::mat4(1.0f));
-		m_Shader->setMat4("view", m_Camera.GetViewMatrix());
-		m_Shader->setVec3("viewPos", m_Camera.Position);
+		m_Shader->setVec3("lightPos", 0.0f, 10.0f, 2.0f);
+		m_Shader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		m_Shader->setVec3("camera_position", m_Camera.Position);
+
+		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), 0.1f, 10000.0f);
+		glm::mat4 view = m_Camera.GetViewMatrix();
+		m_Shader->setMat4("view", view);
 		m_Shader->setMat4("projection", projection);
+
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+		m_Shader->setMat4("model", model);
+		
 		if (isWireFrame)
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -110,23 +116,7 @@ namespace test
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-		for (unsigned int i = 0; i < model_testing->num_meshes; ++i)
-		{
-			m_Shader->setVec3("diffuseColor", model_testing->mesh_list[i].diffuseColor.r, model_testing->mesh_list[i].diffuseColor.g,
-		        model_testing->mesh_list[i].diffuseColor.b);
-			m_Shader->setBool("isTex", model_testing->mesh_list[i].hasTexture);
-		    
-		    if (model_testing->mesh_list[i].hasTexture)
-		    {
-		        glActiveTexture(GL_TEXTURE0);
-		        glBindTexture(GL_TEXTURE_2D, model_testing->mesh_list[i].tex_handle); // Bind texture for the current mesh
-		    }
-		
-		    glBindVertexArray(model_testing->mesh_list[i].VAO);
-		    glDrawElements(GL_TRIANGLES, (GLsizei)model_testing->mesh_list[i].vert_indices.size(), GL_UNSIGNED_INT, 0);
-		    glBindVertexArray(0);
-		}
-		m_Shader->Unbind();
+		m_Model->Draw(*m_Shader);
 	}
 
 	void TestLoadModels::ShowFileExplorer()
@@ -219,20 +209,5 @@ namespace test
 		ImGui::Text("`T` -> WireFrame View  ->");
 		ImGui::SameLine();
 		ImGui::TextColored(color, " [%s]\n", (isWireFrame) ? "ENABLED" : "DISABLED");
-
-		/*color = dynamicTess ? enabledColor : disabledColor;
-		ImGui::Text("`E` -> Dynamic Tessellation ->");
-		ImGui::SameLine();
-		ImGui::TextColored(color, " [%s]\n", (dynamicTess) ? "ENABLED" : "DISABLED");
-
-		color = renderPointsOnly ? enabledColor : disabledColor;
-		ImGui::Text("`P` -> Tessellated Points ->");
-		ImGui::SameLine();
-		ImGui::TextColored(color, " [%s]\n", (renderPointsOnly) ? "ENABLED" : "DISABLED");
-
-		color = showNormals ? enabledColor : disabledColor;
-		ImGui::Text("`N` -> Normal ->");
-		ImGui::SameLine();
-		ImGui::TextColored(color, " [%s]\n", (showNormals) ? "ENABLED" : "DISABLED");*/
 	}
 }
