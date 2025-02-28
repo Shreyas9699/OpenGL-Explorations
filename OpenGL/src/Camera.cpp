@@ -9,7 +9,7 @@ glm::mat4 Camera::GetViewMatrix() const
 // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
-    float velocity = MovementSpeed * deltaTime;
+    float velocity = MovementSpeed * deltaTime * outlier;
     if (direction == FORWARD)
         Position += Front * velocity;
     if (direction == BACKWARD)
@@ -100,6 +100,6 @@ void Camera::printCameraDetails() const
 
 void Camera::SetCameraZoom(float val) { Zoom = val; }
 
-void Camera::SetCameraMovementSpeed(float val) { MovementSpeed = val; }
+void Camera::IncreaseOutlier(float val) { outlier = val; }
 
 void Camera::SetMouseSensitivity(float val) { MouseSensitivity = val; }

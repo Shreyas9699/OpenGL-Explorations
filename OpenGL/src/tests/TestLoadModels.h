@@ -23,6 +23,9 @@ namespace test
 		bool renderPointsOnly = false;
 		bool showNormals = false;
 
+		float normalLength = 0.3f;
+		glm::vec3 lightPosition = glm::vec3(0.0f, 15.0f, 5.0f);
+
 		//std::vector<const char*> heightmaps = {};
 		float errorMessageTime = 0.0f;
 		std::string errorMessage;

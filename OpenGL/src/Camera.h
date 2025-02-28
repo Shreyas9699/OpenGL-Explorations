@@ -33,6 +33,7 @@ public:
     float Pitch;
     // camera options
     float MovementSpeed;
+    float outlier = 1.0f;
     float MouseSensitivity;
     float Zoom;
 
@@ -78,7 +79,7 @@ public:
     void printCameraDetails() const;
 
     void SetCameraZoom(float val);
-    void SetCameraMovementSpeed(float val);
+    void IncreaseOutlier(float val);
     void SetMouseSensitivity(float val);
 
 private:

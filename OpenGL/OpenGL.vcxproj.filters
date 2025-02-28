@@ -483,6 +483,12 @@
     <None Include="res\shaders\LoadModel\NormalFS.glsl" />
     <None Include="res\shaders\LoadModel\NormalGS.glsl" />
     <None Include="res\shaders\Heightmap\heightmapNormalFS.glsl" />
+    <None Include="res\objects\1903WrightFlyer\wrightflyer_joined_fullRes.mtl" />
+    <None Include="res\objects\bell_x1LowRes\bell_x1-full_resolution.mtl" />
+    <None Include="res\shaders\infiniteGrid\InfiPlaneFragmentShader.glsl" />
+    <None Include="res\shaders\infiniteGrid\InfiPlaneVertexShader.glsl" />
+    <None Include="res\shaders\ParticleSysCPU\vertexShader.glsl" />
+    <None Include="res\shaders\ParticleSysCPU\fragmentShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">
@@ -851,6 +857,15 @@
     <Image Include="res\objects\apolloExterior\x3d-cm-exterior-shell-90k-comp-4k.tif">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="res\objects\bell_x1LowRes\bell_x1_diffuse.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\objects\bell_x1LowRes\bell_x1_normal_max.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\objects\bell_x1LowRes\bell_x1_occlusion.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Text Include="res\textures\skybox\interstellar\README.TXT" />
@@ -912,7 +927,7 @@
     <ClCompile Include="src\vendor\glm\detail\glm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\tests\Material.cpp">
+    <ClCompile Include="src\Material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\tests\Test.cpp">
@@ -949,6 +964,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\tests\TestLoadModels.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\XZPlaneGrid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParticleSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Random.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\TestParticleCPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1856,10 +1883,10 @@
     <ClInclude Include="src\vendor\glm\detail\type_vec4.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\tests\Material.h">
+    <ClInclude Include="src\Material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\tests\Sphere.h">
+    <ClInclude Include="src\Sphere.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\tests\Test.h">
@@ -1911,6 +1938,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\XZPlaneGrid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Random.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\TestParticleCPU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Particle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

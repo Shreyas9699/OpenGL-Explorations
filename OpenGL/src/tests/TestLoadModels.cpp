@@ -2,11 +2,15 @@
 #include "imgui/imgui.h"
 #include <iostream>
 
+// gui to sslect type of lightning (pointing, directional)
+// change light pos and color (render light sphere)
+// change camera speed
+
 namespace test
 {
 	TestLoadModels::TestLoadModels(Window* window)
 		: m_Window(window),
-		  m_Camera(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)),
+		  m_Camera(glm::vec3(0.0f, 0.0f, 15.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)),
 		  m_cameraController(m_Window->GetWindow(), m_Camera)
 	{
 		glEnable(GL_DEPTH_TEST);
@@ -88,6 +92,23 @@ namespace test
 			currModelPath = selectedModel;
 			m_Model.reset();
 			m_Model = std::make_unique<Model>(std::filesystem::absolute(currModelPath).string());
+			std::string ObjName = selectedModel.substr(selectedModel.find_last_of("/") + 1);
+			//std::cout << ObjName;
+			if (strcmp(ObjName.c_str(), "bell_x1_mesh.obj") == 0
+				|| strcmp(ObjName.c_str(), "WhiteBeard.obj") == 0
+				)
+			{
+				m_Camera.IncreaseOutlier(200.0f);
+				lightPosition = glm::vec3(0.0f, 1500.0f, -1500.0f);
+				normalLength = 2.0f;
+			}
+			else
+			{
+				m_Camera.IncreaseOutlier(1.0f);
+				m_Camera.Position = glm::vec3(0.0f, 0.0f, 5.0f);
+				lightPosition = glm::vec3(0.0f, 0.0f, 15.0f);
+				normalLength = 0.3f;
+			}
 		}
 	}
 
@@ -97,7 +118,7 @@ namespace test
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		m_Shader->use();
-		m_Shader->setVec3("lightPos", 0.0f, 10.0f, 2.0f);
+		m_Shader->setVec3("lightPos", lightPosition);
 		m_Shader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 		m_Shader->setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
 		m_Shader->setVec3("camera_position", m_Camera.Position);
@@ -129,7 +150,7 @@ namespace test
 			m_ShaderNormal->setMat4("projection", projection);
 			m_ShaderNormal->setMat4("view", view);
 			m_ShaderNormal->setMat4("model", model);
-			m_ShaderNormal->setFloat("normal_length", 0.3f); // Adjust length as needed
+			m_ShaderNormal->setFloat("normal_length", normalLength); // Adjust length as needed
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			m_Model->drawNormals();

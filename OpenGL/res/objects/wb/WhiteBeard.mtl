@@ -17,7 +17,7 @@ Kd 1.000 1.000 1.000
 Ks 0.500 0.500 0.500  
 Ns 100.000            
 d 1.0                 
-illum 2               
+illum 2              
 
 # Assign body texture
 map_Kd body_texture.png
