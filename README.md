@@ -12,6 +12,8 @@ This repository is a learning project that explores the fundamentals of 3D rende
   - Cube With Texture and Lighting
   - Fractal Brownian Motion Plane With Lighting
   - Load and Tessellate Height Map
+  - Load 3D model using Assimp
+  - Particles in 3D (Implements in CPU)
 
 ## Getting Started
 You can follow same instrunctions on `https://github.com/Shreyas9699/opengl-base-template` to set it up.
