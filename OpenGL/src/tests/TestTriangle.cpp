@@ -18,7 +18,7 @@ namespace test
 		m_IB = std::make_unique<IndexBuffer>(indices, sizeof(indices));
 		m_Renderer = std::make_unique<Renderer>();
 
-		m_Shader = std::make_unique<Shader>("res/shaders/BasicShaderVS.shader", "res/shaders/BasicShaderFS.shader");
+		m_Shader = std::make_unique<Shader>("res/shaders/Basic/BasicShaderVS.glsl", "res/shaders/Basic/BasicShaderFS.glsl");
 		m_Shader->Bind();
 		m_Shader->setVec4("u_Color", m_Color[0], m_Color[1], m_Color[2], m_Color[3]);
 	}

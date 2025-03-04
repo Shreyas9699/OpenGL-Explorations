@@ -73,12 +73,12 @@ namespace test
 		layout.Push<float>(2);
 		m_VA->AddBuffer(*m_VB, layout);
 
-		m_ShaderCube = std::make_unique<Shader>("res/shaders/CubrWithTexVS.shader", "res/shaders/CubrWithTexFS.shader");
-		m_ShaderLight = std::make_unique<Shader>("res/shaders/lightCubeVS.shader", "res/shaders/lightCubeFS.shader");
+		m_ShaderCube = std::make_unique<Shader>("res/shaders/Cube/CubeWithTexVS.glsl", "res/shaders/Cube/CubeWithTexFS.glsl");
+		m_ShaderLight = std::make_unique<Shader>("res/shaders/Cube/lightCubeVS.glsl", "res/shaders/Cube/lightCubeFS.glsl");
 
-		m_TextureDiffuse = std::make_unique<Texture>("res/textures/conatiner/container2.png");
-		m_TextureSpecular = std::make_unique<Texture>("res/textures/conatiner/container2_specular.png");
-		m_EmissionMap = std::make_unique<Texture>("res/textures/conatiner/container2_emissionMap.png");
+		m_TextureDiffuse = std::make_unique<Texture>("res/textures/container/container2.png");
+		m_TextureSpecular = std::make_unique<Texture>("res/textures/container/container2_specular.png");
+		m_EmissionMap = std::make_unique<Texture>("res/textures/container/container2_emissionMap.png");
 
 		m_Renderer = std::make_unique<Renderer>();
 

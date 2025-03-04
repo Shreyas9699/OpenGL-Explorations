@@ -40,8 +40,18 @@ private:
     std::function<glm::vec3()> m_PositionGenerator;
     std::function<glm::vec3()> m_VelocityGenerator;
 
-    glm::vec3 GeneratePosition();       // Generates positions based on emitter shape
-    glm::vec3 GenerateVelocity();       // Generates velocities based on emitter shape
+    std::function<glm::vec3()> GeneratePosition();            // Generates positions based on emitter shape
+    glm::vec3 GeneratePointPosition();
+    glm::vec3 GenerateSpherePosition();
+    glm::vec3 GenerateConePosition();
+    glm::vec3 GenerateBoxPosition();
+    std::function<glm::vec3()> GenerateVelocity();            // Generates velocities based on emitter shape
+    glm::vec3 GeneratePointVelocity();
+    glm::vec3 GenerateSphereVelocity();
+    glm::vec3 GenerateConeVelocity();
+    glm::vec3 GenerateBoxVelocity();
+    void UpdateGenerators();
+    
     void CreateParticle();              // Create a single particle
 
 public:
@@ -52,12 +62,16 @@ public:
     void Render(Shader& m_Shader);
 
     void CreateParticles(float delta);
-    void Destory(unsigned int id);
+    void Destroy(unsigned int id);
     void DeleteInactiveParticles();
 
     void SetForce(const glm::vec3& force);
 
-    void SetEmitter(const EmitterProperties& emitterProp) { m_Emitter = emitterProp; }
+    void SetEmitter(const EmitterProperties& emitterProp) 
+    { 
+        m_Emitter = emitterProp;
+        UpdateGenerators();
+    }
     void SetEmitterPosition(const glm::vec3& position) { m_Emitter.position = position; }
     void SetEmitterRotation(const glm::vec3& rotation) { m_Emitter.rotation = rotation; }
     void SetEmitterShape(EmitterShape shape) { m_Emitter.shape = shape; }

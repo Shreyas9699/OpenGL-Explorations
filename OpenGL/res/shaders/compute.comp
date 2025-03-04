@@ -1,0 +1,64 @@
+#version 430 core
+layout (std140, binding = 1) buffer Pos
+{
+    vec4 Positions[];
+};
+
+layout (std140, binding = 2) buffer Vel
+{
+    vec4 Velocities[];
+};
+
+layout (std140, binding = 3) buffer Col
+{
+    vec4 Colors[];
+};
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+const vec3 G = vec3(3.0f, -2.0f, 3.f);
+const float DT = 0.1;
+
+const vec4 colorBegin = vec4(1.0, 1.0, 1.0, 1.0);
+const vec4 colorMid1 = vec4(1.0, 0.8, 0.0, 1.0);
+const vec4 colorMid2 = vec4(1.0, 0.2, 0.0, 1.0);
+const vec4 colorEnd = vec4(1.0, 0.2, 0.0, 1.0);
+
+// Uniforms
+uniform float deltaTime;
+uniform vec3 globalForce;  // Gravity force
+uniform float emissionRate; // Particles per second
+uniform vec3 emitterPosition;
+uniform float accumulatedTime; // Emitter accumulated time
+
+void main() 
+{
+    uint index = gl_GlobalInvocationID.x;
+    vec3 p  = Positions[index].xyz;
+    vec3 v  = Velocities[index].xyz;
+    vec3  pp = p + v*deltaTime ;
+    //vec3  vp = v + G*deltaTime;
+    Positions[index].xyz  = pp;
+    //Velocities[index].xyz = vp;
+
+    float lifeRemaining = Positions[index].w - deltaTime;
+    float lifeSpan = Velocities[index].w;
+    Positions[index].w = lifeRemaining;
+    float life = lifeRemaining / lifeSpan;
+    if (life > 0.5)
+    {
+        float factor = (life - 0.6) / 0.3;
+        Colors[index] = mix(colorBegin, colorMid1, 1.0f - factor);
+    }
+    else if (life > 0.3)
+    {
+        float factor = (life - 0.3) / 0.4;
+        Colors[index] = mix(colorMid1, colorMid2, 1.0 - factor);
+    }
+    else
+    {
+        float factor = life / 0.3;
+        Colors[index] = mix(colorMid2, colorEnd, 1.0 - factor);
+    }
+    Colors[index].a *= life;
+}

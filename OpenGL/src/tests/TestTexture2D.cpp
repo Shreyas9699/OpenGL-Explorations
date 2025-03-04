@@ -33,7 +33,7 @@ namespace test
         m_IB = std::make_unique<IndexBuffer>(indices.data(), indices.size());
         m_Renderer = std::make_unique<Renderer>();
 
-        m_Shader = std::make_unique<Shader>("res/shaders/TextureShaderVS.shader", "res/shaders/TextureShaderFS.shader");
+        m_Shader = std::make_unique<Shader>("res/shaders/Basic/TextureShaderVS.glsl", "res/shaders/Basic/TextureShaderFS.glsl");
         m_Shader->Bind();
         m_Shader->setVec4("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
         m_Texture = std::make_unique<Texture>("res/textures/SSanW2.png");

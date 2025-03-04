@@ -68,12 +68,12 @@ namespace test
 
 		VertexBufferLayout layout2;
 		layout2.Push<float>(3); // positions
-		layout2.Push<float>(3); // normals
+		layout2.Push<float>(3); // normal
 		m_sphere.VAO->AddBuffer(*m_sphere.VBO, layout2);
 
-		m_ShaderCube = std::make_unique<Shader>("res/shaders/CubrWithLightVS.shader", "res/shaders/CubrWithLightFS.shader");
-		m_ShaderLight = std::make_unique<Shader>("res/shaders/LightSphere/lightSphereVS.shader",
-			"res/shaders/LightSphere/lightSphereFS.shader");
+		m_ShaderCube = std::make_unique<Shader>("res/shaders/Cube/CubeWithLightVS.glsl", "res/shaders/Cube/CubeWithLightFS.glsl");
+		m_ShaderLight = std::make_unique<Shader>("res/shaders/LightSphere/lightSphereVS.glsl",
+			"res/shaders/LightSphere/lightSphereFS.glsl");
 		m_Renderer = std::make_unique<Renderer>();
 
 		for (const auto& name : material_types)
@@ -128,7 +128,7 @@ namespace test
 		m_ShaderCube->setFloat("material.shininess", mat_prop.mat_shininess);
 
 		// view/projection transformations
-		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), 900.0f / 900.0f, 0.1f, 100.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), 0.1f, 100.0f);
 		glm::mat4 view = m_Camera.GetViewMatrix();
 		m_ShaderCube->setMat4("view", view);
 		m_ShaderCube->setMat4("projection", projection);

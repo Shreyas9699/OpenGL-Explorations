@@ -20,8 +20,8 @@ namespace test
 		layout.Push<float>(3); // normals
 		m_VA->AddBuffer(*m_VB, layout);
 
-		m_Shader = std::make_unique<Shader>("res/shaders/LightSphere/lightSphereVS.shader", 
-			"res/shaders/LightSphere/lightSphereFS.shader");
+		m_Shader = std::make_unique<Shader>("res/shaders/LightSphere/lightSphereVS.glsl", 
+			"res/shaders/LightSphere/lightSphereFS.glsl");
 
 		m_Renderer = std::make_unique<Renderer>();
 	}

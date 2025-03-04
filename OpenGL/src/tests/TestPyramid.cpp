@@ -58,8 +58,8 @@ namespace test
 		layout.Push<float>(3);
 		layout.Push<float>(2);
 		m_VA->AddBuffer(*m_VB, layout);
-		m_Texture = std::make_unique<Texture>("res/textures/conatiner/Brick.jpg"); // can use Brick2.jpg
-		m_Shader = std::make_unique<Shader>("res/shaders/3DtexVS.glsl", "res/shaders/3DtexFS.glsl");
+		m_Texture = std::make_unique<Texture>("res/textures/container/Brick.jpg"); // can use Brick2.jpg
+		m_Shader = std::make_unique<Shader>("res/shaders/Pyramid/3DtexVS.glsl", "res/shaders/Pyramid/3DtexFS.glsl");
 		m_Shader->Bind();
 		m_Shader->setInt("u_Texture", 0);
 		m_Shader->Unbind();

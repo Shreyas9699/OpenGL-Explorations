@@ -13,8 +13,8 @@ ParticleSystem::ParticleSystem()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Initialize the emitter position generators
-    m_PositionGenerator = [this]() { return this->GeneratePosition(); };
-    m_VelocityGenerator = [this]() { return this->GenerateVelocity(); };
+    m_PositionGenerator = [this]() { return this->GeneratePointPosition(); };
+    m_VelocityGenerator = [this]() { return this->GeneratePointVelocity(); };
 
     glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &m_VBO);
@@ -69,7 +69,7 @@ void ParticleSystem::Update(float delta)
         }
         else
         {
-            Destory(pID);
+            Destroy(pID);
         }
     }
 
@@ -123,155 +123,171 @@ void ParticleSystem::Render(Shader& m_Shader)
     m_Shader.Unbind();
 }
 
-glm::vec3 ParticleSystem::GeneratePosition()
+std::function<glm::vec3()> ParticleSystem::GeneratePosition()
 {
-    glm::vec3 position = m_Emitter.position;
-
+    // Assign the appropriate generator based on shape
     switch (m_Emitter.shape)
     {
     case EmitterShape::POINT:
-        // Point emitter just returns the emitter position
-        break;
-
+        return[this]() { return this->GeneratePointPosition(); };
     case EmitterShape::SPHERE:
-    {
-        // Generate random direction
-        float theta = Random::Float() * 2.0f * glm::pi<float>();
-        float phi = Random::Float() * glm::pi<float>();
-
-        float x = sin(phi) * cos(theta);
-        float y = sin(phi) * sin(theta);
-        float z = cos(phi);
-
-        // Scale by random radius within emitter radius
-        float r = m_Emitter.radius * std::pow(Random::Float(), 1.0f / 3.0f); // cube root for uniform distribution
-        position += glm::vec3(x, y, z) * r;
-        break;
-    }
-
+        return [this]() { return this->GenerateSpherePosition(); };
     case EmitterShape::CONE:
-    {
-        // For cone, we'll start at the tip and direct particles in the cone direction
-        // Cone will be along the local Z axis by default
-        float theta = Random::Float() * 2.0f * glm::pi<float>();
-        float distance = Random::Float() * m_Emitter.radius;
-
-        // Angle spread calculation
-        float spread = glm::radians(m_Emitter.angle);
-        float phi = Random::Float() * spread;
-
-        // Convert to Cartesian coordinates
-        float x = distance * sin(phi) * cos(theta);
-        float y = distance * sin(phi) * sin(theta);
-        float z = distance * cos(phi);
-
-        // Apply emitter rotation
-        glm::quat rotation = glm::quat(glm::radians(m_Emitter.rotation));
-        glm::vec3 rotatedOffset = rotation * glm::vec3(x, y, z);
-
-        position += rotatedOffset;
-        break;
-    }
-
+        return [this]() { return this->GenerateConePosition(); };
     case EmitterShape::BOX:
-    {
-        // Random position within box dimensions
-        float x = (Random::Float() * 2.0f - 1.0f) * m_Emitter.dimensions.x * 0.5f;
-        float y = (Random::Float() * 2.0f - 1.0f) * m_Emitter.dimensions.y * 0.5f;
-        float z = (Random::Float() * 2.0f - 1.0f) * m_Emitter.dimensions.z * 0.5f;
-
-        // Apply emitter rotation
-        glm::quat rotation = glm::quat(glm::radians(m_Emitter.rotation));
-        glm::vec3 rotatedOffset = rotation * glm::vec3(x, y, z);
-
-        position += rotatedOffset;
-        break;
+        return [this]() { return this->GenerateBoxPosition(); };
+    default:
+        std::cerr << "ParticleSystem::GeneratePosition:: Invalid EmitterShpape, default EmitterShape::POINT is applied" << std::endl;
+        return[this]() { return this->GeneratePointPosition(); };
     }
-    }
-
-    return position;
 }
 
-glm::vec3 ParticleSystem::GenerateVelocity()
+glm::vec3 ParticleSystem::GeneratePointPosition()
 {
-    glm::vec3 velocity = glm::vec3(0.0f);
+    return m_Emitter.position; // Point emitter just returns the emitter position
+}
 
+glm::vec3 ParticleSystem::GenerateSpherePosition()
+{
+    // Generate random direction
+    float theta = Random::Float() * 2.0f * glm::pi<float>();
+    float phi = Random::Float() * glm::pi<float>();
+
+    float x = sin(phi) * cos(theta);
+    float y = sin(phi) * sin(theta);
+    float z = cos(phi);
+
+    // Scale by random radius within emitter radius
+    float r = m_Emitter.radius * std::pow(Random::Float(), 1.0f / 3.0f); // cube root for uniform distribution
+    return m_Emitter.position + glm::vec3(x, y, z) * r;
+}
+
+glm::vec3 ParticleSystem::GenerateConePosition()
+{
+    // For cone, we'll start at the tip and direct particles in the cone direction
+    float theta = Random::Float() * 2.0f * glm::pi<float>();
+    float distance = Random::Float() * m_Emitter.radius;
+
+    // Angle spread calculation
+    float spread = glm::radians(m_Emitter.angle);
+    float phi = Random::Float() * spread;
+
+    // Convert to Cartesian coordinates
+    float x = distance * sin(phi) * cos(theta);
+    float y = distance * sin(phi) * sin(theta);
+    float z = distance * cos(phi);
+
+    // Apply emitter rotation
+    glm::quat rotation = glm::quat(glm::radians(m_Emitter.rotation));
+    glm::vec3 rotatedOffset = rotation * glm::vec3(x, y, z);
+
+    return m_Emitter.position + rotatedOffset;
+}
+
+glm::vec3 ParticleSystem::GenerateBoxPosition()
+{
+    // Random position within box dimensions
+    float x = (Random::Float() * 2.0f - 1.0f) * m_Emitter.dimensions.x * 0.5f;
+    float y = (Random::Float() * 2.0f - 1.0f) * m_Emitter.dimensions.y * 0.5f;
+    float z = (Random::Float() * 2.0f - 1.0f) * m_Emitter.dimensions.z * 0.5f;
+
+    // Apply emitter rotation
+    glm::quat rotation = glm::quat(glm::radians(m_Emitter.rotation));
+    glm::vec3 rotatedOffset = rotation * glm::vec3(x, y, z);
+
+    return m_Emitter.position + rotatedOffset;
+}
+
+std::function<glm::vec3()> ParticleSystem::GenerateVelocity()
+{
+    // Assign the appropriate generator based on shape
     switch (m_Emitter.shape)
     {
     case EmitterShape::POINT:
-        {
-            // Random direction from point
-            float theta = Random::Float() * 2.0f * glm::pi<float>();
-            float phi = Random::Float() * glm::pi<float>();
-
-            float x = sin(phi) * cos(theta);
-            float y = sin(phi) * sin(theta);
-            float z = cos(phi);
-
-            velocity = glm::vec3(x, y, z);
-            break;
-        }
-
+        return [this]() { return this->GeneratePointVelocity(); };
     case EmitterShape::SPHERE:
-        {
-            // For sphere, particle can go in any direction (but we'll direct it outward)
-            glm::vec3 particleOffset = GeneratePosition() - m_Emitter.position;
-            if (glm::length(particleOffset) > 0.0001f) {
-                velocity = glm::normalize(particleOffset);
-            }
-            else {
-                // Fallback if at center
-                velocity = glm::vec3(
-                    Random::Float() * 2.0f - 1.0f,
-                    Random::Float() * 2.0f - 1.0f,
-                    Random::Float() * 2.0f - 1.0f
-                );
-                velocity = glm::normalize(velocity);
-            }
-            break;
-        }
-
+        return [this]() { return this->GenerateSphereVelocity(); };
     case EmitterShape::CONE:
-        {
-            // Cone emitter directs particles within the cone angle
-            float theta = Random::Float() * 2.0f * glm::pi<float>();
-
-            // Angle spread calculation
-            float spread = glm::radians(m_Emitter.angle);
-            float phi = Random::Float() * spread;
-
-            // Convert to Cartesian coordinates
-            float x = sin(phi) * cos(theta);
-            float y = sin(phi) * sin(theta);
-            float z = cos(phi);
-
-            // Apply emitter rotation
-            glm::quat rotation = glm::quat(glm::radians(m_Emitter.rotation));
-            velocity = rotation * glm::vec3(x, y, z);
-            break;
-        }
-
+        return [this]() { return this->GenerateConeVelocity(); };
     case EmitterShape::BOX:
-        {
-            // For box, we'll direct particles outward from center
-            glm::vec3 particleOffset = GeneratePosition() - m_Emitter.position;
-            if (glm::length(particleOffset) > 0.0001f) {
-                velocity = glm::normalize(particleOffset);
-            }
-            else {
-                // Fallback if at center
-                velocity = glm::vec3(
-                    Random::Float() * 2.0f - 1.0f,
-                    Random::Float() * 2.0f - 1.0f,
-                    Random::Float() * 2.0f - 1.0f
-                );
-                velocity = glm::normalize(velocity);
-            }
-            break;
-        }
+        return [this]() { return this->GenerateBoxVelocity(); };
+    default:
+        std::cerr << "ParticleSystem::GeneratePosition:: Invalid EmitterShpape, default EmitterShape::POINT is applied" << std::endl;
+        return [this]() { return this->GeneratePointVelocity(); };
     }
+}
 
-    return velocity;
+glm::vec3 ParticleSystem::GeneratePointVelocity()
+{
+    // Random direction from point
+    float theta = Random::Float() * 2.0f * glm::pi<float>();
+    float phi = Random::Float() * glm::pi<float>();
+
+    float x = sin(phi) * cos(theta);
+    float y = sin(phi) * sin(theta);
+    float z = cos(phi);
+
+    return glm::vec3(x, y, z);
+}
+
+glm::vec3 ParticleSystem::GenerateSphereVelocity()
+{
+    // For sphere, particle can go in any direction (but we'll direct it outward)
+    glm::vec3 particleOffset = GenerateSpherePosition() - m_Emitter.position;
+    if (glm::length(particleOffset) > 0.0001f) 
+    {
+        return glm::normalize(particleOffset);
+    }
+    particleOffset = glm::vec3(
+        Random::Float() * 2.0f - 1.0f,
+        Random::Float() * 2.0f - 1.0f,
+        Random::Float() * 2.0f - 1.0f
+    );
+        
+    return glm::normalize(particleOffset);
+}
+
+glm::vec3 ParticleSystem::GenerateConeVelocity()
+{
+    // Cone emitter directs particles within the cone angle
+    float theta = Random::Float() * 2.0f * glm::pi<float>();
+
+    // Angle spread calculation
+    float spread = glm::radians(m_Emitter.angle);
+    float phi = Random::Float() * spread;
+
+    // Convert to Cartesian coordinates
+    float x = sin(phi) * cos(theta);
+    float y = sin(phi) * sin(theta);
+    float z = cos(phi);
+
+    // Apply emitter rotation
+    glm::quat rotation = glm::quat(glm::radians(m_Emitter.rotation));
+    return rotation * glm::vec3(x, y, z);
+}
+
+glm::vec3 ParticleSystem::GenerateBoxVelocity()
+{
+    // For box, we'll direct particles outward from center
+    glm::vec3 particleOffset = GenerateBoxPosition() - m_Emitter.position;
+    if (glm::length(particleOffset) > 0.0001f) 
+    {
+        return glm::normalize(particleOffset);
+    }
+    // Fallback if at center
+    particleOffset = glm::vec3(
+        Random::Float() * 2.0f - 1.0f,
+        Random::Float() * 2.0f - 1.0f,
+        Random::Float() * 2.0f - 1.0f
+    );
+    return glm::normalize(particleOffset);
+}
+
+void ParticleSystem::UpdateGenerators()
+{
+    // Update position and velocity generators dynamically
+    m_PositionGenerator = GeneratePosition();
+    m_VelocityGenerator = GenerateVelocity();
 }
 
 void ParticleSystem::CreateParticle()
@@ -313,7 +329,7 @@ void ParticleSystem::CreateParticles(float delta)
     }
 }
 
-void ParticleSystem::Destory(unsigned int id)
+void ParticleSystem::Destroy(unsigned int id)
 {
     m_Particles[id].Active = false;
 }

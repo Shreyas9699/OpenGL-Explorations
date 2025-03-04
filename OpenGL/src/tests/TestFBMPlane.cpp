@@ -34,8 +34,7 @@ namespace test
 		m_sphere.VAO->AddBuffer(*m_sphere.VBO, layout2);
 
 		m_ShaderPlane = std::make_unique<Shader>("res/shaders/FBM/VertexFBMShader.glsl", "res/shaders/FBM/FragShaderFBM.glsl");
-		m_ShaderLightSrc = std::make_unique<Shader>("res/shaders/LightSphere/lightSphereVS.shader",
-			"res/shaders/LightSphere/lightSphereFS.shader");
+		m_ShaderLightSrc = std::make_unique<Shader>("res/shaders/LightSphere/lightSphereVS.glsl", "res/shaders/LightSphere/lightSphereFS.glsl");
 		m_Renderer = std::make_unique<Renderer>();
 
 		lightPos = glm::vec3(0.0f, 1.75f, 0.0f);
