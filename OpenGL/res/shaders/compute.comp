@@ -1,12 +1,14 @@
 #version 430 core
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
 layout (std140, binding = 1) buffer Pos
 {
-    vec4 Positions[];
+    vec3 Positions[];
 };
 
 layout (std140, binding = 2) buffer Vel
 {
-    vec4 Velocities[];
+    vec3 Velocities[];
 };
 
 layout (std140, binding = 3) buffer Col
@@ -14,51 +16,108 @@ layout (std140, binding = 3) buffer Col
     vec4 Colors[];
 };
 
-layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+layout (std140, binding = 4) buffer LifeSpan
+{
+    vec2 Life[];
+};
+
+layout (std140, binding = 5) buffer Size
+{
+    vec2 Sizes[];
+};
+
+struct Particle 
+{
+    vec3 position;
+    vec3 velocity;
+    vec4 color;
+    float lifeRemaining;
+    float lifeSpan;
+    float size;
+};
+
+layout(std430, binding = 1) buffer ParticleBuffer 
+{
+    Particle particles[];
+};
 
 const vec3 G = vec3(3.0f, -2.0f, 3.f);
 const float DT = 0.1;
 
-const vec4 colorBegin = vec4(1.0, 1.0, 1.0, 1.0);
-const vec4 colorMid1 = vec4(1.0, 0.8, 0.0, 1.0);
-const vec4 colorMid2 = vec4(1.0, 0.2, 0.0, 1.0);
-const vec4 colorEnd = vec4(1.0, 0.2, 0.0, 1.0);
+uniform vec4 colorBegin = vec4(1.0, 1.0, 1.0, 1.0);
+uniform vec4 colorEnd = vec4(1.0, 0.2, 0.0, 1.0);
+
+uniform float sizeBegin = 1.0;
+uniform float sizeEnd = 1.0;
+
 
 // Uniforms
+uniform float MAX_PARTICLES;
 uniform float deltaTime;
 uniform vec3 globalForce;  // Gravity force
 uniform float emissionRate; // Particles per second
 uniform vec3 emitterPosition;
 uniform float accumulatedTime; // Emitter accumulated time
+uniform int numParticles;
+uniform uint lifeSpan;
+
+// Pseudo-random float between 0 and 1
+float random(float x) 
+{
+    return fract(sin(x * 12.9898) * 43758.5453);
+}
+
+vec3 randVelGen() 
+{
+    // Generate pseudo-random angles
+    float theta = fract(sin(1.0) * 43758.5453) * 2.0 * 3.14159265359;
+    float phi = fract(sin(2.0) * 43758.5453) * 3.14159265359;
+
+    // Convert spherical coordinates to Cartesian coordinates
+    float x = sin(phi) * cos(theta);
+    float y = sin(phi) * sin(theta);
+    float z = cos(phi);
+
+    return normalize(vec3(x, y, z));
+}
+
+Particle createParticle()
+{
+    Particle p;
+    p.position = emitterPosition;
+    p.lifeRemaining = lifeSpan;
+    p.lifeSpan = lifeSpan;
+    p.color = colorBegin;
+    p.size = sizeBegin;
+    p.velocity = randVelGen();
+
+    return p;
+}
 
 void main() 
 {
-    uint index = gl_GlobalInvocationID.x;
-    vec3 p  = Positions[index].xyz;
-    vec3 v  = Velocities[index].xyz;
-    vec3  pp = p + v*deltaTime ;
-    //vec3  vp = v + G*deltaTime;
-    Positions[index].xyz  = pp;
-    //Velocities[index].xyz = vp;
+    uint id = gl_GlobalInvocationID.x;
+    if (id >= MAX_PARTICLES) return;
 
-    float lifeRemaining = Positions[index].w - deltaTime;
-    float lifeSpan = Velocities[index].w;
-    Positions[index].w = lifeRemaining;
-    float life = lifeRemaining / lifeSpan;
-    if (life > 0.5)
+    Particle p = particles[id];
+
+    if (p.lifeRemaining <= 0.0) 
     {
-        float factor = (life - 0.6) / 0.3;
-        Colors[index] = mix(colorBegin, colorMid1, 1.0f - factor);
+        // Respawn the particle
+        p = createParticle();
     }
-    else if (life > 0.3)
+
+    // Update position and velocity
+    if (p.lifeRemaining > 0.0) 
     {
-        float factor = (life - 0.3) / 0.4;
-        Colors[index] = mix(colorMid1, colorMid2, 1.0 - factor);
+        float life = p.lifeRemaining / p.lifeSpan;
+        p.lifeRemaining -= deltaTime;
+        p.velocity.xyz += globalForce * deltaTime;
+        p.position.xyz += p.velocity.xyz * deltaTime;
+
+        p.size = mix(sizeEnd, sizeBegin, life);
+        p.color = mix(colorEnd, colorBegin, life);
     }
-    else
-    {
-        float factor = life / 0.3;
-        Colors[index] = mix(colorMid2, colorEnd, 1.0 - factor);
-    }
-    Colors[index].a *= life;
+
+    particles[id] = p;
 }

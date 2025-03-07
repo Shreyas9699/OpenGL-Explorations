@@ -25,6 +25,9 @@ struct EmitterProperties
     float emissionRate = 1000.0f;                // Particles per second
     float accumulatedTime = 0.0f;
 
+    /*float MINLife;
+    float MAXLife;*/
+
     EmitterProperties() = default;
 
     EmitterProperties(glm::vec3 pos, glm::vec3 rotation, glm::vec3 scale, EmitterShape shape, float radius, float angle,
@@ -48,8 +51,6 @@ struct Particle
     float lifeSpan = 1.5f;
     float LifeRemaining = 0.0f;
     bool Active = true;
-
-    // for handling size variation
     float sizeBegin = 1.0f;
     float sizeEnd = 1.0f;
     float currentSize = 1.0f;

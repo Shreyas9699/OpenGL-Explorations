@@ -102,6 +102,8 @@
     <None Include="res\objects\porsche\skyline_GTR.cob" />
     <None Include="res\objects\spider\spider.mtl" />
     <None Include="res\objects\wb\WhiteBeard.mtl" />
+    <None Include="res\shaders\ParticleFSGPU.glsl" />
+    <None Include="res\shaders\ParticleVSGPU.glsl" />
     <None Include="res\shaders\Pyramid\3DtexFS.glsl" />
     <None Include="res\shaders\Pyramid\3DtexVS.glsl" />
     <None Include="res\shaders\Basic\BasicShaderFS.glsl" />

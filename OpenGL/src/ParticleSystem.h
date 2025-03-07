@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 #include <functional>
+#include <queue>
 
 #include "Particle.h"
 #include "Shader_t.h"
@@ -17,6 +18,7 @@ class ParticleSystem
 {
 private:
     std::unordered_map<unsigned int, Particle> m_Particles;
+    std::queue<unsigned int> m_ParticlePool;
     unsigned int id = 0;
     std::vector<float> m_Points;
 
@@ -51,7 +53,7 @@ private:
     glm::vec3 GenerateConeVelocity();
     glm::vec3 GenerateBoxVelocity();
     void UpdateGenerators();
-    
+
     void CreateParticle();              // Create a single particle
 
 public:
@@ -61,14 +63,12 @@ public:
     void Update(float delta);
     void Render(Shader& m_Shader);
 
-    void CreateParticles(float delta);
     void Destroy(unsigned int id);
     void DeleteInactiveParticles();
 
     void SetForce(const glm::vec3& force);
-
-    void SetEmitter(const EmitterProperties& emitterProp) 
-    { 
+    void SetEmitter(const EmitterProperties& emitterProp)
+    {
         m_Emitter = emitterProp;
         UpdateGenerators();
     }

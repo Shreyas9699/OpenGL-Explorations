@@ -3,8 +3,8 @@
 
 test::TestParticleCPU::TestParticleCPU(Window* window)
 	: m_Window(window),
-	  m_Camera(glm::vec3(20.0f, 0.0f, 15.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), -140),
-	  m_cameraController(m_Window->GetWindow(), m_Camera)
+	m_Camera(glm::vec3(20.0f, 0.0f, 15.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), -140),
+	m_cameraController(m_Window->GetWindow(), m_Camera)
 {
 	m_Window->setCustomKeyCallback([this](int key, int scancode, int action, int mods)
 		{
@@ -20,22 +20,23 @@ test::TestParticleCPU::TestParticleCPU(Window* window)
 
 	// Setup a point emitter at position(0, 0, 0)
 	emitterProp.shape = EmitterShape::POINT;
+	//emitterProp.emissionRate = 1024 * 1024;
 	m_ParticleSys->SetEmitter(emitterProp);
 
 	// setup a sphere emitter
 	/*emitterProp.shape = EmitterShape::SPHERE;
 	m_ParticleSys->SetEmitter(emitterProp);*/
-	
+
 
 	// setup a cone emitter pointing downward
 	/*emitterProp.shape = EmitterShape::CONE;
 	emitterProp.radius = 5.0f;
 	m_ParticleSys->SetEmitter(emitterProp);*/
-	
 
-   // setup a cone emitter pointing downward
-	/*emitterProp.shape = EmitterShape::BOX;
-	m_ParticleSys->SetEmitter(emitterProp);*/
+
+	// setup a cone emitter pointing downward
+	 /*emitterProp.shape = EmitterShape::BOX;
+	 m_ParticleSys->SetEmitter(emitterProp);*/
 }
 
 test::TestParticleCPU::~TestParticleCPU()
@@ -89,11 +90,11 @@ void test::TestParticleCPU::OnUpdate(Timestep deltaTime, GLFWwindow* win)
 		m_ParticleSys = std::make_unique <ParticleSystem>();
 
 		m_ParticleSys->SetEmitterShape(m_EmitterShape);
-		
+
 
 		if (m_EmitterShape == EmitterShape::POINT)
 		{
-			
+
 		}
 	}*/
 }
@@ -199,7 +200,7 @@ void test::TestParticleCPU::OnImGuiRender()
 		}
 		ImGui::EndDisabled();
 	}
-	
+
 	// Particle properties
 	static glm::vec4 colorBegin = m_ParticleSys->GetarticleColorBegin();
 	static glm::vec4 colorEnd = m_ParticleSys->GetarticleColorEnd();

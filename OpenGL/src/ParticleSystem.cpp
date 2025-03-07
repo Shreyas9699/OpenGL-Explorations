@@ -36,14 +36,14 @@ void ParticleSystem::Update(float delta)
 
     // Handle fractional particles using accumulated time
     m_Emitter.accumulatedTime += particlesThisFrame - numParticles;
-    if (m_Emitter.accumulatedTime >= 1.0f) 
+    if (m_Emitter.accumulatedTime >= 1.0f)
     {
         numParticles += 1;
         m_Emitter.accumulatedTime -= 1.0f;
     }
 
     // Create particles
-    for (int i = 0; i < numParticles; i++) 
+    for (int i = 0; i < numParticles; i++)
     {
         CreateParticle();
     }
@@ -55,7 +55,7 @@ void ParticleSystem::Update(float delta)
         {
             // Calculate life percentage for interpolation
             float life = particle.LifeRemaining / particle.lifeSpan;
-            
+
 
             if (m_UseForces)
             {
@@ -234,7 +234,7 @@ glm::vec3 ParticleSystem::GenerateSphereVelocity()
 {
     // For sphere, particle can go in any direction (but we'll direct it outward)
     glm::vec3 particleOffset = GenerateSpherePosition() - m_Emitter.position;
-    if (glm::length(particleOffset) > 0.0001f) 
+    if (glm::length(particleOffset) > 0.0001f)
     {
         return glm::normalize(particleOffset);
     }
@@ -243,7 +243,7 @@ glm::vec3 ParticleSystem::GenerateSphereVelocity()
         Random::Float() * 2.0f - 1.0f,
         Random::Float() * 2.0f - 1.0f
     );
-        
+
     return glm::normalize(particleOffset);
 }
 
@@ -270,7 +270,7 @@ glm::vec3 ParticleSystem::GenerateBoxVelocity()
 {
     // For box, we'll direct particles outward from center
     glm::vec3 particleOffset = GenerateBoxPosition() - m_Emitter.position;
-    if (glm::length(particleOffset) > 0.0001f) 
+    if (glm::length(particleOffset) > 0.0001f)
     {
         return glm::normalize(particleOffset);
     }
@@ -292,40 +292,53 @@ void ParticleSystem::UpdateGenerators()
 
 void ParticleSystem::CreateParticle()
 {
-    if (m_Particles.find(id) == m_Particles.end())
+    unsigned int particleID;
+    if (!m_ParticlePool.empty())
     {
-        glm::vec3 position = m_PositionGenerator();
-        glm::vec3 velocity = m_VelocityGenerator();
-
-        // Use the custom colors and sizes if they're enabled
-        /*glm::vec4 colorBegin = m_UseCustomColors ? m_DefaultColorBegin : glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-        glm::vec4 colorEnd = m_UseCustomColors ? m_DefaultColorEnd : glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
-        float sizeBegin = m_UseSizeOverLifetime ? m_DefaultSizeBegin : 1.0f;
-        float sizeEnd = m_UseSizeOverLifetime ? m_DefaultSizeEnd : 1.0f;*/
-
-        m_Particles.insert({ id,
-            Particle(
-                position,
-                velocity,
-                m_DefaultColorBegin,
-                m_DefaultColorEnd,
-                m_DefaultLifespan,                              // Default lifespan
-                m_DefaultLifespan,
-                true,
-                m_DefaultSizeBegin,
-                m_DefaultSizeEnd)
-            });
+        particleID = m_ParticlePool.front();
+        m_ParticlePool.pop();
+        //std::cout << "Used m_ParticlePool to create new particle" << std::endl;
     }
-    id++;
-}
-
-void ParticleSystem::CreateParticles(float delta)
-{
-    // This method is kept for backward compatibility
-    // but now it just triggers the CreateParticle method
-    for (unsigned int i = 0; i < 100; i++)
+    else
     {
-        CreateParticle();
+        particleID = id++;
+    }
+
+    glm::vec3 position = m_PositionGenerator();
+    glm::vec3 velocity = m_VelocityGenerator();
+
+    // Use the custom colors and sizes if they're enabled
+    /*glm::vec4 colorBegin = m_UseCustomColors ? m_DefaultColorBegin : glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    glm::vec4 colorEnd = m_UseCustomColors ? m_DefaultColorEnd : glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+    float sizeBegin = m_UseSizeOverLifetime ? m_DefaultSizeBegin : 1.0f;
+    float sizeEnd = m_UseSizeOverLifetime ? m_DefaultSizeEnd : 1.0f;*/
+    if (m_Particles.find(particleID) != m_Particles.end())
+    {
+        m_Particles[particleID] = Particle(
+           position,
+           velocity,
+           m_DefaultColorBegin,
+           m_DefaultColorEnd,
+           m_DefaultLifespan,                              // Default lifespan
+           m_DefaultLifespan,
+           true,
+           m_DefaultSizeBegin,
+           m_DefaultSizeEnd);
+    }
+    else
+    {
+        m_Particles.insert({ particleID,
+        Particle(
+            position,
+            velocity,
+            m_DefaultColorBegin,
+            m_DefaultColorEnd,
+            m_DefaultLifespan,                              // Default lifespan
+            m_DefaultLifespan,
+            true,
+            m_DefaultSizeBegin,
+            m_DefaultSizeEnd)
+            });
     }
 }
 
@@ -341,8 +354,8 @@ void ParticleSystem::DeleteInactiveParticles()
         if (!it->second.Active)
         {
             unsigned int ID = it->first;
-            it++;
-            m_Particles.erase(ID);
+            it = m_Particles.erase(it);
+            m_ParticlePool.push(ID);
         }
         else
         {
