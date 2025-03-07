@@ -1,5 +1,4 @@
 #pragma once
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -48,6 +47,7 @@ struct Particle
     glm::vec3 Velocity = glm::vec3(1.0f);
     glm::vec4 colorBegin = glm::vec4(glm::vec3(1.0f), 1.0f);
     glm::vec4 colorEnd = glm::vec4(glm::vec3(0.0f), 1.0f);
+    glm::vec4 color = glm::vec4(glm::vec3(1.0f), 1.0f);
     float lifeSpan = 1.5f;
     float LifeRemaining = 0.0f;
     bool Active = true;

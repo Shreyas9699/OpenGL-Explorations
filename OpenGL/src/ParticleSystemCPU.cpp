@@ -1,10 +1,10 @@
-#include "ParticleSystem.h"
+#include "ParticleSystemCPU.h"
 #include "Random.h"
 
 #include <cmath>
 #include <glm/gtx/quaternion.hpp>
 
-ParticleSystem::ParticleSystem()
+ParticleSystemCPU::ParticleSystemCPU()
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -20,14 +20,14 @@ ParticleSystem::ParticleSystem()
     glGenBuffers(1, &m_VBO);
 }
 
-ParticleSystem::~ParticleSystem()
+ParticleSystemCPU::~ParticleSystemCPU()
 {
     glDeleteVertexArrays(1, &m_VAO);
     glDeleteBuffers(1, &m_VBO);
     m_Shader.reset();
 }
 
-void ParticleSystem::Update(float delta)
+void ParticleSystemCPU::Update(float delta)
 {
     // Update emitter and create new particles
     m_Emitter.accumulatedTime += delta;
@@ -49,10 +49,12 @@ void ParticleSystem::Update(float delta)
     }
 
     DeleteInactiveParticles();
+    m_ActiveParticleCount = 0;
     for (auto& [pID, particle] : m_Particles)
     {
         if (particle.LifeRemaining > 0)
         {
+            m_ActiveParticleCount++;
             // Calculate life percentage for interpolation
             float life = particle.LifeRemaining / particle.lifeSpan;
 
@@ -82,12 +84,12 @@ void ParticleSystem::Update(float delta)
         m_Points.push_back(particle.second.Position.z);
 
         float life = particle.second.LifeRemaining / particle.second.lifeSpan;
-        glm::vec4 color = glm::mix(particle.second.colorEnd, particle.second.colorBegin, life);
+        particle.second.color = glm::mix(particle.second.colorEnd, particle.second.colorBegin, life);
 
-        m_Points.push_back(color.r);
-        m_Points.push_back(color.g);
-        m_Points.push_back(color.b);
-        m_Points.push_back(color.a * life); // fade effect
+        m_Points.push_back(particle.second.color.r);
+        m_Points.push_back(particle.second.color.g);
+        m_Points.push_back(particle.second.color.b);
+        m_Points.push_back(particle.second.color.a * life); // fade effect
 
         m_Points.push_back(particle.second.currentSize);
     }
@@ -111,7 +113,7 @@ void ParticleSystem::Update(float delta)
     glBindVertexArray(0);
 }
 
-void ParticleSystem::Render(Shader& m_Shader)
+void ParticleSystemCPU::Render(Shader& m_Shader)
 {
     // draw particles
     m_Shader.Bind();
@@ -123,7 +125,7 @@ void ParticleSystem::Render(Shader& m_Shader)
     m_Shader.Unbind();
 }
 
-std::function<glm::vec3()> ParticleSystem::GeneratePosition()
+std::function<glm::vec3()> ParticleSystemCPU::GeneratePosition()
 {
     // Assign the appropriate generator based on shape
     switch (m_Emitter.shape)
@@ -142,12 +144,12 @@ std::function<glm::vec3()> ParticleSystem::GeneratePosition()
     }
 }
 
-glm::vec3 ParticleSystem::GeneratePointPosition()
+glm::vec3 ParticleSystemCPU::GeneratePointPosition()
 {
     return m_Emitter.position; // Point emitter just returns the emitter position
 }
 
-glm::vec3 ParticleSystem::GenerateSpherePosition()
+glm::vec3 ParticleSystemCPU::GenerateSpherePosition()
 {
     // Generate random direction
     float theta = Random::Float() * 2.0f * glm::pi<float>();
@@ -162,7 +164,7 @@ glm::vec3 ParticleSystem::GenerateSpherePosition()
     return m_Emitter.position + glm::vec3(x, y, z) * r;
 }
 
-glm::vec3 ParticleSystem::GenerateConePosition()
+glm::vec3 ParticleSystemCPU::GenerateConePosition()
 {
     // For cone, we'll start at the tip and direct particles in the cone direction
     float theta = Random::Float() * 2.0f * glm::pi<float>();
@@ -184,7 +186,7 @@ glm::vec3 ParticleSystem::GenerateConePosition()
     return m_Emitter.position + rotatedOffset;
 }
 
-glm::vec3 ParticleSystem::GenerateBoxPosition()
+glm::vec3 ParticleSystemCPU::GenerateBoxPosition()
 {
     // Random position within box dimensions
     float x = (Random::Float() * 2.0f - 1.0f) * m_Emitter.dimensions.x * 0.5f;
@@ -198,7 +200,7 @@ glm::vec3 ParticleSystem::GenerateBoxPosition()
     return m_Emitter.position + rotatedOffset;
 }
 
-std::function<glm::vec3()> ParticleSystem::GenerateVelocity()
+std::function<glm::vec3()> ParticleSystemCPU::GenerateVelocity()
 {
     // Assign the appropriate generator based on shape
     switch (m_Emitter.shape)
@@ -217,7 +219,7 @@ std::function<glm::vec3()> ParticleSystem::GenerateVelocity()
     }
 }
 
-glm::vec3 ParticleSystem::GeneratePointVelocity()
+glm::vec3 ParticleSystemCPU::GeneratePointVelocity()
 {
     // Random direction from point
     float theta = Random::Float() * 2.0f * glm::pi<float>();
@@ -230,7 +232,7 @@ glm::vec3 ParticleSystem::GeneratePointVelocity()
     return glm::vec3(x, y, z);
 }
 
-glm::vec3 ParticleSystem::GenerateSphereVelocity()
+glm::vec3 ParticleSystemCPU::GenerateSphereVelocity()
 {
     // For sphere, particle can go in any direction (but we'll direct it outward)
     glm::vec3 particleOffset = GenerateSpherePosition() - m_Emitter.position;
@@ -247,7 +249,7 @@ glm::vec3 ParticleSystem::GenerateSphereVelocity()
     return glm::normalize(particleOffset);
 }
 
-glm::vec3 ParticleSystem::GenerateConeVelocity()
+glm::vec3 ParticleSystemCPU::GenerateConeVelocity()
 {
     // Cone emitter directs particles within the cone angle
     float theta = Random::Float() * 2.0f * glm::pi<float>();
@@ -266,7 +268,7 @@ glm::vec3 ParticleSystem::GenerateConeVelocity()
     return rotation * glm::vec3(x, y, z);
 }
 
-glm::vec3 ParticleSystem::GenerateBoxVelocity()
+glm::vec3 ParticleSystemCPU::GenerateBoxVelocity()
 {
     // For box, we'll direct particles outward from center
     glm::vec3 particleOffset = GenerateBoxPosition() - m_Emitter.position;
@@ -283,14 +285,14 @@ glm::vec3 ParticleSystem::GenerateBoxVelocity()
     return glm::normalize(particleOffset);
 }
 
-void ParticleSystem::UpdateGenerators()
+void ParticleSystemCPU::UpdateGenerators()
 {
     // Update position and velocity generators dynamically
     m_PositionGenerator = GeneratePosition();
     m_VelocityGenerator = GenerateVelocity();
 }
 
-void ParticleSystem::CreateParticle()
+void ParticleSystemCPU::CreateParticle()
 {
     unsigned int particleID;
     if (!m_ParticlePool.empty())
@@ -315,15 +317,15 @@ void ParticleSystem::CreateParticle()
     if (m_Particles.find(particleID) != m_Particles.end())
     {
         m_Particles[particleID] = Particle(
-           position,
-           velocity,
-           m_DefaultColorBegin,
-           m_DefaultColorEnd,
-           m_DefaultLifespan,                              // Default lifespan
-           m_DefaultLifespan,
-           true,
-           m_DefaultSizeBegin,
-           m_DefaultSizeEnd);
+            position,
+            velocity,
+            m_DefaultColorBegin,
+            m_DefaultColorEnd,
+            m_DefaultLifespan,                              // Default lifespan
+            m_DefaultLifespan,
+            true,
+            m_DefaultSizeBegin,
+            m_DefaultSizeEnd);
     }
     else
     {
@@ -342,12 +344,12 @@ void ParticleSystem::CreateParticle()
     }
 }
 
-void ParticleSystem::Destroy(unsigned int id)
+void ParticleSystemCPU::Destroy(unsigned int id)
 {
     m_Particles[id].Active = false;
 }
 
-void ParticleSystem::DeleteInactiveParticles()
+void ParticleSystemCPU::DeleteInactiveParticles()
 {
     for (auto it = m_Particles.begin(); it != m_Particles.end(); )
     {
@@ -362,10 +364,4 @@ void ParticleSystem::DeleteInactiveParticles()
             it++;
         }
     }
-}
-
-void ParticleSystem::SetForce(const glm::vec3& force)
-{
-    m_GlobalForce = force;
-    m_UseForces = glm::length(force) > 0.0001f;
 }

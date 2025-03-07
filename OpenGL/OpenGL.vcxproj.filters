@@ -489,9 +489,10 @@
     <None Include="res\shaders\infiniteGrid\InfiPlaneVertexShader.glsl" />
     <None Include="res\shaders\ParticleSysCPU\vertexShader.glsl" />
     <None Include="res\shaders\ParticleSysCPU\fragmentShader.glsl" />
-    <None Include="res\shaders\compute.comp" />
-    <None Include="res\shaders\ParticleVSGPU.glsl" />
-    <None Include="res\shaders\ParticleFSGPU.glsl" />
+    <None Include="res\shaders\ParticleSysGPU\compute.comp" />
+    <None Include="res\shaders\ParticleSysGPU\ParticleVSGPU.glsl" />
+    <None Include="res\shaders\ParticleSysGPU\ParticleFSGPU.glsl" />
+    <None Include="res\shaders\ParticleSysGPU\emitter.comp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">
@@ -972,13 +973,19 @@
     <ClCompile Include="src\XZPlaneGrid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ParticleSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Random.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\tests\TestParticleCPU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParticleSystemCPU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParticleSystemGPU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\TestParticleGPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1946,7 +1953,7 @@
     <ClInclude Include="src\XZPlaneGrid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ParticleSystem.h">
+    <ClInclude Include="src\ParticleSystemBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Core\Random.h">
@@ -1959,6 +1966,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ComputeShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleSystemCPU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleSystemGPU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\TestParticleGPU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

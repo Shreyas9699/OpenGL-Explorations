@@ -1,0 +1,271 @@
+#version 430 core
+
+layout(local_size_x = 64) in;
+
+struct Particle 
+{
+    vec4 position;    // xyz = position, w = size
+    vec4 velocity;    // xyz = velocity, w = lifeRemaining
+    vec4 colorBegin;
+    vec4 colorEnd;    // w = lifespan
+};
+
+// Particle storage buffer
+layout(std430, binding = 0) buffer ParticleBuffer 
+{
+    Particle particles[];
+};
+
+// Atomic counter to track particles to emit
+layout(binding = 0, offset = 0) uniform atomic_uint emitCounter;
+
+// Emitter properties
+uniform int newParticleCount;
+uniform vec3 emitterPosition;
+uniform vec3 emitterRotation;
+uniform vec3 emitterDimensions;
+uniform float emitterRadius;
+uniform float emitterAngle;
+uniform int emitterShape; // 0=POINT, 1=SPHERE, 2=CONE, 3=BOX
+
+// Particle properties
+uniform float particleLifespan;
+uniform float particleSizeBegin;
+uniform vec4 particleColorBegin;
+uniform vec4 particleColorEnd;
+
+// Random number generation
+uint seed = 0;
+uint wang_hash(uint seed) {
+    seed = (seed ^ 61) ^ (seed >> 16);
+    seed *= 9;
+    seed = seed ^ (seed >> 4);
+    seed *= 0x27d4eb2d;
+    seed = seed ^ (seed >> 15);
+    return seed;
+}
+
+float rand() {
+    seed = wang_hash(seed);
+    return float(seed) / 4294967296.0;
+}
+
+// Utility functions for different emitter shapes
+vec3 generatePointPosition() {
+    return emitterPosition;
+}
+
+vec3 generateSpherePosition() {
+    float theta = rand() * 2.0 * 3.14159265;
+    float phi = rand() * 3.14159265;
+    
+    float x = sin(phi) * cos(theta);
+    float y = sin(phi) * sin(theta);
+    float z = cos(phi);
+    
+    float r = emitterRadius * pow(rand(), 1.0/3.0); // cube root for uniform distribution
+    return emitterPosition + vec3(x, y, z) * r;
+}
+
+vec3 generateConePosition() {
+    float theta = rand() * 2.0 * 3.14159265;
+    float distance = rand() * emitterRadius;
+    
+    float spread = radians(emitterAngle);
+    float phi = rand() * spread;
+    
+    float x = distance * sin(phi) * cos(theta);
+    float y = distance * sin(phi) * sin(theta);
+    float z = distance * cos(phi);
+    
+    // Apply emitter rotation
+    mat3 rotX = mat3(
+        1, 0, 0,
+        0, cos(radians(emitterRotation.x)), -sin(radians(emitterRotation.x)),
+        0, sin(radians(emitterRotation.x)), cos(radians(emitterRotation.x))
+    );
+    
+    mat3 rotY = mat3(
+        cos(radians(emitterRotation.y)), 0, sin(radians(emitterRotation.y)),
+        0, 1, 0,
+        -sin(radians(emitterRotation.y)), 0, cos(radians(emitterRotation.y))
+    );
+    
+    mat3 rotZ = mat3(
+        cos(radians(emitterRotation.z)), -sin(radians(emitterRotation.z)), 0,
+        sin(radians(emitterRotation.z)), cos(radians(emitterRotation.z)), 0,
+        0, 0, 1
+    );
+    
+    vec3 rotatedOffset = rotZ * rotY * rotX * vec3(x, y, z);
+    return emitterPosition + rotatedOffset;
+}
+
+vec3 generateBoxPosition() {
+    float x = (rand() * 2.0 - 1.0) * emitterDimensions.x * 0.5;
+    float y = (rand() * 2.0 - 1.0) * emitterDimensions.y * 0.5;
+    float z = (rand() * 2.0 - 1.0) * emitterDimensions.z * 0.5;
+    
+    // Apply emitter rotation
+    mat3 rotX = mat3(
+        1, 0, 0,
+        0, cos(radians(emitterRotation.x)), -sin(radians(emitterRotation.x)),
+        0, sin(radians(emitterRotation.x)), cos(radians(emitterRotation.x))
+    );
+    
+    mat3 rotY = mat3(
+        cos(radians(emitterRotation.y)), 0, sin(radians(emitterRotation.y)),
+        0, 1, 0,
+        -sin(radians(emitterRotation.y)), 0, cos(radians(emitterRotation.y))
+    );
+    
+    mat3 rotZ = mat3(
+        cos(radians(emitterRotation.z)), -sin(radians(emitterRotation.z)), 0,
+        sin(radians(emitterRotation.z)), cos(radians(emitterRotation.z)), 0,
+        0, 0, 1
+    );
+    
+    vec3 rotatedOffset = rotZ * rotY * rotX * vec3(x, y, z);
+    return emitterPosition + rotatedOffset;
+}
+
+// Generate velocity based on emitter shape
+vec3 generateVelocity(vec3 position) 
+{
+    vec3 dir;
+    
+    switch(emitterShape) 
+    {
+        case 0: // POINT
+            // Random direction
+            {
+                float theta = rand() * 2.0 * 3.14159265;
+                float phi = rand() * 3.14159265;
+                dir = vec3(
+                    sin(phi) * cos(theta),
+                    sin(phi) * sin(theta),
+                    cos(phi)
+                );
+            }
+            break;
+            
+        case 1: // SPHERE
+            // Outward from center
+            dir = normalize(position - emitterPosition);
+            if (length(dir) < 0.0001) 
+            {
+                float theta = rand() * 2.0 * 3.14159265;
+                float phi = rand() * 3.14159265;
+                dir = vec3(
+                    sin(phi) * cos(theta),
+                    sin(phi) * sin(theta),
+                    cos(phi)
+                );
+            }
+            break;
+            
+        case 2: // CONE
+            // Within cone angle
+            {
+                float theta = rand() * 2.0 * 3.14159265;
+                float spread = radians(emitterAngle);
+                float phi = rand() * spread;
+                
+                float x = sin(phi) * cos(theta);
+                float y = sin(phi) * sin(theta);
+                float z = cos(phi);
+                
+                // Apply emitter rotation
+                mat3 rotX = mat3(
+                    1, 0, 0,
+                    0, cos(radians(emitterRotation.x)), -sin(radians(emitterRotation.x)),
+                    0, sin(radians(emitterRotation.x)), cos(radians(emitterRotation.x))
+                );
+                
+                mat3 rotY = mat3(
+                    cos(radians(emitterRotation.y)), 0, sin(radians(emitterRotation.y)),
+                    0, 1, 0,
+                    -sin(radians(emitterRotation.y)), 0, cos(radians(emitterRotation.y))
+                );
+                
+                mat3 rotZ = mat3(
+                    cos(radians(emitterRotation.z)), -sin(radians(emitterRotation.z)), 0,
+                    sin(radians(emitterRotation.z)), cos(radians(emitterRotation.z)), 0,
+                    0, 0, 1
+                );
+                
+                dir = normalize(rotZ * rotY * rotX * vec3(x, y, z));
+            }
+            break;
+            
+        case 3: // BOX
+            // Outward from center
+            dir = normalize(position - emitterPosition);
+            if (length(dir) < 0.0001) {
+                dir = normalize(vec3(
+                    rand() * 2.0 - 1.0,
+                    rand() * 2.0 - 1.0,
+                    rand() * 2.0 - 1.0
+                ));
+            }
+            break;
+            
+        default:
+            dir = vec3(0, 1, 0);
+    }
+    
+    // Add some randomness to velocity
+    float speed = 2.0 + rand() * 3.0;
+    return dir * speed;
+}
+
+void main() 
+{
+    // Each thread handles one potential new particle
+    uint id = gl_GlobalInvocationID.x;
+    
+    // Only proceed if within the number of new particles to create
+    if (id >= newParticleCount)
+        return;
+    
+    // Get an index in the particle array using atomic counter
+    uint particleIndex = atomicCounterIncrement(emitCounter);
+    
+    // Wrap around if we exceed array size
+    particleIndex = particleIndex % particles.length();
+    
+    // Look for an inactive particle to replace
+    for (uint i = 0; i < particles.length(); i++) 
+    {
+        uint idx = (particleIndex + i) % particles.length();
+        if (particles[idx].velocity.w <= 0.0) 
+        {
+            particleIndex = idx;
+            break;
+        }
+    }
+    
+    // Initialize seed based on particle index and global time
+    seed = uint(particleIndex) + gl_GlobalInvocationID.x * 1973 + 
+           uint(sin(float(id)) * 43758.5453);
+    
+    // Generate position based on emitter shape
+    vec3 position;
+    switch(emitterShape) 
+    {
+        case 0: position = generatePointPosition(); break;
+        case 1: position = generateSpherePosition(); break;
+        case 2: position = generateConePosition(); break;
+        case 3: position = generateBoxPosition(); break;
+        default: position = generatePointPosition();
+    }
+    
+    // Generate velocity based on position and shape
+    vec3 velocity = generateVelocity(position);
+    
+    // Create the new particle
+    particles[particleIndex].position = vec4(position, particleSizeBegin);
+    particles[particleIndex].velocity = vec4(velocity, particleLifespan);
+    particles[particleIndex].colorBegin = particleColorBegin;
+    particles[particleIndex].colorEnd = vec4(particleColorEnd.rgb, particleLifespan);
+}

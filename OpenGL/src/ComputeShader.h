@@ -55,12 +55,12 @@ public:
 		glUseProgram(ID); 
 	}
 
-	void bind()
+	void Bind()
 	{
 		glUseProgram(ID);
 	}
 
-	void unbind()
+	void Unbind()
 	{
 		glUseProgram(0);
 	}

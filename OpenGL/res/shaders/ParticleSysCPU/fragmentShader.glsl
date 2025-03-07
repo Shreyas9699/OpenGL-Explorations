@@ -15,7 +15,7 @@ void main()
 		discard;
 	}
 
-	//float alpha = 1.0 - smoothstep(0.8, 1.0, dist);
+	float alpha = 1.0 - smoothstep(0.8, 1.0, dist);
 	FragmenOut = VfragColor;
-	//FragmenOut.a *= alpha;
+	FragmenOut.a *= alpha;
 }

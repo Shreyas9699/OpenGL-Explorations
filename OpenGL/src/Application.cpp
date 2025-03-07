@@ -27,6 +27,7 @@
 #include "tests/TestLoadModels.h"
 
 #include "tests/TestParticleCPU.h"
+#include "tests/TestParticleGPU.h"
 
 
 #include "Shader_t.h"
@@ -71,7 +72,8 @@ int main(void)
     menu->AddTest<test::TestFBMPlane>("Fractal Brownian Motion Plane", &window);
     menu->AddTest<test::TestHeightMap>("Height Map", &window);
     menu->AddTest<test::TestLoadModels>("Load Models", &window);
-    menu->AddTest<test::TestParticleCPU>("Particles CPU", &window);
+    menu->AddTest<test::TestParticleCPU>("Particles System CPU", &window);
+    menu->AddTest<test::TestParticleGPU>("Particles System GPU", &window);
 
     float lastFrameTime = 0.0f;
     /* Loop until the user closes the window */

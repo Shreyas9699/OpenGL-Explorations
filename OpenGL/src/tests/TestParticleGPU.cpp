@@ -1,10 +1,9 @@
-#include "TestParticleCPU.h"
+#include "TestParticleGPU.h"
 #include "imgui/imgui.h"
-
 
 namespace test
 {
-	TestParticleCPU::TestParticleCPU(Window* window)
+	TestParticleGPU::TestParticleGPU(Window* window)
 		: m_Window(window),
 		m_Camera(glm::vec3(20.0f, 0.0f, 15.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), -140),
 		m_cameraController(m_Window->GetWindow(), m_Camera)
@@ -15,9 +14,10 @@ namespace test
 			});
 		glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		m_Shader = std::make_unique<Shader>("res/shaders/ParticleSysCPU/vertexShader.glsl", "res/shaders/ParticleSysCPU/fragmentShader.glsl");
+		m_Shader = std::make_unique<Shader>("res/shaders/ParticleSysGPU/ParticleVSGPU.glsl",
+			"res/shaders/ParticleSysGPU/ParticleFSGPU.glsl");
 		m_XZPlane = std::make_unique<XZPlaneGrid>(m_Window->GetAspectRatio(), m_GridSize, m_Near, m_Far);
-		m_ParticleSys = std::make_unique <ParticleSystemCPU>();
+		m_ParticleSys = std::make_unique <ParticleSystemGPU>();
 
 		emitterShape = { "POINT", "SPHERE", "CONE", "BOX" };
 
@@ -26,7 +26,7 @@ namespace test
 		m_ParticleSys->SetEmitter(emitterProp);
 	}
 
-	TestParticleCPU::~TestParticleCPU()
+	TestParticleGPU::~TestParticleGPU()
 	{
 		m_ParticleSys.reset();
 		m_XZPlane.reset();
@@ -35,7 +35,7 @@ namespace test
 		m_Window->setCustomKeyCallback(nullptr);
 	}
 
-	void TestParticleCPU::handleKeyPress(int key, int scancode, int action, int mods)
+	void TestParticleGPU::handleKeyPress(int key, int scancode, int action, int mods)
 	{
 		if (key == GLFW_KEY_G && action == GLFW_PRESS)
 		{
@@ -55,7 +55,7 @@ namespace test
 		}
 	}
 
-	void TestParticleCPU::OnUpdate(Timestep deltaTime, GLFWwindow* win)
+	void TestParticleGPU::OnUpdate(Timestep deltaTime, GLFWwindow* win)
 	{
 		m_cameraController.Update(deltaTime);
 		m_ParticleSys->Update(deltaTime);
@@ -68,7 +68,7 @@ namespace test
 		}
 	}
 
-	void TestParticleCPU::OnRender()
+	void TestParticleGPU::OnRender()
 	{
 		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -95,7 +95,7 @@ namespace test
 		m_ParticleSys->Render(*m_Shader);
 	}
 
-	void TestParticleCPU::OnImGuiRender()
+	void TestParticleGPU::OnImGuiRender()
 	{
 		ImVec4 enabledColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);  // Green
 		ImVec4 disabledColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); // Red
@@ -121,7 +121,6 @@ namespace test
 		ImGui::SliderInt(" ", &m_GridSize, -1, 150);
 		ImGui::EndDisabled();
 
-		//ImGui::Separator();
 		//  Emitter properties
 		if (ImGui::CollapsingHeader("Particle Emitter Properties", ImGuiTreeNodeFlags_DefaultOpen))
 		{
@@ -147,7 +146,7 @@ namespace test
 				m_ParticleSys->SetEmitter(emitterProp);
 			}
 
-			if (ImGui::SliderFloat("Particle Emitter EmissionRate", (float*)&emitterProp.emissionRate, 10.0f, 3500.0f))
+			if (ImGui::SliderFloat("Particle Emitter EmissionRate", (float*)&emitterProp.emissionRate, 1000.0f, 10000.0f))
 			{
 				// Update the particle system with the new emitter properties
 				m_ParticleSys->SetEmitter(emitterProp);
@@ -160,7 +159,7 @@ namespace test
 			ImGui::EndDisabled();
 
 			ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "CONE");
-			if (ImGui::SliderFloat("Particle Emitter Angle", (float*)&emitterProp.angle, 0.0f, 360.0f))
+			if (ImGui::SliderFloat("Particle Emitter Angle", (float*)&emitterProp.angle, 0.0f, 120.0f))
 			{
 				m_ParticleSys->SetEmitterAngle(emitterProp.angle);
 			}
@@ -203,7 +202,7 @@ namespace test
 				m_ParticleSys->SetParticleSizeEnd(sizeEnd);
 			}
 
-			if (ImGui::SliderFloat("Particle lifespan (in sec)", (float*)&lifespan, 0.01f, 20.0f))
+			if (ImGui::SliderFloat("Particle lifespan (in sec)", (float*)&lifespan, 0.01f, 30.0f))
 			{
 				m_ParticleSys->SetParticleLifespan(lifespan);
 			}

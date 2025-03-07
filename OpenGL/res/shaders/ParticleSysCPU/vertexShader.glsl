@@ -12,6 +12,7 @@ out vec4 VfragColor;
 void main()
 {
 	gl_Position = projection * view * model * vec4(aPos, 1.0f);
+	float dist = length((view * model * vec4(aPos, 1.0)));
 	VfragColor = aColor;
-	gl_PointSize = aSize;
+	gl_PointSize = aSize * 40.0 / dist;
 }

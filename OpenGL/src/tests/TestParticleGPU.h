@@ -4,12 +4,12 @@
 #include "CameraController.h"
 #include "Window.h"
 
-#include "ParticleSystemCPU.h"
+#include "ParticleSystemGPU.h"
 #include "XZPlaneGrid.h"
 
 namespace test
 {
-	class TestParticleCPU : public Test
+	class TestParticleGPU : public Test
 	{
 		Window* m_Window;
 		std::unique_ptr<Shader> m_Shader;
@@ -34,8 +34,8 @@ namespace test
 		void handleKeyPress(int key, int scancode, int action, int mods);
 
 	public:
-		TestParticleCPU(Window* window);
-		~TestParticleCPU();
+		TestParticleGPU(Window* window);
+		~TestParticleGPU();
 
 		void OnUpdate(Timestep deltaTime, GLFWwindow* win);
 		void OnRender() override;
