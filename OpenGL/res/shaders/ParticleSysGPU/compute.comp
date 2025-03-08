@@ -38,6 +38,10 @@ void main()
         
     // Update life
     particles[id].velocity.w -= deltaTime;
+
+    // If particle just died, we can return early to save computation
+    if (particles[id].velocity.w <= 0.0)
+        return;
     
     // Apply global force to velocity
     particles[id].velocity.xyz += globalForce * deltaTime;

@@ -4,7 +4,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 static constexpr unsigned int MAX_ABSOLUTE_PARTICLES = 1000000;
-static constexpr float MAX_ABSOLUTE_LIFESPAN = 30.0f;
+static constexpr unsigned int MAX_ABSOLUTE_LIFESPAN = 30;
 
 enum class EmitterShape
 {

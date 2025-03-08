@@ -151,7 +151,7 @@ namespace test
 				m_ParticleSys->SetEmitter(emitterProp);
 			}
 
-			if (ImGui::SliderInt("Particle Emitter EmissionRate", &emitterProp.emissionRate, 1000, 33000))
+			if (ImGui::SliderInt("Particle Emitter EmissionRate", &emitterProp.emissionRate, 1000, 30000))
 			{
 				// Update the particle system with the new emitter properties
 				m_ParticleSys->SetEmissionRate(emitterProp.emissionRate);
