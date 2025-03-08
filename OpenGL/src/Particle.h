@@ -3,6 +3,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+static constexpr unsigned int MAX_ABSOLUTE_PARTICLES = 1000000;
+static constexpr float MAX_ABSOLUTE_LIFESPAN = 30.0f;
+
 enum class EmitterShape
 {
     POINT,
@@ -21,7 +24,7 @@ struct EmitterProperties
     float angle = 30.0f;                        // For CONE (in degrees)
     glm::vec3 dimensions = glm::vec3(1.0f);     // For BOX
 
-    float emissionRate = 1000.0f;                // Particles per second
+    int emissionRate = 1000;                // Particles per second
     float accumulatedTime = 0.0f;
 
     /*float MINLife;
@@ -30,7 +33,7 @@ struct EmitterProperties
     EmitterProperties() = default;
 
     EmitterProperties(glm::vec3 pos, glm::vec3 rotation, glm::vec3 scale, EmitterShape shape, float radius, float angle,
-        glm::vec3 dia, float emissionRate)
+        glm::vec3 dia, int emissionRate)
         : position(pos),
           rotation(rotation),
           scale(scale),

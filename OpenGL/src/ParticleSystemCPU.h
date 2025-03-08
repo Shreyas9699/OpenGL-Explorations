@@ -36,9 +36,6 @@ public:
     void Destroy(unsigned int id);
     void DeleteInactiveParticles();
 
-    void SetEmitter(const EmitterProperties& emitterProp) override
-    {
-        m_Emitter = emitterProp;
-        UpdateGenerators();
-    }
+    void SetEmitter(const EmitterProperties& emitterProp) override;
+    void SetEmissionRate(int rate) override;
 };

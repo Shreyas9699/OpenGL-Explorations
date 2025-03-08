@@ -20,6 +20,7 @@ namespace test
 		CameraController m_cameraController;
 		int m_GridSize = 100;
 		int m_GridSizePrev = 0;
+		float m_scalingFactor = 1.0f;
 		float m_Near = 0.01f;
 		float m_Far = 1000.0f;
 		bool isGridEnabled = false;
@@ -29,7 +30,7 @@ namespace test
 		// particle Emitter properties
 		std::vector<const char*> emitterShape;
 		int currentEmitterShapeIdx = 0;
-		EmitterProperties emitterProp = EmitterProperties(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f), EmitterShape::POINT, 2.0f, 45.0f, glm::vec3(2.0f), 1000.0f);
+		EmitterProperties emitterProp = EmitterProperties(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f), EmitterShape::POINT, 2.0f, 45.0f, glm::vec3(2.0f), 1000);
 
 		void handleKeyPress(int key, int scancode, int action, int mods);
 

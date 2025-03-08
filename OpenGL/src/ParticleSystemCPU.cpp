@@ -42,6 +42,8 @@ void ParticleSystemCPU::Update(float delta)
         m_Emitter.accumulatedTime -= 1.0f;
     }
 
+    UpdateGenerators();
+
     // Create particles
     for (int i = 0; i < numParticles; i++)
     {
@@ -364,4 +366,17 @@ void ParticleSystemCPU::DeleteInactiveParticles()
             it++;
         }
     }
+}
+
+void ParticleSystemCPU::SetEmitter(const EmitterProperties& emitterProp)
+{
+    m_Emitter = emitterProp;
+    UpdateGenerators();
+}
+
+void ParticleSystemCPU::SetEmissionRate(int rate)
+{
+    m_Emitter.emissionRate = rate;
+    m_Emitter.accumulatedTime = 0.0f;
+    UpdateGenerators();
 }

@@ -38,13 +38,13 @@ private:
 
         for (unsigned int y = 0; y <= m_Rings; y++)
         {
-            float phi = (float)y * M_PI / (float)m_Rings;
+            float phi = static_cast<float>(y * M_PI) / static_cast<float>(m_Rings);
             float sinPhi = sin(phi);
             float cosPhi = cos(phi);
 
             for (unsigned int x = 0; x <= m_Segments; x++)
             {
-                float theta = (float)x * 2.0f * M_PI / (float)m_Segments;
+                float theta = static_cast<float>(x * 2.0f * M_PI) / static_cast<float>(m_Segments);
                 float sinTheta = sin(theta);
                 float cosTheta = cos(theta);
 

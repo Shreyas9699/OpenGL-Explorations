@@ -21,6 +21,7 @@ layout(std430, binding = 0) readonly buffer ParticleBuffer {
 uniform mat4 view;
 uniform mat4 model;
 uniform mat4 projection;
+uniform float scaling_factor;
 
 // Output to fragment shader
 out vec4 particleColor;
@@ -55,7 +56,7 @@ void main()
     // Calculate point size with depth attenuation
     // This makes particles that are further away appear smaller
     float dist = length((view * model * vec4(position, 1.0)).xyz);
-    gl_PointSize = size * lifePercent * 40.0 / dist;
+    gl_PointSize = size * lifePercent * scaling_factor / dist;
     
     // Calculate color based on life
     particleColor = mix(particle.colorEnd, particle.colorBegin, lifePercent);

@@ -18,11 +18,10 @@ namespace test
 			"res/shaders/ParticleSysGPU/ParticleFSGPU.glsl");
 		m_XZPlane = std::make_unique<XZPlaneGrid>(m_Window->GetAspectRatio(), m_GridSize, m_Near, m_Far);
 		m_ParticleSys = std::make_unique <ParticleSystemGPU>();
-
 		emitterShape = { "POINT", "SPHERE", "CONE", "BOX" };
 
-		// Setup a point emitter at position(0, 0, 0)
 		emitterProp.shape = EmitterShape::POINT;
+		emitterProp.emissionRate = 1000;
 		m_ParticleSys->SetEmitter(emitterProp);
 	}
 
@@ -60,6 +59,8 @@ namespace test
 		m_cameraController.Update(deltaTime);
 		m_ParticleSys->Update(deltaTime);
 
+		m_ElapsedTime += deltaTime;
+
 		if (m_GridSize != m_GridSizePrev)
 		{
 			m_GridSizePrev = m_GridSize;
@@ -75,6 +76,7 @@ namespace test
 
 		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), m_Near, m_Far);
 		glm::mat4 view = m_Camera.GetViewMatrix();
+		m_scalingFactor = m_Near * m_Window->GetWindowHeight() * glm::radians(m_Camera.Zoom);
 
 		if (isGridEnabled)
 		{
@@ -84,6 +86,7 @@ namespace test
 		m_Shader->Bind();
 		m_Shader->setMat4("projection", projection);
 		m_Shader->setMat4("view", view);
+		m_Shader->setFloat("scaling_factor", m_scalingFactor);
 
 		// render the loaded model
 		glm::mat4 model = glm::mat4(1.0f);
@@ -105,6 +108,8 @@ namespace test
 		ImGui::Text("FPS: %.1f (%.3f ms)", io.Framerate, 1000.0f / io.Framerate);
 		ImGui::Text("Number of particles alive: %d ", m_ParticleSys->GetActiveParticleCount());
 
+		ImGui::Text("Elapsed Time: %.2f seconds", m_ElapsedTime);
+
 		ImGui::Text("Press below keys to enable/disable:\n");
 
 		color = cusorEnable ? enabledColor : disabledColor;
@@ -125,7 +130,7 @@ namespace test
 		if (ImGui::CollapsingHeader("Particle Emitter Properties", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::Text("Particle Emitter properties\n");
-			if (ImGui::Combo("Particle Emitter Shape", &currentEmitterShapeIdx, emitterShape.data(), emitterShape.size()))
+			if (ImGui::Combo("Particle Emitter Shape", &currentEmitterShapeIdx, emitterShape.data(), static_cast<int>(emitterShape.size())))
 			{
 				if (emitterShape[currentEmitterShapeIdx] == "POINT")
 				{
@@ -146,27 +151,27 @@ namespace test
 				m_ParticleSys->SetEmitter(emitterProp);
 			}
 
-			if (ImGui::SliderFloat("Particle Emitter EmissionRate", (float*)&emitterProp.emissionRate, 1000.0f, 10000.0f))
+			if (ImGui::SliderInt("Particle Emitter EmissionRate", &emitterProp.emissionRate, 1000, 33000))
 			{
 				// Update the particle system with the new emitter properties
-				m_ParticleSys->SetEmitter(emitterProp);
+				m_ParticleSys->SetEmissionRate(emitterProp.emissionRate);
 			}
 			ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "SPHERE" && emitterShape[currentEmitterShapeIdx] != "CONE");
-			if (ImGui::SliderFloat("Particle Emitter Radius", (float*)&emitterProp.radius, 1.0f, 10.0f))
+			if (ImGui::SliderFloat("Particle Emitter Radius", (float*)&emitterProp.radius, 1.0f, 10.0f, "%.1f"))
 			{
 				m_ParticleSys->SetEmitterRadius(emitterProp.radius);
 			}
 			ImGui::EndDisabled();
 
 			ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "CONE");
-			if (ImGui::SliderFloat("Particle Emitter Angle", (float*)&emitterProp.angle, 0.0f, 120.0f))
+			if (ImGui::SliderFloat("Particle Emitter Angle", (float*)&emitterProp.angle, 0.0f, 120.0f, "%.1f"))
 			{
 				m_ParticleSys->SetEmitterAngle(emitterProp.angle);
 			}
 			ImGui::EndDisabled();
 
 			ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "BOX");
-			if (ImGui::SliderFloat3("Particle Emitter Dimensions", (float*)&emitterProp.dimensions, 1.0f, 10.0f))
+			if (ImGui::SliderFloat3("Particle Emitter Dimensions", (float*)&emitterProp.dimensions, 1.0f, 10.0f, "%.1f"))
 			{
 				m_ParticleSys->SetEmitterDimensions(emitterProp.dimensions);
 			}
@@ -192,17 +197,17 @@ namespace test
 				m_ParticleSys->SetParticleColorEnd(colorEnd);
 			}
 
-			if (ImGui::SliderFloat("Particle Begin Size", (float*)&sizeBegin, 0.1f, 10.0f))
+			if (ImGui::SliderFloat("Particle Begin Size", (float*)&sizeBegin, 0.1f, 10.0f, "%.1f"))
 			{
 				m_ParticleSys->SetParticleSizeBegin(sizeBegin);
 			}
 
-			if (ImGui::SliderFloat("Particle End Size", (float*)&sizeEnd, 0.1f, 10.0f))
+			if (ImGui::SliderFloat("Particle End Size", (float*)&sizeEnd, 0.1f, 10.0f, "%.1f"))
 			{
 				m_ParticleSys->SetParticleSizeEnd(sizeEnd);
 			}
 
-			if (ImGui::SliderFloat("Particle lifespan (in sec)", (float*)&lifespan, 0.01f, 30.0f))
+			if (ImGui::SliderFloat("Particle lifespan (in sec)", (float*)&lifespan, 0.1f, 30.0f, "%.1f"))
 			{
 				m_ParticleSys->SetParticleLifespan(lifespan);
 			}

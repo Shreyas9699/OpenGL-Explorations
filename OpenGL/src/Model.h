@@ -60,7 +60,7 @@ public:
             // Bind the normal vertices
             //std::cout << "Inside drawNormals() function \n";
             glBindVertexArray(mesh.VAO);
-            glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, (GLsizei)mesh.indices.size(), GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);
         }
     }
@@ -241,7 +241,7 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
     unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
     if (data)
     {
-        GLenum format;
+        GLenum format = GL_RGB;     // Default format if nrComponents is not 1, 3, or 4
         if (nrComponents == 1)
             format = GL_RED;
         else if (nrComponents == 3)

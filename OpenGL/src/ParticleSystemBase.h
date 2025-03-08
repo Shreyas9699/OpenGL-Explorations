@@ -47,6 +47,7 @@ public:
 
     // Setters
     virtual void SetEmitter(const EmitterProperties& emitterProp) = 0;
+    virtual void SetEmissionRate(int rate) = 0;
     void SetForce(const glm::vec3& force) { m_GlobalForce = force; }
     void SetEmitterPosition(const glm::vec3& position) { m_Emitter.position = position; }
     void SetEmitterRotation(const glm::vec3& rotation) { m_Emitter.rotation = rotation; }
@@ -54,7 +55,6 @@ public:
     void SetEmitterRadius(float radius) { m_Emitter.radius = radius; }
     void SetEmitterAngle(float angle) { m_Emitter.angle = angle; }
     void SetEmitterDimensions(const glm::vec3& dimensions) { m_Emitter.dimensions = dimensions; }
-    void SetEmissionRate(float rate) { m_Emitter.emissionRate = rate; }
 
     void SetParticleColorBegin(const glm::vec4& color) { m_DefaultColorBegin = color; }
     void SetParticleColorEnd(const glm::vec4& color) { m_DefaultColorEnd = color; }

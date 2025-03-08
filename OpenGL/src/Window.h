@@ -48,7 +48,8 @@ public:
 	Window& setSize(int width, int height)
 	{
 		// This would need to resize an existing window
-		if (m_Window) {
+		if (m_Window) 
+		{
 			glfwSetWindowSize(m_Window, width, height);
 			m_WindowWidth = width;
 			m_WindowHeight = height;
@@ -130,6 +131,16 @@ public:
 	float GetAspectRatio() const 
 	{ 
 		return m_AspectRatio;
+	}
+
+	int GetWindowWidth() const
+	{
+		return m_WindowWidth;
+	}
+
+	int GetWindowHeight() const
+	{
+		return m_WindowHeight;
 	}
 
 	GLFWwindow* GetWindow() const 

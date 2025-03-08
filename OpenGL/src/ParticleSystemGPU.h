@@ -12,6 +12,7 @@ private:
 
     // GPU-specific members
     GLuint m_particleSSBO, m_atomicBuffer, m_instanceVBO;
+    //GLuint m_FreeListSSBO;
     GLuint m_particleCountBuffer;
     std::unique_ptr<ComputeShader> m_ComputeShader, m_EmitterShader;
     bool m_UseGPU = true;
@@ -27,12 +28,15 @@ private:
 
     std::vector<GPUParticle> m_GPUParticles;
     unsigned int m_MaxParticles = 1024 * 1024; // Maximum number of particles for GPU simulation
+
+    //void UpdateMaxParticles();
+
 public:
     ParticleSystemGPU();
     ~ParticleSystemGPU();
 
     void Update(float delta) override;
     void Render(Shader& shader) override;
-    void SetEmitter(const EmitterProperties& emitterProp) override { m_Emitter = emitterProp; }
-   
+    void SetEmitter(const EmitterProperties& emitterProp) override;
+    void SetEmissionRate(int rate) override;
 };

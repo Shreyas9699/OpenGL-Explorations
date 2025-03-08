@@ -22,8 +22,15 @@ ParticleSystemGPU::ParticleSystemGPU()
     // Create compute shader
     m_ComputeShader = std::make_unique<ComputeShader>("res/shaders/ParticleSysGPU/compute.comp");
 
+    // Compile emitter compute shader
+    m_EmitterShader = std::make_unique<ComputeShader>("res/shaders/ParticleSysGPU/emitter.comp");
+
     // Initialize GPU particles buffer
+    m_MaxParticles = m_Emitter.emissionRate * static_cast<int>(std::ceil(MAX_ABSOLUTE_LIFESPAN));
     m_GPUParticles.resize(m_MaxParticles);
+
+    std::cout << "PARTICLE_SYSTEM_GPU::ParticleSystemGPU::m_MaxParticles := " << m_MaxParticles << std::endl;
+    std::cout << "PARTICLE_SYSTEM_GPU::ParticleSystemGPU::GPU Buffer size := " << m_MaxParticles * sizeof(GPUParticle) << std::endl;
 
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_particleCountBuffer);
     glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);
@@ -39,9 +46,6 @@ ParticleSystemGPU::ParticleSystemGPU()
     // Create and setup instance VBO to hold particle IDs
     glGenBuffers(1, &m_instanceVBO);
     glBindBuffer(GL_ARRAY_BUFFER, m_instanceVBO);
-
-    m_Emitter.emissionRate = 6000.0f;
-    int maxParticle = m_Emitter.emissionRate * m_DefaultLifespan;
 
     // Generate particle indices (0 to MaxParticles-1)
     std::vector<GLuint> particleIndices(m_MaxParticles);
@@ -78,9 +82,6 @@ ParticleSystemGPU::ParticleSystemGPU()
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicBuffer);
     glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-
-    // Compile emitter compute shader
-    m_EmitterShader = std::make_unique<ComputeShader>("res/shaders/ParticleSysGPU/emitter.comp");
 }
 
 ParticleSystemGPU::~ParticleSystemGPU()
@@ -92,7 +93,11 @@ ParticleSystemGPU::~ParticleSystemGPU()
 
 void ParticleSystemGPU::Update(float delta)
 {
-    if (!m_ComputeShader || !m_EmitterShader) return;
+    if (!m_ComputeShader || !m_EmitterShader)
+    {
+        std::cerr << "ERROR::ParticleSystemGPU::Update    Invalid Compute shader or Emitter shader" << std::endl;
+        return;
+    }
 
     // Reset atomic counter for new particles
     GLuint zero = 0;
@@ -106,6 +111,9 @@ void ParticleSystemGPU::Update(float delta)
     // Prepare to emit new particles
     int newParticlesCount = static_cast<int>(m_Emitter.emissionRate * delta);
 
+    std::cout << "m_Emitter.emissionRate: " << m_Emitter.emissionRate << std::endl
+        << "newParticlesCount for the frame: " << newParticlesCount << std::endl;
+
     // Calculate accumulated fractional particles
     m_Emitter.accumulatedTime += m_Emitter.emissionRate * delta - newParticlesCount;
     if (m_Emitter.accumulatedTime >= 1.0f)
@@ -115,7 +123,8 @@ void ParticleSystemGPU::Update(float delta)
     }
 
     // ---- EMIT PARTICLES ON GPU ----
-    if (newParticlesCount > 0) {
+    if (newParticlesCount > 0) 
+    {
         // Bind atomic counter for emitter shader to use
         glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, m_atomicBuffer);
 
@@ -190,4 +199,52 @@ void ParticleSystemGPU::Render(Shader& shader)
     glBindVertexArray(0);
 
     shader.Unbind();
+}
+
+//void ParticleSystemGPU::UpdateMaxParticles()
+//{
+//    std::cout << "Emission Rate: " << m_Emitter.emissionRate
+//        << ", Max Particles: " << m_MaxParticles
+//        << ", Active Particles: " << m_ActiveParticleCount << std::endl;
+//
+//    // Calculate how many particles we need based on emission rate and lifespan
+//    unsigned int neededParticles = static_cast<unsigned int>(m_Emitter.emissionRate * static_cast<int>(std::ceil(m_DefaultLifespan))); // 10% buffer := * 1.1f
+//
+//    // Cap at some absolute maximum for performance reasons
+//    m_MaxParticles = std::min(neededParticles, MAX_ABSOLUTE_PARTICLES);
+//
+//    // Resize GPU particles buffer if needed - this is expensive, so only do it when necessary
+//    if (m_GPUParticles.size() < m_MaxParticles) 
+//    {
+//        std::cout << "PARTICLE_SYSTEM_GPU::UpdateMaxParticles::    Buffer rezied!" << std::endl;
+//        m_GPUParticles.resize(m_MaxParticles);
+//
+//        // Reinitialize SSBO with new size
+//        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_particleSSBO);
+//        glBufferData(GL_SHADER_STORAGE_BUFFER, m_MaxParticles * sizeof(GPUParticle), nullptr, GL_DYNAMIC_DRAW);
+//
+//        // Initialize new particles
+//        for (size_t i = m_GPUParticles.size(); i < m_MaxParticles; i++) 
+//        {
+//            m_GPUParticles[i].position = glm::vec4(0.0f, 0.0f, 0.0f, m_DefaultSizeBegin);
+//            m_GPUParticles[i].velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // w = lifeRemaining (0 = inactive)
+//            m_GPUParticles[i].colorBegin = m_DefaultColorBegin;
+//            m_GPUParticles[i].colorEnd = glm::vec4(m_DefaultColorEnd.r, m_DefaultColorEnd.g, m_DefaultColorEnd.b, m_DefaultLifespan);
+//        }
+//
+//        // Upload initial data
+//        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_MaxParticles * sizeof(GPUParticle), m_GPUParticles.data());
+//        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+//    }
+//}
+
+void ParticleSystemGPU::SetEmitter(const EmitterProperties& emitterProp)
+{
+    m_Emitter = emitterProp;
+}
+
+void ParticleSystemGPU::SetEmissionRate(int rate)
+{
+    m_Emitter.emissionRate = rate;
+    m_Emitter.accumulatedTime = 0.0f;
 }
