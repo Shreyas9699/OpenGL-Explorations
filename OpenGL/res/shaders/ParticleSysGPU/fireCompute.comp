@@ -8,6 +8,8 @@ struct Particle
     vec4 velocity;    // xyz = velocity, w = lifeRemaining
     vec4 colorBegin;
     vec4 colorEnd;    // w = lifespan
+    float mass;
+    float initialPhase;
 };
 
 layout(std430, binding = 0) buffer ParticleBuffer {
@@ -19,8 +21,6 @@ layout(std430, binding = 1) buffer FreeListBuffer {
     int indices[];
 } freelist;
 
-
-// Add atomic counter for counting active particles
 layout(binding = 1, offset = 0) uniform atomic_uint activeParticleCount;
 
 uniform float deltaTime;
@@ -36,37 +36,23 @@ void UpdateParticle(inout Particle particle, int index)
         if (particle.velocity.w <= 0.0)
             return;
 
-        // Update life
         particle.velocity.w -= deltaTime;
-
-        // If particle just died, we can return early to save computation
-        //if (particle.velocity.w <= 0.0)
-        //    return;
 
         // Apply global force to velocity
         particle.velocity.xyz += globalForce * deltaTime;
-        
-        // Update position based on velocity
+
+
         particle.position.xyz += particle.velocity.xyz * deltaTime;
-        
-        // Calculate life percentage
         float lifespan = particle.colorEnd.w;
         float lifeRemaining = particle.velocity.w;
         float lifePercent = lifeRemaining / lifespan;
-        
-        // Update size based on life
         particle.position.w = mix(sizeEnd, sizeBegin, lifePercent);
 
          atomicCounterIncrement(activeParticleCount);
 
-         //if (particle.velocity.w <= 0.0)
-         //{
-         //   freelist.indices[atomicAdd(freelist.count, 1)] = index;
-         //}
          if (particle.velocity.w <= 0.0) 
          {
             int idx = atomicAdd(freelist.count, 1);
-            // Ensure we don't overflow the free list
             if (idx < freelist.indices.length()) 
             {
                 freelist.indices[idx] = index;
@@ -80,7 +66,6 @@ void main()
 {
     uint id = gl_GlobalInvocationID.x;
     
-    // Check if we're in bounds
     if (id >= particles.length())
         return;
 

@@ -45,7 +45,7 @@ extern "C"
 int main(void)
 {
     Window window("OpenGL Project", false);
-    window.displayGPUDetails();
+    window.displayGPUDetails(true);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();

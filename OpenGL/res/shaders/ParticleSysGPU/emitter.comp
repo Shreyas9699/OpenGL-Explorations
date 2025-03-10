@@ -16,6 +16,11 @@ layout(std430, binding = 0) buffer ParticleBuffer
     Particle particles[];
 };
 
+layout(std430, binding = 1) buffer FreeListBuffer {
+    int count;
+    int indices[];
+} freelist;
+
 // Atomic counter to track particles to emit
 layout(binding = 0, offset = 0) uniform atomic_uint emitCounter;
 
@@ -227,23 +232,17 @@ void main()
     // Only proceed if within the number of new particles to create
     if (id >= newParticleCount)
         return;
+
+    int freeListIndex = atomicAdd(freelist.count, -1) - 1;
+    if (freeListIndex <= 0) 
+    {
+        atomicAdd(freelist.count, 1);
+        return;
+    }
+
     
     // Get an index in the particle array using atomic counter
-    uint particleIndex = atomicCounterIncrement(emitCounter);
-    
-    // Wrap around if we exceed array size
-    particleIndex = particleIndex % particles.length();
-    
-    // Look for an inactive particle to replace
-    for (uint i = 0; i < particles.length(); i++) 
-    {
-        uint idx = (particleIndex + i) % particles.length();
-        if (particles[idx].velocity.w <= 0.0) 
-        {
-            particleIndex = idx;
-            break;
-        }
-    }
+    uint particleIndex = freelist.indices[freeListIndex];
     
     // Initialize seed based on particle index and global time
     seed = uint(particleIndex) + gl_GlobalInvocationID.x * 1973 + 

@@ -8,7 +8,6 @@ ParticleSystemGPU::ParticleSystemGPU()
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
-    // glEnable(GL_POINT_SMOOTH); //is deprecated in core profile as its from legacy OpenGL 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -18,76 +17,67 @@ ParticleSystemGPU::ParticleSystemGPU()
     glGenBuffers(1, &m_atomicBuffer);
     glGenBuffers(1, &m_instanceVBO);
     glGenBuffers(1, &m_particleCountBuffer);
-
-    // Create compute shader
-    m_ComputeShader = std::make_unique<ComputeShader>("res/shaders/ParticleSysGPU/compute.comp");
+    glGenBuffers(1, &m_freeListBuffer);
 
     // Compile emitter compute shader
     m_EmitterShader = std::make_unique<ComputeShader>("res/shaders/ParticleSysGPU/emitter.comp");
 
-    // Initialize GPU particles buffer
-    m_MaxParticles = 30000 * 30;
+    initParticles();
+}
+
+void ParticleSystemGPU::initParticles()
+{
+    // Create compute shader
+    m_ComputeShader = std::make_unique<ComputeShader>("res/shaders/ParticleSysGPU/compute.comp");
+
+    // Resize GPU particles buffer
     m_GPUParticles.resize(m_MaxParticles);
 
-    std::cout << "PARTICLE_SYSTEM_GPU::ParticleSystemGPU::     (Max limit) m_MaxParticles := " << m_MaxParticles << std::endl;
-    std::cout << "PARTICLE_SYSTEM_GPU::ParticleSystemGPU::     GPU Buffer size := " << m_MaxParticles * sizeof(GPUParticle) << std::endl;
-
-    std::cout << "Expected particles : "
-        << m_Emitter.emissionRate * m_DefaultLifespan
-        << " (Rate: " << m_Emitter.emissionRate
-        << " * Lifespan: " << m_DefaultLifespan << ")" << std::endl;
-    std::cout << "Actual max buffer size: " << m_MaxParticles << std::endl;
-
+    // Initialize buffers
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_particleCountBuffer);
     glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
-    // Initialize SSBO
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_particleSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, m_MaxParticles * sizeof(GPUParticle), nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicBuffer);
+    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
-    // Setup basic VAO for rendering (empty, just position attribute)
-    glBindVertexArray(m_VAO);
-
-    // Create and setup instance VBO to hold particle IDs
-    glGenBuffers(1, &m_instanceVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_instanceVBO);
-
-    // Generate particle indices (0 to MaxParticles-1)
+    // Allocate free list + particle index buffer in one loop
+    std::vector<GLint> freeIndices(m_MaxParticles + 1);  // +1 for count at index 0
     std::vector<GLuint> particleIndices(m_MaxParticles);
-    for (GLuint i = 0; i < m_MaxParticles; i++)
+
+    freeIndices[0] = m_MaxParticles; // First element stores the count
+
+    for (GLuint i = 0; i < m_MaxParticles; i++) 
     {
-        particleIndices[i] = i;
-    }
+        freeIndices[i + 1] = m_MaxParticles - 1 - i;  // LIFO Free List
+        particleIndices[i] = i;  // Particle indices
 
-    glBufferData(GL_ARRAY_BUFFER, m_MaxParticles * sizeof(GLuint), particleIndices.data(), GL_STATIC_DRAW);
-
-    // Setup attribute for particle ID
-    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 0, 0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    // Initialize particles with default values
-    for (size_t i = 0; i < m_MaxParticles; i++)
-    {
+        // Initialize GPU particles
         m_GPUParticles[i].position = glm::vec4(0.0f, 0.0f, 0.0f, m_DefaultSizeBegin);
         m_GPUParticles[i].velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // w = lifeRemaining (0 = inactive)
         m_GPUParticles[i].colorBegin = m_DefaultColorBegin;
         m_GPUParticles[i].colorEnd = glm::vec4(m_DefaultColorEnd.r, m_DefaultColorEnd.g, m_DefaultColorEnd.b, m_DefaultLifespan);
     }
 
-    // Upload initial data
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_particleSSBO);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_MaxParticles * sizeof(GPUParticle), m_GPUParticles.data());
+    // Upload Free List Buffer
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_freeListBuffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, (m_MaxParticles + 1) * sizeof(GLint), freeIndices.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-    // Initialize atomic counter for particle emission
-    glGenBuffers(1, &m_atomicBuffer);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicBuffer);
-    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+    // Upload Particle SSBO
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_particleSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, m_MaxParticles * sizeof(GPUParticle), m_GPUParticles.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    // Set up VAO & VBO for rendering particles
+    glBindVertexArray(m_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, m_MaxParticles * sizeof(GLuint), particleIndices.data(), GL_STATIC_DRAW);
+    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 0, 0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 ParticleSystemGPU::~ParticleSystemGPU()
@@ -137,6 +127,8 @@ void ParticleSystemGPU::Update(float delta)
         // Bind particle SSBO
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_particleSSBO);
 
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_freeListBuffer);
+
         // Set emitter shader uniforms
         m_EmitterShader->Bind();
         m_EmitterShader->setInt("newParticleCount", newParticlesCount);
@@ -167,6 +159,8 @@ void ParticleSystemGPU::Update(float delta)
 
     // Bind particle counter atomic buffer to binding point 1
     glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 1, m_particleCountBuffer);
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_freeListBuffer);
 
     // Set compute shader uniforms
     m_ComputeShader->Bind();

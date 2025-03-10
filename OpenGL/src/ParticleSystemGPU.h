@@ -12,7 +12,7 @@ private:
 
     // GPU-specific members
     GLuint m_particleSSBO, m_atomicBuffer, m_instanceVBO;
-    //GLuint m_FreeListSSBO;
+    GLuint m_freeListBuffer;
     GLuint m_particleCountBuffer;
     std::unique_ptr<ComputeShader> m_ComputeShader, m_EmitterShader;
     bool m_UseGPU = true;
@@ -26,10 +26,21 @@ private:
         glm::vec4 colorEnd;    // w = lifespan
     };
 
-    std::vector<GPUParticle> m_GPUParticles;
-    unsigned int m_MaxParticles = 1024 * 1024; // Maximum number of particles for GPU simulation
+    struct GPUParticleFire
+    {
+        glm::vec4 position;    // xyz = position, w = size
+        glm::vec4 velocity;    // xyz = velocity, w = lifeRemaining
+        glm::vec4 colorBegin;
+        glm::vec4 colorEnd;    // w = lifespan
+        float mass;
+        float initialPhase;
+    };
 
-    //void UpdateMaxParticles();
+    std::vector<GPUParticle> m_GPUParticles;
+    std::vector<GPUParticleFire> m_FireParticles;
+    unsigned int m_MaxParticles = ParticleConfig::MAX_ABSOLUTE_PARTICLES * ParticleConfig::MAX_ABSOLUTE_LIFESPAN;
+
+    void initParticles();
 
 public:
     ParticleSystemGPU();

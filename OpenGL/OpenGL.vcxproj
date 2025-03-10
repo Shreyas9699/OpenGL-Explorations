@@ -103,6 +103,7 @@
     <None Include="res\objects\spider\spider.mtl" />
     <None Include="res\objects\wb\WhiteBeard.mtl" />
     <None Include="res\shaders\ParticleSysGPU\emitter.comp" />
+    <None Include="res\shaders\ParticleSysGPU\fireCompute.comp" />
     <None Include="res\shaders\ParticleSysGPU\ParticleFSGPU.glsl" />
     <None Include="res\shaders\ParticleSysGPU\ParticleVSGPU.glsl" />
     <None Include="res\shaders\Pyramid\3DtexFS.glsl" />

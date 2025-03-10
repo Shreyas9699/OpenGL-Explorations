@@ -3,8 +3,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-static constexpr unsigned int MAX_ABSOLUTE_PARTICLES = 1000000;
-static constexpr unsigned int MAX_ABSOLUTE_LIFESPAN = 30;
+// MAX_ABSOLUTE_PARTICLES * MAX_ABSOLUTE_LIFESPAN => max particles alive (current under 0.9 mill for GTX 1050)
+namespace ParticleConfig
+{
+    static constexpr unsigned int MAX_ABSOLUTE_PARTICLES = 60000;
+    static constexpr unsigned int MAX_ABSOLUTE_LIFESPAN = 30;
+};
+
 
 enum class EmitterShape
 {

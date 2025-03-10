@@ -64,10 +64,29 @@ public:
 		return *this;
 	}
 
-	void displayGPUDetails()
+	void displayGPUDetails(bool dispWorkGrps = false)
 	{
 		std::cout << "Vendor: " << glGetString(GL_VENDOR) << std::endl;
 		std::cout << "GPU: " << glGetString(GL_RENDERER) << std::endl;
+
+		// Compute shader work group details
+		if (dispWorkGrps)
+		{
+			int values[3];
+			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &values[0]);
+			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &values[1]);
+			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &values[2]);
+			std::cout << "Max Global (total) Work Group Counts      x: " << values[0] << " y: " << values[1]
+				<< " z: " << values[2] << std::endl;
+			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &values[0]);
+			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &values[1]);
+			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &values[2]);
+			std::cout << "Max Local (in one shader) Work Group Size x: " << values[0] << " y: " << values[1]
+				<< " z: " << values[2] << std::endl;
+			int temp;
+			glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &temp);
+			std::cout << "Max Local Work Group Invocations           : " << temp << std::endl;
+		}
 	}
 
 	void setCustomKeyCallback(std::function<void(int, int, int, int)> callback)
