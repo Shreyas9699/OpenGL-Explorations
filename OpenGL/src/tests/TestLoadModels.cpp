@@ -80,6 +80,18 @@ namespace test
 				m_Camera.Front = glm::vec3(0.0f, 0.0f, 0.0f);*/
 			}
 		}
+		if (key == GLFW_KEY_X && action == GLFW_PRESS)
+		{
+			/*m_isExploding = !m_isExploding;
+			if (m_isExploding) 
+			{
+				m_explosionExpanding = true;
+			}
+			else 
+			{
+				m_explosionExpanding = false;
+			}*/
+		}
 
 	}
 
@@ -87,8 +99,33 @@ namespace test
 	{
 		m_cameraController.Update(deltaTime);
 
+		// Update explosion effect
+		if (m_explosionExpanding) 
+		{
+			m_explosionFactor += m_explosionSpeed * deltaTime.GetSeconds();
+			if (m_explosionFactor >= m_explosionMax) 
+			{
+				m_explosionFactor = m_explosionMax;
+				m_explosionExpanding = false;
+			}
+		}
+		else if (m_isExploding) 
+		{
+			// Hold at maximum explosion
+		}
+		else if (m_explosionFactor > 0.0f) 
+		{
+			// Contract back
+			m_explosionFactor -= m_explosionSpeed * deltaTime.GetSeconds();
+			if (m_explosionFactor < 0.0f) 
+			{
+				m_explosionFactor = 0.0f;
+			}
+		}
+
 		if (selectedModel != currModelPath)
 		{
+			m_explosionFactor = 0.0f;
 			currModelPath = selectedModel;
 			m_Model.reset();
 			m_Model = std::make_unique<Model>(std::filesystem::absolute(currModelPath).string());
@@ -127,7 +164,7 @@ namespace test
 		glm::mat4 view = m_Camera.GetViewMatrix();
 		m_Shader->setMat4("view", view);
 		m_Shader->setMat4("projection", projection);
-
+		m_Shader->setFloat("explosionFactor", m_explosionFactor);
 
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
@@ -150,6 +187,7 @@ namespace test
 			m_ShaderNormal->setMat4("projection", projection);
 			m_ShaderNormal->setMat4("view", view);
 			m_ShaderNormal->setMat4("model", model);
+			m_ShaderNormal->setFloat("explosionFactor", m_explosionFactor);
 			m_ShaderNormal->setFloat("normal_length", normalLength); // Adjust length as needed
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

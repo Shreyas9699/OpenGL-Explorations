@@ -36,7 +36,6 @@ void ParticleSystemGPU::initParticles()
     // Initialize buffers
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_particleCountBuffer);
     glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicBuffer);
     glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);

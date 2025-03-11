@@ -41,7 +41,8 @@ uniform vec4 particleColorEnd;
 
 // Random number generation
 uint seed = 0;
-uint wang_hash(uint seed) {
+uint wang_hash(uint seed) 
+{
     seed = (seed ^ 61) ^ (seed >> 16);
     seed *= 9;
     seed = seed ^ (seed >> 4);
@@ -50,29 +51,35 @@ uint wang_hash(uint seed) {
     return seed;
 }
 
-float rand() {
+float rand() 
+{
     seed = wang_hash(seed);
     return float(seed) / 4294967296.0;
 }
 
 // Utility functions for different emitter shapes
-vec3 generatePointPosition() {
+vec3 generatePointPosition() 
+{
     return emitterPosition;
 }
 
-vec3 generateSpherePosition() {
-    float theta = rand() * 2.0 * 3.14159265;
-    float phi = rand() * 3.14159265;
+vec3 generateSpherePosition() 
+{
+    float u = rand();
+    float v = rand();
+    float theta = 2.0 * 3.14159265 * u;  // Uniform theta
+    float phi = acos(2.0 * v - 1.0);      // Proper phi distribution
     
     float x = sin(phi) * cos(theta);
     float y = sin(phi) * sin(theta);
     float z = cos(phi);
     
-    float r = emitterRadius * pow(rand(), 1.0/3.0); // cube root for uniform distribution
+    float r = emitterRadius * pow(rand(), 1.0/3.0);
     return emitterPosition + vec3(x, y, z) * r;
 }
 
-vec3 generateConePosition() {
+vec3 generateConePosition() 
+{
     float theta = rand() * 2.0 * 3.14159265;
     float distance = rand() * emitterRadius;
     
@@ -106,7 +113,8 @@ vec3 generateConePosition() {
     return emitterPosition + rotatedOffset;
 }
 
-vec3 generateBoxPosition() {
+vec3 generateBoxPosition() 
+{
     float x = (rand() * 2.0 - 1.0) * emitterDimensions.x * 0.5;
     float y = (rand() * 2.0 - 1.0) * emitterDimensions.y * 0.5;
     float z = (rand() * 2.0 - 1.0) * emitterDimensions.z * 0.5;

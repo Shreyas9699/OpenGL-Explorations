@@ -11,6 +11,7 @@ namespace test
 {
 	class TestParticleGPU : public Test
 	{
+
 		Window* m_Window;
 		std::unique_ptr<Shader> m_Shader;
 		std::unique_ptr<Shader> m_ShaderGPU;

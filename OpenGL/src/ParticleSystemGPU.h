@@ -26,18 +26,7 @@ private:
         glm::vec4 colorEnd;    // w = lifespan
     };
 
-    struct GPUParticleFire
-    {
-        glm::vec4 position;    // xyz = position, w = size
-        glm::vec4 velocity;    // xyz = velocity, w = lifeRemaining
-        glm::vec4 colorBegin;
-        glm::vec4 colorEnd;    // w = lifespan
-        float mass;
-        float initialPhase;
-    };
-
     std::vector<GPUParticle> m_GPUParticles;
-    std::vector<GPUParticleFire> m_FireParticles;
     unsigned int m_MaxParticles = ParticleConfig::MAX_ABSOLUTE_PARTICLES * ParticleConfig::MAX_ABSOLUTE_LIFESPAN;
 
     void initParticles();

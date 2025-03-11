@@ -26,6 +26,12 @@ namespace test
 		float normalLength = 0.3f;
 		glm::vec3 lightPosition = glm::vec3(0.0f, 15.0f, 5.0f);
 
+		bool m_isExploding = false;
+		float m_explosionFactor = 0.0f;
+		float m_explosionMax = 1.0f;
+		float m_explosionSpeed = 0.5f; // Adjust speed as needed
+		bool m_explosionExpanding = false;
+
 		//std::vector<const char*> heightmaps = {};
 		float errorMessageTime = 0.0f;
 		std::string errorMessage;

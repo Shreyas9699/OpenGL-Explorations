@@ -54,22 +54,22 @@ void ParticleSystemCPU::Update(float delta)
     m_ActiveParticleCount = 0;
     for (auto& [pID, particle] : m_Particles)
     {
-        if (particle.LifeRemaining > 0)
+        if (particle.lifeRemaining > 0)
         {
             m_ActiveParticleCount++;
             // Calculate life percentage for interpolation
-            float life = particle.LifeRemaining / particle.lifeSpan;
+            float life = particle.lifeRemaining / particle.initialLife;
 
 
             if (m_UseForces)
             {
-                particle.Velocity += m_GlobalForce * delta; // vel2 = vel1 + acc * t
+                particle.velocity += m_GlobalForce * delta; // vel2 = vel1 + acc * t
             }
 
-            particle.LifeRemaining -= delta;
-            particle.Position += particle.Velocity * delta;
+            particle.lifeRemaining -= delta;
+            particle.position += particle.velocity * delta;
 
-            particle.currentSize = glm::mix(particle.sizeEnd, particle.sizeBegin, life);
+            particle.size = glm::mix(particle.sizeEnd, particle.sizeBegin, life);
         }
         else
         {
@@ -81,11 +81,11 @@ void ParticleSystemCPU::Update(float delta)
     m_Points.clear();
     for (auto& particle : m_Particles)
     {
-        m_Points.push_back(particle.second.Position.x);
-        m_Points.push_back(particle.second.Position.y);
-        m_Points.push_back(particle.second.Position.z);
+        m_Points.push_back(particle.second.position.x);
+        m_Points.push_back(particle.second.position.y);
+        m_Points.push_back(particle.second.position.z);
 
-        float life = particle.second.LifeRemaining / particle.second.lifeSpan;
+        float life = particle.second.lifeRemaining / particle.second.initialLife;
         particle.second.color = glm::mix(particle.second.colorEnd, particle.second.colorBegin, life);
 
         m_Points.push_back(particle.second.color.r);
@@ -93,7 +93,7 @@ void ParticleSystemCPU::Update(float delta)
         m_Points.push_back(particle.second.color.b);
         m_Points.push_back(particle.second.color.a * life); // fade effect
 
-        m_Points.push_back(particle.second.currentSize);
+        m_Points.push_back(particle.second.size);
     }
 
     glBindVertexArray(m_VAO);
@@ -317,7 +317,7 @@ void ParticleSystemCPU::CreateParticle()
     float sizeBegin = m_UseSizeOverLifetime ? m_DefaultSizeBegin : 1.0f;
     float sizeEnd = m_UseSizeOverLifetime ? m_DefaultSizeEnd : 1.0f;*/
     if (m_Particles.find(particleID) != m_Particles.end())
-    {
+    {   
         m_Particles[particleID] = Particle(
             position,
             velocity,

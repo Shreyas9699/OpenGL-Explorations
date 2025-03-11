@@ -40,42 +40,43 @@ struct EmitterProperties
     EmitterProperties(glm::vec3 pos, glm::vec3 rotation, glm::vec3 scale, EmitterShape shape, float radius, float angle,
         glm::vec3 dia, int emissionRate)
         : position(pos),
-          rotation(rotation),
-          scale(scale),
-          shape(shape),
-          radius(radius),
-          angle(angle),
-          dimensions(dia),
-          emissionRate(emissionRate) {}
+        rotation(rotation),
+        scale(scale),
+        shape(shape),
+        radius(radius),
+        angle(angle),
+        dimensions(dia),
+        emissionRate(emissionRate) {
+    }
 };
 
 struct Particle
 {
-    glm::vec3 Position = glm::vec3(0.0f);
-    glm::vec3 Velocity = glm::vec3(1.0f);
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 velocity = glm::vec3(1.0f);
     glm::vec4 colorBegin = glm::vec4(glm::vec3(1.0f), 1.0f);
     glm::vec4 colorEnd = glm::vec4(glm::vec3(0.0f), 1.0f);
     glm::vec4 color = glm::vec4(glm::vec3(1.0f), 1.0f);
-    float lifeSpan = 1.5f;
-    float LifeRemaining = 0.0f;
+    float initialLife = 1.5f;
+    float lifeRemaining = 0.0f;
     bool Active = true;
     float sizeBegin = 1.0f;
     float sizeEnd = 1.0f;
-    float currentSize = 1.0f;
+    float size = 1.0f;
 
     Particle() = default;
 
     // Constructor with all parameters
     Particle(glm::vec3 position, glm::vec3 velocity, glm::vec4 colorBegin, glm::vec4 colorEnd, float lifeSpan,
         float lifeRemaining, bool active, float sizeBegin = 1.0f, float sizeEnd = 1.0f)
-        : Position(position),
-          Velocity(velocity),
+        : position(position),
+          velocity(velocity),
           colorBegin(colorBegin),
           colorEnd(colorEnd),
-          lifeSpan(lifeSpan),
-          LifeRemaining(lifeRemaining),
+          initialLife(lifeSpan),
+          lifeRemaining(lifeRemaining),
           Active(active),
           sizeBegin(sizeBegin),
           sizeEnd(sizeEnd),
-          currentSize(sizeBegin) { }
+          size(sizeBegin) { }
 };
