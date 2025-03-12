@@ -7,6 +7,10 @@
 class ParticleSystemCPU : public ParticleSystemBase
 {
 private:
+    std::unordered_map<unsigned int, Particle> m_Particles;
+    std::queue<unsigned int> m_ParticlePool;
+    std::vector<float> m_Points;
+
     std::unique_ptr<VertexArray> m_VAO;
     std::unique_ptr<VertexBuffer> m_VBO;
     std::unique_ptr<Shader> m_Shader;
@@ -38,6 +42,7 @@ public:
 
     void Destroy(unsigned int id);
     void DeleteInactiveParticles();
+    size_t GetNumOfParticles() { return m_Particles.size(); }
 
     void SetEmitter(const EmitterProperties& emitterProp) override;
     void SetEmissionRate(int rate) override;

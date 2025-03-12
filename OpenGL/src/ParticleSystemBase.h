@@ -17,10 +17,6 @@
 class ParticleSystemBase
 {
 protected:
-    std::unordered_map<unsigned int, Particle> m_Particles;
-    std::queue<unsigned int> m_ParticlePool;
-    std::vector<float> m_Points;
-
     unsigned int id = 0;
     size_t m_ActiveParticleCount = 0;
     bool isBegin = false;
@@ -63,7 +59,6 @@ public:
     void SetParticleLifespan(float lifespan) { m_DefaultLifespan = lifespan; }
 
     // Getters
-    size_t GetNumOfParticles() { return m_Particles.size(); }
     size_t GetActiveParticleCount() const { return m_ActiveParticleCount; }
     glm::vec4 GetParticleColorBegin() { return m_DefaultColorBegin; }
     glm::vec4 GetParticleColorEnd() { return m_DefaultColorEnd; }

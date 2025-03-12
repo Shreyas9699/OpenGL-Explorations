@@ -30,10 +30,6 @@ uniform float sizeEnd;
 
 void UpdateParticle(inout Particle particle, int index)
 {
-    // Check if particle is active
-    if (particle.velocity.w <= 0.0)
-        return;
-
     // Update life
     particle.velocity.w -= deltaTime;
     
@@ -73,6 +69,9 @@ void main()
     
     // Check if we're in bounds
     if (id >= particles.length())
+        return;
+
+    if (particles[id].velocity.w <= 0.0)
         return;
 
     UpdateParticle(particles[id], int(id));

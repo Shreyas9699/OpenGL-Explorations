@@ -33,13 +33,8 @@ void main()
     Particle particle = particles[particleID];
     
     // Skip rendering if particle is inactive
-    if (particle.velocity.w <= 0.0) {
-        // Move the vertex far away so it's not visible
-        gl_Position = vec4(0, 0, -1000, 1);
-        gl_PointSize = 0;
-        particleColor = vec4(0);
+    if (particle.velocity.w <= 0.0) 
         return;
-    }
     
     // Calculate life percentage for interpolation
     float lifespan = particle.colorEnd.w;
