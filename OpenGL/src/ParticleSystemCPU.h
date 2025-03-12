@@ -1,11 +1,14 @@
 // Particle System with CPU Implementation
 #pragma once
 #include "ParticleSystemBase.h"
+#include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
 
 class ParticleSystemCPU : public ParticleSystemBase
 {
 private:
-    unsigned int m_VAO, m_VBO;
+    std::unique_ptr<VertexArray> m_VAO;
+    std::unique_ptr<VertexBuffer> m_VBO;
     std::unique_ptr<Shader> m_Shader;
 
     std::function<glm::vec3()> m_PositionGenerator;

@@ -1,5 +1,4 @@
 #include "Renderer.h"
-
 #include <iostream>
 
 void GLClearError()
@@ -30,7 +29,7 @@ void Renderer::Draw(const VertexArray& va, const Shader& shader, float vertexCou
 {
 	shader.Bind();
 	va.Bind();
-	GLCall(glDrawArrays(GL_TRIANGLES, 0, vertexCount));
+	GLCall(glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertexCount));
 }
 
 void Renderer::DrawLines(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const
@@ -38,14 +37,14 @@ void Renderer::DrawLines(const VertexArray& va, const IndexBuffer& ib, const Sha
 	shader.Bind();
 	va.Bind();
 	ib.Bind();
-	GLCall(glDrawElements(GL_LINES, ib.GetCount(), GL_UNSIGNED_INT, nullptr););
+	GLCall(glDrawElements(GL_LINES, (GLsizei)ib.GetCount(), GL_UNSIGNED_INT, nullptr););
 }
 
 void Renderer::DrawLines(const VertexArray& va, const Shader& shader, float vertexCount) const
 {
 	shader.Bind();
 	va.Bind();
-	GLCall(glDrawArrays(GL_LINE_STRIP, 0, vertexCount));
+	GLCall(glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertexCount));
 }
 
 void Renderer::DrawPatchesTri(const VertexArray& va, const Shader& shader, float vertexCount) const
@@ -54,7 +53,7 @@ void Renderer::DrawPatchesTri(const VertexArray& va, const Shader& shader, float
 	va.Bind();
 	// Set OpenGL to interpret the input as patches (instead of triangles)
 	glPatchParameteri(GL_PATCH_VERTICES, 3);
-	GLCall(glDrawArrays(GL_PATCHES, 0, vertexCount / 3));
+	GLCall(glDrawArrays(GL_PATCHES, 0, (GLsizei)vertexCount / 3));
 }
 
 void Renderer::Clear() const

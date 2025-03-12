@@ -19,6 +19,7 @@ struct VertexBufferElement
 		case GL_FLOAT:			return 4;
 		case GL_UNSIGNED_INT:	return 4;
 		case GL_UNSIGNED_BYTE:	return 1;
+		case GL_INT:            return 4;
 		}
 		ASSERT(false)
 		return 0;
@@ -39,6 +40,13 @@ public:
 	{
 		static_assert(std::is_same<T, float>::value || std::is_same<T, unsigned int>::value || std::is_same<T, unsigned char>::value,
 			"Push<T>: Unsupported type! Use float, unsigned int, or unsigned char.");
+	}
+
+	template<>
+	void Push<int>(unsigned int count)
+	{
+		m_Elements.push_back({ count, GL_INT, GL_FALSE });
+		m_Stride += count * VertexBufferElement::GetSizeOfType(GL_INT);
 	}
 
 	template<>

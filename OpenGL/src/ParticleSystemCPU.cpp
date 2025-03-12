@@ -16,14 +16,13 @@ ParticleSystemCPU::ParticleSystemCPU()
     m_PositionGenerator = [this]() { return this->GeneratePointPosition(); };
     m_VelocityGenerator = [this]() { return this->GeneratePointVelocity(); };
 
-    glGenVertexArrays(1, &m_VAO);
-    glGenBuffers(1, &m_VBO);
+    m_VAO = std::make_unique<VertexArray>();
 }
 
 ParticleSystemCPU::~ParticleSystemCPU()
 {
-    glDeleteVertexArrays(1, &m_VAO);
-    glDeleteBuffers(1, &m_VBO);
+    m_VAO.reset();
+    m_VBO.reset();
     m_Shader.reset();
 }
 
@@ -96,23 +95,17 @@ void ParticleSystemCPU::Update(float delta)
         m_Points.push_back(particle.second.size);
     }
 
-    glBindVertexArray(m_VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferData(GL_ARRAY_BUFFER, m_Points.size() * sizeof(float), m_Points.data(), GL_DYNAMIC_DRAW);
+    m_VAO->Bind();
+    m_VBO.reset();
+    m_VBO = std::make_unique<VertexBuffer>(m_Points.data(), static_cast<unsigned int>(m_Points.size() * sizeof(float)));
 
     // why 7* => 
     //  We now have 8 values per vertex: 3 for position, 4 for color, 1 for size
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(7 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    VertexBufferLayout layout;
+    layout.Push<float>(3);
+    layout.Push<float>(4);
+    layout.Push<float>(1);
+    m_VAO->AddBuffer(*m_VBO, layout);
 }
 
 void ParticleSystemCPU::Render(Shader& m_Shader)
@@ -120,10 +113,9 @@ void ParticleSystemCPU::Render(Shader& m_Shader)
     // draw particles
     m_Shader.Bind();
     m_Shader.setVec4("color", 1.0f, 1.0f, 1.0f, 1.0f);
-    glBindVertexArray(m_VAO);
-    //glPointSize(3.0f);
-    glDrawArrays(GL_POINTS, 0, (GLsizei)m_Points.size() / 8); // Changed from /3 to /7 to account for position + color
-    glBindVertexArray(0);
+    m_VAO->Bind();
+    glDrawArrays(GL_POINTS, 0, (GLsizei)m_Points.size() / 7); // Changed from /3 to /7 to account for position + color
+    m_VAO->Unbind();
     m_Shader.Unbind();
 }
 

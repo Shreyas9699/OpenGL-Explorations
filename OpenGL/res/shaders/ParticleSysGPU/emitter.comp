@@ -11,8 +11,8 @@ struct Particle
 };
 
 // Particle storage buffer
-layout(std430, binding = 0) buffer ParticleBuffer 
-{
+layout(binding = 0) uniform atomic_uint newParticleCounter;
+layout(std430, binding = 0) buffer ParticleBuffer {
     Particle particles[];
 };
 
@@ -21,8 +21,6 @@ layout(std430, binding = 1) buffer FreeListBuffer {
     int indices[];
 } freelist;
 
-// Atomic counter to track particles to emit
-layout(binding = 0, offset = 0) uniform atomic_uint emitCounter;
 
 // Emitter properties
 uniform int newParticleCount;

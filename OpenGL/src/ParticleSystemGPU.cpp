@@ -11,14 +11,6 @@ ParticleSystemGPU::ParticleSystemGPU()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glGenVertexArrays(1, &m_VAO);
-    glGenBuffers(1, &m_VBO);
-    glGenBuffers(1, &m_particleSSBO);
-    glGenBuffers(1, &m_atomicBuffer);
-    glGenBuffers(1, &m_instanceVBO);
-    glGenBuffers(1, &m_particleCountBuffer);
-    glGenBuffers(1, &m_freeListBuffer);
-
     // Compile emitter compute shader
     m_EmitterShader = std::make_unique<ComputeShader>("res/shaders/ParticleSysGPU/emitter.comp");
 
@@ -34,12 +26,16 @@ void ParticleSystemGPU::initParticles()
     m_GPUParticles.resize(m_MaxParticles);
 
     // Initialize buffers
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_particleCountBuffer);
-    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);
+    // Initialize particle count buffer
+    GLuint initialZero = 0;
+    m_ParticleCountBuffer = std::make_unique<VertexBuffer>(
+        &initialZero, sizeof(GLuint), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
+    );
 
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicBuffer);
-    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+    // Initialize atomic buffer
+    m_AtomicBuffer = std::make_unique<VertexBuffer>(
+        &initialZero, sizeof(GLuint), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
+    );
 
     // Allocate free list + particle index buffer in one loop
     std::vector<GLint> freeIndices(m_MaxParticles + 1);  // +1 for count at index 0
@@ -59,30 +55,34 @@ void ParticleSystemGPU::initParticles()
         m_GPUParticles[i].colorEnd = glm::vec4(m_DefaultColorEnd.r, m_DefaultColorEnd.g, m_DefaultColorEnd.b, m_DefaultLifespan);
     }
 
-    // Upload Free List Buffer
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_freeListBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, (m_MaxParticles + 1) * sizeof(GLint), freeIndices.data(), GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    // Create free list buffer
+    m_FreeListBuffer = std::make_unique<VertexBuffer>(
+        freeIndices.data(), (m_MaxParticles + 1) * sizeof(GLint), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
+    );
 
-    // Upload Particle SSBO
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_particleSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, m_MaxParticles * sizeof(GPUParticle), m_GPUParticles.data(), GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    // Create particle SSBO
+    m_ParticleSSBO = std::make_unique<VertexBuffer>(
+        m_GPUParticles.data(), m_MaxParticles * sizeof(GPUParticle), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
+    );
 
-    // Set up VAO & VBO for rendering particles
-    glBindVertexArray(m_VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, m_MaxParticles * sizeof(GLuint), particleIndices.data(), GL_STATIC_DRAW);
-    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 0, 0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    m_ParticleVAO = std::make_unique<VertexArray>();
+    m_InstanceVBO = std::make_unique<VertexBuffer>( particleIndices.data(), m_MaxParticles * sizeof(GLuint));
+    VertexBufferLayout layout;
+    layout.Push<int>(1); // For the particle index
+    m_ParticleVAO->AddBuffer(*m_InstanceVBO, layout);
 }
 
 ParticleSystemGPU::~ParticleSystemGPU()
 {
-    glDeleteVertexArrays(1, &m_VAO);
-    glDeleteBuffers(1, &m_VBO);
+    m_ParticleVAO.reset();
+    m_InstanceVBO.reset();
+    m_ParticleSSBO.reset();
+    m_AtomicBuffer.reset();
+    m_ParticleCountBuffer.reset();
+    m_FreeListBuffer.reset();
+
+    m_ComputeShader.reset();
+    m_EmitterShader.reset();
     m_Shader.reset();
 }
 
@@ -96,18 +96,17 @@ void ParticleSystemGPU::Update(float delta)
 
     // Reset atomic counter for new particles
     GLuint zero = 0;
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicBuffer);
-    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &zero);
+    /*GLCall(glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_AtomicBuffer->GetRendererID()));
+    GLCall(glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &zero));*/
+    m_AtomicBuffer->UpdateData(&zero, sizeof(GLuint), 0);
 
     // Reset particle counter to zero
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_particleCountBuffer);
-    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &zero);
+   /* GLCall(glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_ParticleCountBuffer->GetRendererID()));
+    GLCall(glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &zero));*/
+    m_ParticleCountBuffer->UpdateData(&zero, sizeof(GLuint), 0);
 
     // Prepare to emit new particles
     int newParticlesCount = static_cast<int>(m_Emitter.emissionRate * delta);
-
-    /*std::cout << "m_Emitter.emissionRate: " << m_Emitter.emissionRate << std::endl
-        << "newParticlesCount for the frame: " << newParticlesCount << std::endl;*/
 
     // Calculate accumulated fractional particles
     m_Emitter.accumulatedTime += m_Emitter.emissionRate * delta - newParticlesCount;
@@ -121,12 +120,9 @@ void ParticleSystemGPU::Update(float delta)
     if (newParticlesCount > 0) 
     {
         // Bind atomic counter for emitter shader to use
-        glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, m_atomicBuffer);
-
-        // Bind particle SSBO
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_particleSSBO);
-
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_freeListBuffer);
+        m_AtomicBuffer->BindBase(GL_ATOMIC_COUNTER_BUFFER, 0);
+        m_ParticleSSBO->BindBase(GL_SHADER_STORAGE_BUFFER, 0);
+        m_FreeListBuffer->BindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
         // Set emitter shader uniforms
         m_EmitterShader->Bind();
@@ -144,22 +140,18 @@ void ParticleSystemGPU::Update(float delta)
 
         // Dispatch a reasonable number of threads
         // We don't need many threads, just enough to handle emission
-        glDispatchCompute((newParticlesCount + 255) / 256, 1, 1);
+        GLCall(glDispatchCompute((newParticlesCount + 255) / 256, 1, 1));
+        m_EmitterShader->Unbind();
 
         // Wait for emission shader to complete
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-        m_EmitterShader->Unbind();
+        GLCall(glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_ATOMIC_COUNTER_BARRIER_BIT));
     }
 
     // ---- UPDATE PARTICLES ON GPU ----
     // Bind the SSBO for the update shader
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_particleSSBO);
-
-    // Bind particle counter atomic buffer to binding point 1
-    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 1, m_particleCountBuffer);
-
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_freeListBuffer);
+    m_ParticleSSBO->BindBase(GL_SHADER_STORAGE_BUFFER, 0);
+    m_ParticleCountBuffer->BindBase(GL_ATOMIC_COUNTER_BUFFER, 1);
+    m_FreeListBuffer->BindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
     // Set compute shader uniforms
     m_ComputeShader->Bind();
@@ -172,31 +164,22 @@ void ParticleSystemGPU::Update(float delta)
     // Each workgroup processes 256 particles
     int numWorkGroups = (m_MaxParticles + 255) / 256;
     glDispatchCompute(numWorkGroups, 1, 1);
-
-    // Ensure compute shader finishes before rendering
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
     m_ComputeShader->Unbind();
 
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_particleCountBuffer);
+    // Ensure compute shader finishes before rendering
+    GLCall(glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT));
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_ParticleCountBuffer->GetRendererID());
     glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &m_ActiveParticleCount);
-
-    // Note: No more readback to CPU - we keep all data on the GPU
 }
 
 void ParticleSystemGPU::Render(Shader& shader)
 {
     shader.Bind();
-
-    // Bind particle buffer as SSBO for shader to read from
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_particleSSBO);
-
-    // Draw particles using instanced rendering
-    glBindVertexArray(m_VAO);
+    m_ParticleSSBO->BindBase(GL_SHADER_STORAGE_BUFFER, 0);
+    m_ParticleVAO->Bind();
     // Draw m_MaxParticles instances - the shader will discard inactive ones
-    glDrawArrays(GL_POINTS, 0, m_MaxParticles);
-    glBindVertexArray(0);
-
+    GLCall(glDrawArrays(GL_POINTS, 0, m_MaxParticles));
+    m_ParticleVAO->Unbind();
     shader.Unbind();
 }
 
