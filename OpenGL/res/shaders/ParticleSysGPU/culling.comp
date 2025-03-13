@@ -1,0 +1,128 @@
+#version 430 core
+layout(local_size_x = 256) in;
+
+struct Particle 
+{
+    vec4 position;    // xyz = position, w = size
+    vec4 velocity;    // xyz = velocity, w = lifeRemaining
+    vec4 colorBegin;
+    vec4 colorEnd;    // w = lifespan
+};
+
+struct DrawElementsIndirectCommand {
+    uint count;
+    uint instanceCount;
+    uint firstIndex;
+    uint baseVertex;
+    uint baseInstance;
+};
+
+// Input particle buffer
+layout(std430, binding = 0) readonly buffer ParticleBuffer {
+    Particle particles[];
+};
+
+// Output buffer of visible particle indices
+layout(std430, binding = 1) buffer VisibleParticlesBuffer {
+    uint visibleIndices[];
+};
+
+// Atomic counter for visible particles
+layout(binding = 0, offset = 0) uniform atomic_uint visibleParticleCount;
+
+// Indirect draw command
+layout(std430, binding = 2) buffer DrawCommand {
+    DrawElementsIndirectCommand cmd;
+};
+
+// Uniforms for culling
+uniform mat4 view;
+uniform mat4 projection;
+uniform vec3 cameraPosition;
+uniform float cullingDistance;
+
+// Extract frustum planes from view-projection matrix
+void extractFrustumPlanes(mat4 vp, out vec4 planes[6])
+{
+    // Left plane
+    planes[0] = vec4(vp[0][3] + vp[0][0], vp[1][3] + vp[1][0], vp[2][3] + vp[2][0], vp[3][3] + vp[3][0]);
+    // Right plane
+    planes[1] = vec4(vp[0][3] - vp[0][0], vp[1][3] - vp[1][0], vp[2][3] - vp[2][0], vp[3][3] - vp[3][0]);
+    // Bottom plane 
+    planes[2] = vec4(vp[0][3] + vp[0][1], vp[1][3] + vp[1][1], vp[2][3] + vp[2][1], vp[3][3] + vp[3][1]);
+    // Top plane
+    planes[3] = vec4(vp[0][3] - vp[0][1], vp[1][3] - vp[1][1], vp[2][3] - vp[2][1], vp[3][3] - vp[3][1]);
+    // Near plane
+    planes[4] = vec4(vp[0][3] + vp[0][2], vp[1][3] + vp[1][2], vp[2][3] + vp[2][2], vp[3][3] + vp[3][2]);
+    // Far plane 
+    planes[5] = vec4(vp[0][3] - vp[0][2], vp[1][3] - vp[1][2], vp[2][3] - vp[2][2], vp[3][3] - vp[3][2]);
+    
+    // Normalize planes
+    for (int i = 0; i < 6; i++) {
+        float len = length(planes[i].xyz);
+        planes[i] /= len;
+    }
+}
+
+// Check if a point is inside the frustum
+bool isInFrustum(vec3 point, float radius, vec4 planes[6])
+{
+    for (int i = 0; i < 6; i++) {
+        if (dot(planes[i].xyz, point) + planes[i].w < -radius) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void main()
+{
+    uint id = gl_GlobalInvocationID.x;
+    
+    // Check if we're in bounds
+    if (id >= particles.length()) {
+        return;
+    }
+    
+    // Get particle data
+    Particle particle = particles[id];
+    
+    // Skip inactive particles
+    if (particle.velocity.w <= 0.0) {
+        return;
+    }
+    
+    vec3 position = particle.position.xyz;
+    float size = particle.position.w;
+    
+    // Distance culling
+    float distanceToCamera = distance(position, cameraPosition);
+    if (distanceToCamera > cullingDistance) {
+        return;
+    }
+    
+    // Frustum culling
+    mat4 vp = projection * view;
+    vec4 frustumPlanes[6];
+    extractFrustumPlanes(vp, frustumPlanes);
+    
+    if (!isInFrustum(position, size, frustumPlanes)) {
+        return;
+    }
+    
+    // Particle is visible, add to visible list
+    uint index = atomicCounterIncrement(visibleParticleCount);
+    visibleIndices[index] = id;
+    
+    // First thread updates the draw command
+    if (index == 0) {
+        cmd.count = 1;
+        cmd.firstIndex = 0;
+        cmd.baseVertex = 0;
+        cmd.baseInstance = 0;
+    }
+    
+    // Update instance count atomically (not ideal but works)
+    // In production, you'd want to use a barrier and have a single thread update this
+    atomicExchange(cmd.instanceCount, index + 1);
+}

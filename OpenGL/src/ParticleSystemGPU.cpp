@@ -96,13 +96,7 @@ void ParticleSystemGPU::Update(float delta)
 
     // Reset atomic counter for new particles
     GLuint zero = 0;
-    /*GLCall(glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_AtomicBuffer->GetRendererID()));
-    GLCall(glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &zero));*/
     m_AtomicBuffer->UpdateData(&zero, sizeof(GLuint), 0);
-
-    // Reset particle counter to zero
-   /* GLCall(glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_ParticleCountBuffer->GetRendererID()));
-    GLCall(glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &zero));*/
     m_ParticleCountBuffer->UpdateData(&zero, sizeof(GLuint), 0);
 
     // Prepare to emit new particles
@@ -159,6 +153,7 @@ void ParticleSystemGPU::Update(float delta)
     m_ComputeShader->setVec3("globalForce", m_GlobalForce);
     m_ComputeShader->setFloat("sizeBegin", m_DefaultSizeBegin);
     m_ComputeShader->setFloat("sizeEnd", m_DefaultSizeEnd);
+    m_ComputeShader->setFloat("mass", 2.1e-6f);
 
     // Dispatch compute shader
     // Each workgroup processes 256 particles

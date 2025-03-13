@@ -8,6 +8,7 @@ namespace test
 		m_Camera(glm::vec3(20.0f, 0.0f, 15.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), -140),
 		m_cameraController(m_Window->GetWindow(), m_Camera)
 	{
+		m_Camera.IncreaseOutlier(50.0f);
 		m_Window->setCustomKeyCallback([this](int key, int scancode, int action, int mods)
 			{
 				this->handleKeyPress(key, scancode, action, mods);
@@ -18,7 +19,7 @@ namespace test
 			"res/shaders/ParticleSysGPU/ParticleFSGPU.glsl");
 		m_XZPlane = std::make_unique<XZPlaneGrid>(m_Window->GetAspectRatio(), m_GridSize, m_Near, m_Far);
 		m_ParticleSys = std::make_unique <ParticleSystemGPU>();
-		emitterShape = { "POINT", "SPHERE", "CONE", "BOX" };
+		emitterShape = { "POINT", "SPHERE", "CONE", "BOX", "CIRCLE"};
 
 		emitterProp.shape = EmitterShape::POINT;
 		emitterProp.emissionRate = 1000;
@@ -148,6 +149,10 @@ namespace test
 				{
 					emitterProp.shape = EmitterShape::BOX;
 				}
+				else if (emitterShape[currentEmitterShapeIdx] == "CIRCLE")
+				{
+					emitterProp.shape = EmitterShape::CIRCLE;
+				}
 				m_ParticleSys->SetEmitter(emitterProp);
 			}
 
@@ -156,8 +161,9 @@ namespace test
 				// Update the particle system with the new emitter properties
 				m_ParticleSys->SetEmissionRate(emitterProp.emissionRate);
 			}
-			ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "SPHERE" && emitterShape[currentEmitterShapeIdx] != "CONE");
-			if (ImGui::SliderFloat("Particle Emitter Radius", (float*)&emitterProp.radius, 1.0f, 10.0f, "%.1f"))
+			ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "SPHERE" && emitterShape[currentEmitterShapeIdx] != "CONE"
+			&& emitterShape[currentEmitterShapeIdx] != "CIRCLE");
+			if (ImGui::SliderFloat("Particle Emitter Radius", (float*)&emitterProp.radius, 1.0f, 50.0f, "%.1f"))
 			{
 				m_ParticleSys->SetEmitterRadius(emitterProp.radius);
 			}
@@ -197,7 +203,7 @@ namespace test
 				m_ParticleSys->SetParticleColorEnd(colorEnd);
 			}
 
-			if (ImGui::SliderFloat("Particle Begin Size", (float*)&sizeBegin, 0.1f, 10.0f, "%.1f"))
+			if (ImGui::SliderFloat("Particle Begin Size", (float*)&sizeBegin, 0.1f, 30.0f, "%.1f"))
 			{
 				m_ParticleSys->SetParticleSizeBegin(sizeBegin);
 			}

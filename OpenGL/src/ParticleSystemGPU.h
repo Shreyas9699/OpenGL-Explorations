@@ -18,15 +18,6 @@ private:
     std::unique_ptr<ComputeShader> m_ComputeShader, m_EmitterShader;
     bool m_UseGPU = true;
 
-    // Struct for GPU particles (keep aligned to vec4 for better performance)
-    struct GPUParticle
-    {
-        glm::vec4 position;    // xyz = position, w = size
-        glm::vec4 velocity;    // xyz = velocity, w = lifeRemaining
-        glm::vec4 colorBegin;
-        glm::vec4 colorEnd;    // w = lifespan
-    };
-
     std::vector<GPUParticle> m_GPUParticles;
     unsigned int m_MaxParticles = ParticleConfig::MAX_ABSOLUTE_PARTICLES * ParticleConfig::MAX_ABSOLUTE_LIFESPAN;
 

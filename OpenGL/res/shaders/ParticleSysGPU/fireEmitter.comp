@@ -260,20 +260,47 @@ vec3 generateVelocity(vec3 position)
             }
             break;
         case 4: // CIRCLE
+           // For fire, particles should move upward with some variance based on position
             {
-                dir = vec3(0.0, 1.0, 0.0);
+                // Calculate distance from center
+                vec2 horizOffset = vec2(position.x - emitterPosition.x, position.z - emitterPosition.z);
+                float distFromCenter = length(horizOffset);
+                
+                // Normalize horizontal offset for directional component
+                vec2 normHorizOffset = distFromCenter > 0.0001 ? horizOffset / distFromCenter : vec2(0.0);
+                
+                // Particles closer to the center should move more directly upward
+                // Particles at the edges should curl slightly inward
+                float centerFactor = smoothstep(0.0, emitterRadius, distFromCenter);
+                
+                // Base upward direction
+                vec3 baseDir = vec3(0.0, 1.0, 0.0);
+                
+                // Add slight inward curl at the edges
+                vec3 inwardCurl = vec3(-normHorizOffset.x * 0.2, 0.0, -normHorizOffset.y * 0.2);
+                
+                // Particles at the edges move more slowly upward
+                float speedFactor = mix(1.0, 0.7, centerFactor);
+                
+                // Combine directions
+                dir = normalize(baseDir + inwardCurl * centerFactor);
+                
+                // Add slight randomness that increases with height
+                // This creates the flame "licking" effect
                 float heightRandomness = 0.15 + (position.y - emitterPosition.y) * 0.05;
                 dir = normalize(dir + vec3(
                     (rand() * 2.0 - 1.0) * heightRandomness,
-                    rand() * 0.05,
+                    rand() * 0.05,  // Small random upward component
                     (rand() * 2.0 - 1.0) * heightRandomness
                 ));
                 
-                return dir;
+                // Adjust speed based on position
+                float speed = mix(2.0, 3.5, rand()) * speedFactor;
+                return dir * speed;
             }
             break;
         default:
-            dir = vec3(0.0, 1.0, 0.0);
+            dir = vec3(0, 1, 0);
     }
     
     // Add some randomness to velocity
@@ -321,8 +348,9 @@ void main()
     vec3 velocity = generateVelocity(position);
     
     // Create the new particle
+    float life = particleLifespan * (0.8 + rand() * 0.4);
     particles[particleIndex].position = vec4(position, particleSizeBegin);
-    particles[particleIndex].velocity = vec4(velocity, particleLifespan);
+    particles[particleIndex].velocity = vec4(velocity, life);
     particles[particleIndex].colorBegin = particleColorBegin;
-    particles[particleIndex].colorEnd = vec4(particleColorEnd.rgb, particleLifespan);
+    particles[particleIndex].colorEnd = vec4(particleColorEnd.rgb, life);
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -10,13 +11,13 @@ namespace ParticleConfig
     static constexpr unsigned int MAX_ABSOLUTE_LIFESPAN = 30;
 };
 
-
-enum class EmitterShape
+enum class EmitterShape 
 {
-    POINT,
-    SPHERE,
-    CONE,
-    BOX
+    POINT   = 0,
+    SPHERE  = 1,
+    CONE    = 2,
+    BOX     = 3, 
+    CIRCLE = 4
 };
 
 struct EmitterProperties
@@ -79,4 +80,23 @@ struct Particle
           sizeBegin(sizeBegin),
           sizeEnd(sizeEnd),
           size(sizeBegin) { }
+};
+
+// Struct for GPU particles(keep aligned to vec4 for better performance)
+struct GPUParticle
+{
+    glm::vec4 position;    // xyz = position, w = size
+    glm::vec4 velocity;    // xyz = velocity, w = lifeRemaining
+    glm::vec4 colorBegin;
+    glm::vec4 colorEnd;    // w = lifespan
+};
+
+// Indirect draw command structure
+struct DrawElementsIndirectCommand 
+{
+    GLuint count;
+    GLuint instanceCount;
+    GLuint firstIndex;
+    GLuint baseVertex;
+    GLuint baseInstance;
 };
