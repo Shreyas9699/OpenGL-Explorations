@@ -5,7 +5,8 @@ This repository is a learning project that explores the fundamentals of 3D rende
 ## Gallery
 Here are some project screenshots and a video:
 
-### Video
+### Videos
+https://github.com/user-attachments/assets/b141a3f7-1838-497a-84b2-56b992c2555f
 
 
 ### Screenshots
