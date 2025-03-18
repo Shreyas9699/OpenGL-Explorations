@@ -37,7 +37,7 @@ public:
     ~ParticleSystemCPU();
 
 
-    void Update(float delta) override;
+    void Update(float delta, const glm::mat4& viewProj = glm::mat4(0.0f)) override;
     void Render(Shader& m_Shader) override;
 
     void Destroy(unsigned int id);

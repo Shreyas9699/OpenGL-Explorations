@@ -493,9 +493,9 @@
     <None Include="res\shaders\ParticleSysGPU\ParticleVSGPU.glsl" />
     <None Include="res\shaders\ParticleSysGPU\ParticleFSGPU.glsl" />
     <None Include="res\shaders\ParticleSysGPU\emitter.comp" />
-    <None Include="res\shaders\ParticleSysGPU\fireCompute.comp" />
     <None Include="res\shaders\ParticleSysGPU\culling.comp" />
-    <None Include="res\shaders\ParticleSysGPU\fireEmitter.comp" />
+    <None Include="res\shaders\Heightmap\minimapFS.glsl" />
+    <None Include="res\shaders\Heightmap\minimapVS.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">
@@ -989,6 +989,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ParticleSystemCPU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Frustum.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1978,6 +1981,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Particle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Frustum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

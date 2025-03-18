@@ -27,7 +27,7 @@ public:
     ParticleSystemGPU();
     ~ParticleSystemGPU();
 
-    void Update(float delta) override;
+    void Update(float delta, const glm::mat4& viewProj = glm::mat4(0.0f)) override;
     void Render(Shader& shader) override;
     void SetEmitter(const EmitterProperties& emitterProp) override;
     void SetEmissionRate(int rate) override;

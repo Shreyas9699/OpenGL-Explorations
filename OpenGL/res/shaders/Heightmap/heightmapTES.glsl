@@ -4,13 +4,14 @@ layout(quads, fractional_odd_spacing, ccw) in;
 
 uniform sampler2D heightMap;
 uniform mat4 model;
-uniform mat4 view;
+uniform mat4 viewTES;
 uniform mat4 projection;
 
 in vec2 TextureCoord[];
 
 out vec2 TexCoord_TES;
 out float Height;
+out vec3 WorldPos;
 
 void main()
 {
@@ -42,5 +43,6 @@ void main()
     vec4 p1 = mix(p01, p11, u);
     vec4 p = mix(p0, p1, v) + normal * Height;
 
-    gl_Position = projection * view * model * p;
+    WorldPos = (model * p).xyz; // Add world position calculation
+    gl_Position = projection * viewTES * model * p;
 }

@@ -4,7 +4,7 @@ layout(vertices=4) out;
 in vec2 TexCoord[];
 
 uniform mat4 model;
-uniform mat4 view;
+uniform mat4 viewTCS;
 uniform bool isDynamicTess;
 uniform float fovCos;
 
@@ -34,10 +34,10 @@ void main()
             const float MIN_DISTANCE = 20;
             const float MAX_DISTANCE = 800;
             
-            vec4 eyeSpacePos00 = view * model * gl_in[0].gl_Position;
-            vec4 eyeSpacePos01 = view * model * gl_in[1].gl_Position;
-            vec4 eyeSpacePos10 = view * model * gl_in[2].gl_Position;
-            vec4 eyeSpacePos11 = view * model * gl_in[3].gl_Position;
+            vec4 eyeSpacePos00 = viewTCS * model * gl_in[0].gl_Position;
+            vec4 eyeSpacePos01 = viewTCS * model * gl_in[1].gl_Position;
+            vec4 eyeSpacePos10 = viewTCS * model * gl_in[2].gl_Position;
+            vec4 eyeSpacePos11 = viewTCS * model * gl_in[3].gl_Position;
             
             // "distance" from camera scaled between 0 and 1
             float distance00 = clamp( (length(eyeSpacePos00.xyz) - MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0 );
@@ -55,13 +55,22 @@ void main()
             float tessLevel2 = 0.0;
             float tessLevel3 = 0.0;
 
-            if (cosAngle00 >= fovCos || cosAngle01 >= fovCos || cosAngle10 >= fovCos || cosAngle11 >= fovCos)
+            float coverage = max(max(cosAngle00, cosAngle01), max(cosAngle10, cosAngle11));
+
+            if (coverage > fovCos) 
             {
-                // Inside the view frustum
-                tessLevel0 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00) );
-                tessLevel1 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance00, distance01) );
-                tessLevel2 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance01, distance11) );
-                tessLevel3 = mix( MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance11, distance10) );
+                tessLevel0 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00) );
+                tessLevel1 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance00, distance01) );
+                tessLevel2 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance01, distance11) );
+                tessLevel3 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance11, distance10) );
+            }
+            else 
+            {
+                // Reduced LOD for peripheral patches
+                tessLevel0 = mix(MIN_TESS_LEVEL/2, MIN_TESS_LEVEL, (coverage - (fovCos - 0.2)) / 0.4);
+                tessLevel1 = mix(MIN_TESS_LEVEL/2, MIN_TESS_LEVEL, (coverage - (fovCos - 0.2)) / 0.4);
+                tessLevel2 = mix(MIN_TESS_LEVEL/2, MIN_TESS_LEVEL, (coverage - (fovCos - 0.2)) / 0.4);
+                tessLevel3 = mix(MIN_TESS_LEVEL/2, MIN_TESS_LEVEL, (coverage - (fovCos - 0.2)) / 0.4);
             }
             
             gl_TessLevelOuter[0] = tessLevel0;

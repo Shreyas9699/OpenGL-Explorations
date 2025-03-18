@@ -72,7 +72,7 @@ public:
 		// Compute shader work group details
 		if (dispWorkGrps)
 		{
-			int values[3];
+			int values[3] = { 0, 0, 0 };
 			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &values[0]);
 			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &values[1]);
 			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &values[2]);

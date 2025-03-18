@@ -19,7 +19,7 @@ namespace test
 			"res/shaders/ParticleSysGPU/ParticleFSGPU.glsl");
 		m_XZPlane = std::make_unique<XZPlaneGrid>(m_Window->GetAspectRatio(), m_GridSize, m_Near, m_Far);
 		m_ParticleSys = std::make_unique <ParticleSystemGPU>();
-		emitterShape = { "POINT", "SPHERE", "CONE", "BOX", "CIRCLE"};
+		emitterShape = { "POINT", "SPHERE", "CONE", "BOX", "CIRCLE", "HEMISPHERE", "TORUS"};
 
 		emitterProp.shape = EmitterShape::POINT;
 		emitterProp.emissionRate = 1000;
@@ -57,8 +57,10 @@ namespace test
 
 	void TestParticleGPU::OnUpdate(Timestep deltaTime, GLFWwindow* win)
 	{
+		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), m_Near, m_Far);
+		glm::mat4 view = m_Camera.GetViewMatrix();
 		m_cameraController.Update(deltaTime);
-		m_ParticleSys->Update(deltaTime);
+		m_ParticleSys->Update(deltaTime, projection * view);
 
 		m_ElapsedTime += deltaTime;
 
@@ -133,26 +135,7 @@ namespace test
 			ImGui::Text("Particle Emitter properties\n");
 			if (ImGui::Combo("Particle Emitter Shape", &currentEmitterShapeIdx, emitterShape.data(), static_cast<int>(emitterShape.size())))
 			{
-				if (emitterShape[currentEmitterShapeIdx] == "POINT")
-				{
-					emitterProp.shape = EmitterShape::POINT;
-				}
-				else if (emitterShape[currentEmitterShapeIdx] == "SPHERE")
-				{
-					emitterProp.shape = EmitterShape::SPHERE;
-				}
-				else if (emitterShape[currentEmitterShapeIdx] == "CONE")
-				{
-					emitterProp.shape = EmitterShape::CONE;
-				}
-				else if (emitterShape[currentEmitterShapeIdx] == "BOX")
-				{
-					emitterProp.shape = EmitterShape::BOX;
-				}
-				else if (emitterShape[currentEmitterShapeIdx] == "CIRCLE")
-				{
-					emitterProp.shape = EmitterShape::CIRCLE;
-				}
+				emitterProp.shape = static_cast<EmitterShape>(currentEmitterShapeIdx);
 				m_ParticleSys->SetEmitter(emitterProp);
 			}
 
@@ -161,11 +144,23 @@ namespace test
 				// Update the particle system with the new emitter properties
 				m_ParticleSys->SetEmissionRate(emitterProp.emissionRate);
 			}
-			ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "SPHERE" && emitterShape[currentEmitterShapeIdx] != "CONE"
-			&& emitterShape[currentEmitterShapeIdx] != "CIRCLE");
+
+			ImGui::BeginDisabled((emitterProp.shape != EmitterShape::SPHERE) && (emitterProp.shape != EmitterShape::CONE) && (emitterProp.shape != EmitterShape::CIRCLE) && (emitterProp.shape != EmitterShape::HEMISPHERE));
 			if (ImGui::SliderFloat("Particle Emitter Radius", (float*)&emitterProp.radius, 1.0f, 50.0f, "%.1f"))
 			{
 				m_ParticleSys->SetEmitterRadius(emitterProp.radius);
+			}
+			ImGui::EndDisabled();
+
+			// Torus (inner and outer radius)
+			ImGui::BeginDisabled(emitterProp.shape != EmitterShape::TORUS);
+			if (ImGui::SliderFloat("Torus Inner Radius", &emitterProp.torusInnerRadius, 0.1f, 10.0f, "%.1f"))
+			{
+				m_ParticleSys->SetEmitterTorusInnerRadius(emitterProp.torusInnerRadius);
+			}
+			if (ImGui::SliderFloat("Torus Outer Radius", &emitterProp.torusOuterRadius, 0.5f, 20.0f, "%.1f"))
+			{
+				m_ParticleSys->SetEmitterTorusOuterRadius(emitterProp.torusOuterRadius);
 			}
 			ImGui::EndDisabled();
 

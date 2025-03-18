@@ -6,8 +6,10 @@ namespace test
 {
 	TestHeightMap::TestHeightMap(Window* win)
 		: m_Window(win),
-		  m_Camera(glm::vec3(0.0f, 50.0f, 100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), -20.0f, 0.0f, 100.0f),
-		  m_cameraController(m_Window->GetWindow(), m_Camera)
+		  m_Camera( glm::vec3(0.0f, 100.0f, 100.0f),  glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f),  -20.0f, 0.0f, 100.0f),
+		  m_cameraController(m_Window->GetWindow(), m_Camera),
+		  m_Near(0.1f),
+		  m_Far(10000.0f)
 	{
 		glEnable(GL_DEPTH_TEST);
 		m_Window->setCustomKeyCallback([this](int key, int scancode, int action, int mods)
@@ -30,6 +32,31 @@ namespace test
 		loadTexture();
 
 		glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
+
+		m_BystanderCamera = Camera(
+			glm::vec3(700.0f, 3200.0f, 1600.0f),
+			glm::vec3(0.0f, 1.0f, 0.0f),
+			glm::normalize(glm::vec3(-700.0f, -3200.0f, -1600.0f)),
+			-115.0f,  // Yaw
+			-65.0f    // Pitch
+		);
+
+		// Mini-map shader
+		m_MiniMapShader = std::make_unique<Shader>("res/shaders/Heightmap/minimapVS.glsl", "res/shaders/Heightmap/minimapFS.glsl");
+
+		// Frustum visualization VAO
+		glGenVertexArrays(1, &m_FrustumVAO);
+		glGenBuffers(1, &m_FrustumVBO);
+
+		glBindVertexArray(m_FrustumVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, m_FrustumVBO);
+		// Allocate space for 36 vertices (12 triangles * 3 verts)
+		glBufferData(GL_ARRAY_BUFFER, NUM_FRUSTUM_FILL_VERTS * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
 	}
 
 	TestHeightMap::~TestHeightMap()
@@ -102,6 +129,25 @@ namespace test
 		layout.Push<float>(3); // positions
 		layout.Push<float>(2); // texCoord
 		m_VA->AddBuffer(*m_VB, layout);
+
+		// Generate patch AABBs
+		m_PatchAABBs.clear();
+		m_PatchAABBs.reserve(rez * rez);
+		for (unsigned int i = 0; i < rez; ++i) 
+		{
+			for (unsigned int j = 0; j < rez; ++j) 
+			{
+				float x_start = -m_width / 2.0f + m_width * i / (float)rez;
+				float x_end = x_start + m_width / (float)rez;
+				float z_start = -m_height / 2.0f + m_height * j / (float)rez;
+				float z_end = z_start + m_height / (float)rez;
+
+				AABB aabb;
+				aabb.min = glm::vec3(x_start, 0.0f, z_start);
+				aabb.max = glm::vec3(x_end, m_HeightScale, z_end);
+				m_PatchAABBs.push_back(aabb);
+			}
+		}
 	}
 
 	void TestHeightMap::handleKeyPress(int key, int scancode, int action, int mods)
@@ -155,15 +201,19 @@ namespace test
 	{
 		GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-		float fovScale = 0.75f;
 
 		m_Shader->Bind();
-		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), 0.1f, 100000.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), m_Near, m_Far/4.0f);
 		glm::mat4 view = m_Camera.GetViewMatrix();
-		float fov = glm::radians(m_Camera.Zoom);
-		float fovCos = glm::cos(fov * fovScale);
+		float aspect = m_cameraController.GetAspectRatio();
+		float verticalFov = glm::radians(m_Camera.Zoom);
+		float horizontalFov = 2.0f * atan(tan(verticalFov / 2.0f) * aspect);
+
+		// Use the smaller FOV for conservative culling
+		float fovCos = cos(std::min(verticalFov, horizontalFov));
 		m_Shader->setFloat("fovCos", fovCos);
-		m_Shader->setMat4("view", view);
+		m_Shader->setMat4("viewTCS", view); // Main camera's view for TCS
+		m_Shader->setMat4("viewTES", view);
 		m_Shader->setMat4("projection", projection);
 		glm::mat4 model = glm::mat4(1.0f);
 		m_Shader->setMat4("model", model);
@@ -188,13 +238,34 @@ namespace test
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-		glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
+
+		// Update frustum
+		glm::mat4 ProjView = projection * view;
+		m_Frustum.Update(ProjView);
+
+		// Determine visible patches
+		m_VisiblePatchStarts.clear();
+		for (size_t idx = 0; idx < m_PatchAABBs.size(); ++idx) 
+		{
+			const auto& aabb = m_PatchAABBs[idx];
+			if (m_Frustum.IsAABBVisible(aabb.min, aabb.max)) 
+			{
+				m_VisiblePatchStarts.push_back(static_cast<GLint>(idx * 4)); // 4 vertices per patch
+			}
+		}
+
+		if (!m_VisiblePatchStarts.empty()) 
+		{
+			std::vector<GLsizei> counts(m_VisiblePatchStarts.size(), 4);
+			glMultiDrawArrays(GL_PATCHES, m_VisiblePatchStarts.data(), counts.data(), static_cast<unsigned int>(m_VisiblePatchStarts.size()));
+		}
 		m_Shader->Unbind();
 
 		if (showNormals)
 		{
 			m_NormalShader->Bind();
 			// Set the same uniforms as main shader
+
 			m_NormalShader->setMat4("view", view);
 			m_NormalShader->setMat4("projection", projection);
 			m_NormalShader->setMat4("model", model);
@@ -202,9 +273,200 @@ namespace test
 			m_NormalShader->setFloat("normalLength", 2.0f); // Adjust length as needed
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
+			if (!m_VisiblePatchStarts.empty())
+			{
+				std::vector<GLsizei> counts(m_VisiblePatchStarts.size(), 4);
+				glMultiDrawArrays(GL_PATCHES, m_VisiblePatchStarts.data(), counts.data(), static_cast<unsigned int>(m_VisiblePatchStarts.size()));
+			}
 			m_NormalShader->Unbind();
 		}
+
+		RenderMiniMap();
+	}
+
+	void TestHeightMap::RenderMiniMap()
+	{
+		// Set viewport to top-right quarter
+		int winWidth, winHeight;
+		glfwGetWindowSize(m_Window->GetWindow(), &winWidth, &winHeight);
+		glViewport(winWidth - winWidth / 4, winHeight - winHeight / 4, winWidth / 4, winHeight / 4);
+		glScissor(winWidth - winWidth / 4, winHeight - winHeight / 4, winWidth / 4, winHeight / 4);
+		glEnable(GL_SCISSOR_TEST);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_SCISSOR_TEST);
+
+		m_Shader->Bind();
+		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), m_Near, m_Far);
+		glm::mat4 view = m_Camera.GetViewMatrix();
+		glm::mat4 bystanderProjection = glm::perspective(glm::radians(m_BystanderCamera.Zoom), (winWidth / 2.0f) / (float)winHeight, m_Near, m_Far * 2.0f);
+		glm::mat4 bystanderView = m_BystanderCamera.GetViewMatrix();
+		float aspect = m_cameraController.GetAspectRatio();
+		float verticalFov = glm::radians(m_Camera.Zoom);
+		float horizontalFov = 2.0f * atan(tan(verticalFov / 2.0f) * aspect);
+		float fovCos = cos(std::min(verticalFov, horizontalFov));
+		m_Shader->setFloat("fovCos", fovCos);
+		m_Shader->setMat4("viewTCS", view); // Main camera's view for TCS
+		m_Shader->setMat4("viewTES", bystanderView);
+		m_Shader->setMat4("projection", projection);
+		glm::mat4 model = glm::mat4(1.0f);
+		m_Shader->setMat4("model", model);
+		m_Shader->setInt("numGrids", (rez - 1) * (rez - 1));
+		m_Shader->setBool("enableGrid", enableGrid);
+		m_Shader->setBool("isDynamicTess", dynamicTess);
+		m_Shader->setBool("showNormals", showNormals);
+		m_Shader->setVec2("uTexelSize", { 1.0f / m_width, 1.0f / m_height });
+		m_VA->Bind();
+		if (renderPointsOnly)
+		{
+			glPointSize(3.0f);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+		}
+
+		if (isWireFrame)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
+
+		if (!renderPointsOnly && !isWireFrame)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
+
+		// Update frustum
+		m_Frustum.Update(projection * view);
+
+		// Determine visible patches
+		m_VisiblePatchStarts.clear();
+		for (size_t idx = 0; idx < m_PatchAABBs.size(); ++idx)
+		{
+			const auto& aabb = m_PatchAABBs[idx];
+			if (m_Frustum.IsAABBVisible(aabb.min, aabb.max))
+			{
+				m_VisiblePatchStarts.push_back(static_cast<GLint>(idx * 4)); // 4 vertices per patch
+			}
+		}
+
+		if (!m_VisiblePatchStarts.empty())
+		{
+			std::vector<GLsizei> counts(m_VisiblePatchStarts.size(), 4);
+			glMultiDrawArrays(GL_PATCHES, m_VisiblePatchStarts.data(), counts.data(), static_cast<unsigned int>(m_VisiblePatchStarts.size()));
+		}
+		m_Shader->Unbind();
+		RenderFrustum();
+	}
+
+	void TestHeightMap::RenderFrustum()
+	{
+		int winWidth, winHeight;
+		glfwGetWindowSize(m_Window->GetWindow(), &winWidth, &winHeight);
+
+		float fovRadians = glm::radians(m_Camera.Zoom);
+		float aspectMain = (winWidth / 2.0f) / (float)winHeight;
+
+		float nearHeight = 2.0f * tan(fovRadians / 2.0f) * m_Near;
+		float nearWidth = nearHeight * aspectMain;
+		float farHeight = 2.0f * tan(fovRadians / 2.0f) * m_Far;
+		float farWidth = farHeight * aspectMain;
+
+		// 2) Camera basis
+		glm::vec3 camPos = m_Camera.Position;
+		glm::vec3 camForward = glm::normalize(m_Camera.Front);
+		glm::vec3 camRight = glm::normalize(glm::cross(camForward, m_Camera.Up));
+		glm::vec3 camUp = glm::normalize(glm::cross(camRight, camForward));
+
+		glm::vec3 nearCenter = camPos + camForward * m_Near;
+		glm::vec3 farCenter = camPos + camForward * m_Far;
+
+		// 3) Corner points
+		glm::vec3 nearTopLeft = nearCenter + (camUp * (nearHeight * 0.5f)) - (camRight * (nearWidth * 0.5f));
+		glm::vec3 nearTopRight = nearCenter + (camUp * (nearHeight * 0.5f)) + (camRight * (nearWidth * 0.5f));
+		glm::vec3 nearBottomLeft = nearCenter - (camUp * (nearHeight * 0.5f)) - (camRight * (nearWidth * 0.5f));
+		glm::vec3 nearBottomRight = nearCenter - (camUp * (nearHeight * 0.5f)) + (camRight * (nearWidth * 0.5f));
+
+		glm::vec3 farTopLeft = farCenter + (camUp * (farHeight * 0.5f)) - (camRight * (farWidth * 0.5f));
+		glm::vec3 farTopRight = farCenter + (camUp * (farHeight * 0.5f)) + (camRight * (farWidth * 0.5f));
+		glm::vec3 farBottomLeft = farCenter - (camUp * (farHeight * 0.5f)) - (camRight * (farWidth * 0.5f));
+		glm::vec3 farBottomRight = farCenter - (camUp * (farHeight * 0.5f)) + (camRight * (farWidth * 0.5f));
+
+		std::vector<glm::vec3> frustumTriangles(NUM_FRUSTUM_FILL_VERTS);
+		int idx = 0;
+
+		// Near plane (two triangles)
+		frustumTriangles[idx++] = nearTopLeft;
+		frustumTriangles[idx++] = nearBottomLeft;
+		frustumTriangles[idx++] = nearBottomRight;
+
+		frustumTriangles[idx++] = nearTopLeft;
+		frustumTriangles[idx++] = nearBottomRight;
+		frustumTriangles[idx++] = nearTopRight;
+
+		// Far plane (two triangles)
+		frustumTriangles[idx++] = farTopLeft;
+		frustumTriangles[idx++] = farTopRight;
+		frustumTriangles[idx++] = farBottomRight;
+
+		frustumTriangles[idx++] = farTopLeft;
+		frustumTriangles[idx++] = farBottomRight;
+		frustumTriangles[idx++] = farBottomLeft;
+
+		// Left plane (two triangles)
+		frustumTriangles[idx++] = nearTopLeft;
+		frustumTriangles[idx++] = farBottomLeft;
+		frustumTriangles[idx++] = nearBottomLeft;
+
+		frustumTriangles[idx++] = nearTopLeft;
+		frustumTriangles[idx++] = farTopLeft;
+		frustumTriangles[idx++] = farBottomLeft;
+
+		// Right plane (two triangles)
+		frustumTriangles[idx++] = nearTopRight;
+		frustumTriangles[idx++] = nearBottomRight;
+		frustumTriangles[idx++] = farBottomRight;
+
+		frustumTriangles[idx++] = nearTopRight;
+		frustumTriangles[idx++] = farBottomRight;
+		frustumTriangles[idx++] = farTopRight;
+
+		// Top plane (two triangles)
+		frustumTriangles[idx++] = nearTopLeft;
+		frustumTriangles[idx++] = farTopLeft;
+		frustumTriangles[idx++] = farTopRight;
+
+		frustumTriangles[idx++] = nearTopLeft;
+		frustumTriangles[idx++] = farTopRight;
+		frustumTriangles[idx++] = nearTopRight;
+
+		// Bottom plane (two triangles)
+		frustumTriangles[idx++] = nearBottomLeft;
+		frustumTriangles[idx++] = farBottomRight;
+		frustumTriangles[idx++] = farBottomLeft;
+
+		frustumTriangles[idx++] = nearBottomLeft;
+		frustumTriangles[idx++] = nearBottomRight;
+		frustumTriangles[idx++] = farBottomRight;
+
+		// 5) Upload data to the fill VBO
+		glBindBuffer(GL_ARRAY_BUFFER, m_FrustumVBO);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * frustumTriangles.size(), frustumTriangles.data());
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glm::mat4 bystanderProjection = glm::perspective(glm::radians(m_BystanderCamera.Zoom), (winWidth / 2.0f) / (float)winHeight, m_Near, m_Far);
+		glm::mat4 bystanderView = m_BystanderCamera.GetViewMatrix();
+		m_MiniMapShader->Bind();
+		m_MiniMapShader->setMat4("projection", bystanderProjection);
+		m_MiniMapShader->setMat4("view", bystanderView);
+		m_MiniMapShader->setVec4("u_color", glm::vec4(0.0f, 1.0f, 0.0f, 0.3f));
+
+		glBindVertexArray(m_FrustumVAO);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(frustumTriangles.size()));
+		glDisable(GL_BLEND);
+		glBindVertexArray(0);
+		m_MiniMapShader->Unbind();
+		glViewport(0, 0, winWidth, winHeight);
 	}
 
 	void TestHeightMap::ShowFileExplorer()

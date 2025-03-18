@@ -38,7 +38,7 @@ public:
     ParticleSystemBase() = default;
     virtual ~ParticleSystemBase() = default;
 
-    virtual void Update(float delta) = 0;
+    virtual void Update(float delta, const glm::mat4& viewProj = glm::mat4(0.0f)) = 0;
     virtual void Render(Shader& shader) = 0;
 
     // Setters
@@ -51,6 +51,8 @@ public:
     void SetEmitterRadius(float radius) { m_Emitter.radius = radius; }
     void SetEmitterAngle(float angle) { m_Emitter.angle = angle; }
     void SetEmitterDimensions(const glm::vec3& dimensions) { m_Emitter.dimensions = dimensions; }
+    void SetEmitterTorusInnerRadius(const float innerRadius) { m_Emitter.torusInnerRadius = innerRadius; }
+    void SetEmitterTorusOuterRadius(const float outterRadius) { m_Emitter.torusOuterRadius = outterRadius; }
 
     void SetParticleColorBegin(const glm::vec4& color) { m_DefaultColorBegin = color; }
     void SetParticleColorEnd(const glm::vec4& color) { m_DefaultColorEnd = color; }

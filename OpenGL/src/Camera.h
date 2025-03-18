@@ -73,6 +73,7 @@ public:
 
     // Camera movement methods
     glm::mat4 GetViewMatrix() const;
+    void LookAt(const glm::vec3& target);
     void ProcessKeyboard(Camera_Movement direction, float deltaTime);
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true);
     void ProcessMouseScroll(float yoffset);

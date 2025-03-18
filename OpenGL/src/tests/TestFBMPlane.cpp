@@ -26,8 +26,8 @@ namespace test
 		// setting sphere(light bulb) attributes
 		m_Sphere = std::make_unique<UVSphere>(0.5f, 64, 32);
 		m_sphere.VAO = std::make_unique<VertexArray>();
-		m_sphere.VBO = std::make_unique<VertexBuffer>(m_Sphere->GetVertex().data(), m_Sphere->GetVertex().size() * sizeof(float));
-		m_sphere.IBO = std::make_unique<IndexBuffer>(m_Sphere->GetIndex().data(), m_Sphere->GetIndex().size());
+		m_sphere.VBO = std::make_unique<VertexBuffer>(m_Sphere->GetVertex().data(), static_cast<unsigned int>(m_Sphere->GetVertex().size() * sizeof(float)));
+		m_sphere.IBO = std::make_unique<IndexBuffer>(m_Sphere->GetIndex().data(), static_cast<unsigned int>(m_Sphere->GetIndex().size()));
 		VertexBufferLayout layout2;
 		layout2.Push<float>(3);
 		layout2.Push<float>(3);

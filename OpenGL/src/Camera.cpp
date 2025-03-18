@@ -6,6 +6,19 @@ glm::mat4 Camera::GetViewMatrix() const
     return glm::lookAt(Position, Position + Front, Up);
 }
 
+void Camera::LookAt(const glm::vec3& target)
+{
+    // Calculate new front vector
+    glm::vec3 newFront = glm::normalize(target - Position);
+
+    // Calculate new yaw and pitch
+    glm::vec3 frontFlat = glm::normalize(glm::vec3(newFront.x, 0.0f, newFront.z));
+    Yaw = glm::degrees(atan2(frontFlat.z, frontFlat.x)) - 90.0f;
+    Pitch = glm::degrees(asin(newFront.y));
+
+    updateCameraVectors(); // Update right/up vectors
+}
+
 // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {

@@ -102,10 +102,10 @@
     <None Include="res\objects\porsche\skyline_GTR.cob" />
     <None Include="res\objects\spider\spider.mtl" />
     <None Include="res\objects\wb\WhiteBeard.mtl" />
+    <None Include="res\shaders\Heightmap\minimapFS.glsl" />
+    <None Include="res\shaders\Heightmap\minimapVS.glsl" />
     <None Include="res\shaders\ParticleSysGPU\culling.comp" />
     <None Include="res\shaders\ParticleSysGPU\emitter.comp" />
-    <None Include="res\shaders\ParticleSysGPU\fireCompute.comp" />
-    <None Include="res\shaders\ParticleSysGPU\fireEmitter.comp" />
     <None Include="res\shaders\ParticleSysGPU\ParticleFSGPU.glsl" />
     <None Include="res\shaders\ParticleSysGPU\ParticleVSGPU.glsl" />
     <None Include="res\shaders\Pyramid\3DtexFS.glsl" />
@@ -430,6 +430,7 @@
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\CameraController.cpp" />
+    <ClCompile Include="src\Frustum.cpp" />
     <ClCompile Include="src\IndexBuffer.cpp" />
     <ClCompile Include="src\ParticleSystemCPU.cpp" />
     <ClCompile Include="src\ParticleSystemGPU.cpp" />
@@ -469,6 +470,7 @@
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\CameraController.h" />
     <ClInclude Include="src\ComputeShader.h" />
+    <ClInclude Include="src\Frustum.h" />
     <ClInclude Include="src\IndexBuffer.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Model.h" />

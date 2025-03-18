@@ -13,11 +13,13 @@ namespace ParticleConfig
 
 enum class EmitterShape 
 {
-    POINT   = 0,
-    SPHERE  = 1,
-    CONE    = 2,
-    BOX     = 3, 
-    CIRCLE = 4
+    POINT       = 0,
+    SPHERE      = 1,
+    CONE        = 2,
+    BOX         = 3, 
+    CIRCLE      = 4,
+    HEMISPHERE  = 5,
+    TORUS       = 6
 };
 
 struct EmitterProperties
@@ -30,7 +32,10 @@ struct EmitterProperties
     float angle = 30.0f;                        // For CONE (in degrees)
     glm::vec3 dimensions = glm::vec3(1.0f);     // For BOX
 
-    int emissionRate = 1000;                // Particles per second
+    float torusInnerRadius = 0.5f;
+    float torusOuterRadius = 1.0f;
+
+    int emissionRate = 1000;
     float accumulatedTime = 0.0f;
 
     /*float MINLife;

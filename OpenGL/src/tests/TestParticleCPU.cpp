@@ -130,22 +130,7 @@ namespace test
 			ImGui::Text("Particle Emitter properties\n");
 			if (ImGui::Combo("Particle Emitter Shape", &currentEmitterShapeIdx, emitterShape.data(), static_cast<int>(emitterShape.size())))
 			{
-				if (emitterShape[currentEmitterShapeIdx] == "POINT")
-				{
-					emitterProp.shape = EmitterShape::POINT;
-				}
-				else if (emitterShape[currentEmitterShapeIdx] == "SPHERE")
-				{
-					emitterProp.shape = EmitterShape::SPHERE;
-				}
-				else if (emitterShape[currentEmitterShapeIdx] == "CONE")
-				{
-					emitterProp.shape = EmitterShape::CONE;
-				}
-				else if (emitterShape[currentEmitterShapeIdx] == "BOX")
-				{
-					emitterProp.shape = EmitterShape::BOX;
-				}
+				emitterProp.shape = static_cast<EmitterShape>(currentEmitterShapeIdx);
 				m_ParticleSys->SetEmitter(emitterProp);
 			}
 

@@ -26,7 +26,7 @@ ParticleSystemCPU::~ParticleSystemCPU()
     m_Shader.reset();
 }
 
-void ParticleSystemCPU::Update(float delta)
+void ParticleSystemCPU::Update(float delta, const glm::mat4& viewProj)
 {
     // Update emitter and create new particles
     m_Emitter.accumulatedTime += delta;

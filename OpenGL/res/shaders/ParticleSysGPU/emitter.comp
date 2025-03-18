@@ -30,6 +30,10 @@ uniform vec3 emitterDimensions;
 uniform float emitterRadius;
 uniform float emitterAngle;
 uniform int emitterShape; // 0=POINT, 1=SPHERE, 2=CONE, 3=BOX
+uniform vec3 lineStart;
+uniform vec3 lineEnd;
+uniform float torusInnerRadius;
+uniform float torusOuterRadius;
 
 // Particle properties
 uniform float particleLifespan;
@@ -178,6 +182,37 @@ vec3 generateCirclePosition()
     return emitterPosition + rotatedOffset;
 }
 
+vec3 generateTorusPosition() 
+{
+    float angle1 = rand() * 2.0 * 3.14159265;  // Angle around main torus loop
+    float angle2 = rand() * 2.0 * 3.14159265;  // Angle around the minor ring
+    
+    float majorRadius = torusOuterRadius;
+    float minorRadius = torusInnerRadius + rand() * (torusOuterRadius - torusInnerRadius);
+    
+    float x = (majorRadius + minorRadius * cos(angle2)) * cos(angle1);
+    float y = minorRadius * sin(angle2);
+    float z = (majorRadius + minorRadius * cos(angle2)) * sin(angle1);
+    
+    return emitterPosition + vec3(x, y, z);
+}
+
+vec3 generateHemispherePosition() 
+{
+    float u = rand();
+    float v = rand();
+    float theta = 2.0 * 3.14159265 * u;
+    float phi = acos(v); // Restrict to upper hemisphere (0 to pi/2)
+    
+    float x = sin(phi) * cos(theta);
+    float y = sin(phi) * sin(theta);
+    float z = cos(phi);
+    
+    float r = emitterRadius * pow(rand(), 1.0/3.0); // Uniform distribution
+    
+    return emitterPosition + vec3(x, abs(y), z) * r; // Only positive Y values
+}
+
 // Generate velocity based on emitter shape
 vec3 generateVelocity(vec3 position) 
 {
@@ -212,7 +247,7 @@ vec3 generateVelocity(vec3 position)
                 );
             }
             break;
-            
+
         case 2: // CONE
             // Within cone angle
             {
@@ -259,19 +294,42 @@ vec3 generateVelocity(vec3 position)
                 ));
             }
             break;
+
         case 4: // CIRCLE
             {
-                dir = vec3(0.0, 1.0, 0.0);
-                float heightRandomness = 0.15 + (position.y - emitterPosition.y) * 0.05;
-                dir = normalize(dir + vec3(
-                    (rand() * 2.0 - 1.0) * heightRandomness,
-                    rand() * 0.05,
-                    (rand() * 2.0 - 1.0) * heightRandomness
-                ));
+                // Generate random angle
+                float theta = rand() * 2.0 * 3.14159265;
                 
-                return dir;
+                // Outward direction in XZ plane
+                dir = normalize(vec3(cos(theta), 0.0, sin(theta)));
+                
+                // Optional: Add slight randomness
+                float randomness = 0.1;  // Adjust for more/less randomness
+                dir += vec3(
+                    (rand() * 2.0 - 1.0) * randomness,
+                    0.0, // No Y deviation
+                    (rand() * 2.0 - 1.0) * randomness
+                );
+                
+                dir = normalize(dir); // Normalize after adding randomness
             }
             break;
+
+        case 5: // HEMISPHERE
+            dir = normalize(position - emitterPosition);
+            if (dir.y < 0) dir.y *= -1.0; // Only emit upwards
+            break;
+
+        case 6: // TORUS
+            {
+                float angle = rand() * 2.0 * 3.14159265;
+                float radius = torusInnerRadius + rand() * (torusOuterRadius - torusInnerRadius);
+                float x = radius * cos(angle);
+                float z = radius * sin(angle);
+                dir = normalize(vec3(x, 0, z));  // Emit outward from ring
+            }
+            break;
+
         default:
             dir = vec3(0.0, 1.0, 0.0);
     }
@@ -314,6 +372,8 @@ void main()
         case 2: position = generateConePosition(); break;
         case 3: position = generateBoxPosition(); break;
         case 4: position = generateCirclePosition(); break;
+        case 5: position = generateHemispherePosition(); break;
+        case 6: position = generateTorusPosition(); break;
         default: position = generatePointPosition();
     }
     

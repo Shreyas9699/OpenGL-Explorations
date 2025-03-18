@@ -1,5 +1,6 @@
 #include "ParticleSystemGPU.h"
 #include "Random.h"
+#include "Frustum.h"
 
 #include <cmath>
 #include <glm/gtx/quaternion.hpp>
@@ -29,12 +30,12 @@ void ParticleSystemGPU::initParticles()
     // Initialize particle count buffer
     GLuint initialZero = 0;
     m_ParticleCountBuffer = std::make_unique<VertexBuffer>(
-        &initialZero, sizeof(GLuint), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
+        &initialZero, static_cast<unsigned int>(sizeof(GLuint)), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
     );
 
     // Initialize atomic buffer
     m_AtomicBuffer = std::make_unique<VertexBuffer>(
-        &initialZero, sizeof(GLuint), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
+        &initialZero, static_cast<unsigned int>(sizeof(GLuint)), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
     );
 
     // Allocate free list + particle index buffer in one loop
@@ -43,9 +44,9 @@ void ParticleSystemGPU::initParticles()
 
     freeIndices[0] = m_MaxParticles; // First element stores the count
 
-    for (GLuint i = 0; i < m_MaxParticles; i++) 
+    for (GLuint i = 0; i < m_MaxParticles; i++)
     {
-        freeIndices[i + 1] = m_MaxParticles - 1 - i;  // LIFO Free List
+        freeIndices[i + 1] = static_cast<GLint>(m_MaxParticles - 1 - i);  // LIFO Free List
         particleIndices[i] = i;  // Particle indices
 
         // Initialize GPU particles
@@ -57,16 +58,16 @@ void ParticleSystemGPU::initParticles()
 
     // Create free list buffer
     m_FreeListBuffer = std::make_unique<VertexBuffer>(
-        freeIndices.data(), (m_MaxParticles + 1) * sizeof(GLint), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
+        freeIndices.data(), (m_MaxParticles + 1) * static_cast<unsigned int>(sizeof(GLuint)), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
     );
 
     // Create particle SSBO
     m_ParticleSSBO = std::make_unique<VertexBuffer>(
-        m_GPUParticles.data(), m_MaxParticles * sizeof(GPUParticle), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
+        m_GPUParticles.data(), m_MaxParticles * static_cast<unsigned int>(sizeof(GPUParticle)), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
     );
 
     m_ParticleVAO = std::make_unique<VertexArray>();
-    m_InstanceVBO = std::make_unique<VertexBuffer>( particleIndices.data(), m_MaxParticles * sizeof(GLuint));
+    m_InstanceVBO = std::make_unique<VertexBuffer>( particleIndices.data(), m_MaxParticles * static_cast<unsigned int>(sizeof(GLuint)));
     VertexBufferLayout layout;
     layout.Push<int>(1); // For the particle index
     m_ParticleVAO->AddBuffer(*m_InstanceVBO, layout);
@@ -86,7 +87,7 @@ ParticleSystemGPU::~ParticleSystemGPU()
     m_Shader.reset();
 }
 
-void ParticleSystemGPU::Update(float delta)
+void ParticleSystemGPU::Update(float delta, const glm::mat4& viewProj)
 {
     if (!m_ComputeShader || !m_EmitterShader)
     {
@@ -127,6 +128,9 @@ void ParticleSystemGPU::Update(float delta)
         m_EmitterShader->setFloat("emitterRadius", m_Emitter.radius);
         m_EmitterShader->setFloat("emitterAngle", m_Emitter.angle);
         m_EmitterShader->setInt("emitterShape", static_cast<int>(m_Emitter.shape));
+        m_EmitterShader->setFloat("torusInnerRadius", m_Emitter.torusInnerRadius);
+        m_EmitterShader->setFloat("torusOuterRadius", m_Emitter.torusOuterRadius);
+        
         m_EmitterShader->setFloat("particleLifespan", m_DefaultLifespan);
         m_EmitterShader->setFloat("particleSizeBegin", m_DefaultSizeBegin);
         m_EmitterShader->setVec4("particleColorBegin", m_DefaultColorBegin);
@@ -148,7 +152,14 @@ void ParticleSystemGPU::Update(float delta)
     m_FreeListBuffer->BindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
     // Set compute shader uniforms
+    Frustum frustum;
+    frustum.Update(viewProj);
+    auto& planes = frustum.GetPlanes();
+
     m_ComputeShader->Bind();
+    for (int i = 0; i < 6; ++i) {
+        m_ComputeShader->setVec4("frustumPlanes[" + std::to_string(i) + "]", planes[i]);
+    }
     m_ComputeShader->setFloat("deltaTime", delta);
     m_ComputeShader->setVec3("globalForce", m_GlobalForce);
     m_ComputeShader->setFloat("sizeBegin", m_DefaultSizeBegin);

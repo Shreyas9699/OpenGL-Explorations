@@ -62,8 +62,8 @@ int main(void)
     currentTest = menu;
 
     menu->AddTest<test::TestClearColor>("Clear Color");
-    menu->AddTest<test::TestTriangle>("Render 2D Traingle");
-    menu->AddTest<test::TestSquare>("Render 2D Square");
+    menu->AddTest<test::TestTriangle>("Render 2D Traingle", &window);
+    menu->AddTest<test::TestSquare>("Render 2D Square", &window);
     menu->AddTest<test::TestTexture2D>("2D Texture");
     menu->AddTest<test::TestPyramid>("3D Textured Pyramid", window.GetWindow());
     menu->AddTest<test::TestUVSphere>("Render Sphere", window.GetWindow());
@@ -102,11 +102,19 @@ int main(void)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        
+        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode); // Full-screen docking space
+
         if (currentTest)
         {
             currentTest->OnUpdate(deltaTime, window.GetWindow());
+            // Create your main rendering area window (no decorations)
+            ImGui::Begin("Render View", nullptr,
+                ImGuiWindowFlags_NoDecoration |
+                ImGuiWindowFlags_NoInputs |
+                ImGuiWindowFlags_NoBackground);
             currentTest->OnRender();
+            ImGui::End();
+
             ImGui::Begin("Test");
             if (currentTest != menu && ImGui::Button("<- or Backspace"))
             {
@@ -117,7 +125,7 @@ int main(void)
             currentTest->OnImGuiRender();
             ImGui::End();
         }
-
+        
         // IMGUI Rendering
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -142,95 +150,5 @@ int main(void)
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-
-    return 0;
+    exit(EXIT_SUCCESS);
 }
-
-// timing
-//float deltaTime = 0.0f;
-//float lastFrame = 0.0f;
-
-//int main(void)
-//{
-//    Window window("Assimp Model loading");
-//
-//    glEnable(GL_DEPTH_TEST); // Enabling depth testing allows rear faces of 3D objects to be hidden behind front faces.
-//    glEnable(GL_MULTISAMPLE); // Anti-aliasing
-//    glEnable(GL_BLEND); // GL_BLEND for OpenGL transparency which is further set within the fragment shader. 
-//    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//
-//    glfwSetInputMode(window.GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-//
-//    // Print GPU name and vendor
-//    std::cout << "GPU: " << glGetString(GL_RENDERER) << std::endl;
-//    std::cout << "Vendor: " << glGetString(GL_VENDOR) << std::endl;
-//
-//    Shader shader("res/shaders/modelVS.glsl", "res/shaders/modelFS.glsl");
-//
-//    Camera camera(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-//	CameraController cameraController(window.GetWindow(), camera);
-//
-//    Model model_testing("res/objects/backpack/backpack.obj");
-//    //Model model_testing("res/objects/spider/spider.obj");
-//    //Model model_testing("res/objects/GoingMerry/GoingMerry.obj");
-//    //Model model_testing("res/objects/conimbriga_complete_portugal.glb");
-//    //Model model_testing("res/objects/model_testing.obj");
-//    //Model model_testing("res/objects/ClassicFormula1/cf1car.obj");
-//    //Model model_testing("res/objects/wb/WhiteBeard.obj"); 
-//    //Model model_testing("res/objects/monkey/monkey.obj");
-//    //Model model_testing("res/objects/porsche/Porsche_911_GT2.obj");
-//    //Model model_testing("res/objects/luffy_hat.glb");
-//    //Model model_testing("res/objects/ordinary_house/ordinary_house.obj");
-//    //Model model_testing("res/objects/dabrovic-sponza/sponza.obj");
-//    //Model model_testing("res/objects/P-51Mustang/P-51 Mustang.obj"); // not working
-//    //Model model_testing("res/objects/knight/armor2021.obj");
-//    
-//    std::cout << "Model created" << std::endl;
-//
-//    shader.use();
-//    shader.setVec3("lightPos", 5.0f, 5.0f, 5.0f);
-//    shader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-//    shader.Unbind();
-//
-//    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-//    while (!glfwWindowShouldClose(window.GetWindow()))
-//    {
-//        float currentFrame = static_cast<float>(glfwGetTime());
-//        deltaTime = currentFrame - lastFrame;
-//        lastFrame = currentFrame;
-//
-//        // input camera
-//        cameraController.Update(deltaTime);
-//
-//        // render
-//        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//
-//        shader.use();
-//        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), cameraController.GetAspectRatio(), 0.1f, 100.0f);
-//        shader.setMat4("model", glm::mat4(1.0f));
-//        shader.setMat4("view", camera.GetViewMatrix());
-//        shader.setVec3("viewPos", camera.Position);
-//        shader.setMat4("projection", projection);
-//        for (unsigned int i = 0; i < model_testing.num_meshes; ++i)
-//        {
-//            shader.setVec3("diffuseColor", model_testing.mesh_list[i].diffuseColor.r, model_testing.mesh_list[i].diffuseColor.g, 
-//                model_testing.mesh_list[i].diffuseColor.b);
-//            shader.setBool("isTex", model_testing.mesh_list[i].hasTexture);
-//            
-//            if (model_testing.mesh_list[i].hasTexture)
-//            {
-//                glActiveTexture(GL_TEXTURE0);
-//                glBindTexture(GL_TEXTURE_2D, model_testing.mesh_list[i].tex_handle); // Bind texture for the current mesh
-//            }
-//
-//            glBindVertexArray(model_testing.mesh_list[i].VAO);
-//            glDrawElements(GL_TRIANGLES, (GLsizei)model_testing.mesh_list[i].vert_indices.size(), GL_UNSIGNED_INT, 0);
-//            glBindVertexArray(0);
-//        }
-//        shader.Unbind();
-//        window.Update();
-//    }
-//
-//    exit(EXIT_SUCCESS);
-//}
