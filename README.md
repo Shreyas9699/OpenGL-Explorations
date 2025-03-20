@@ -11,12 +11,12 @@ https://github.com/user-attachments/assets/b141a3f7-1838-497a-84b2-56b992c2555f
 
 ### Screenshots
 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-    <img src="Screenshots/TestMaterialCubeWLight.png" width="30%">
+  <img src="Screenshots/TestTriangle.png" width="30%">
     <img src="Screenshots/TestSquare.png" width="30%">
-    <img src="Screenshots/TestTexCubeWLight.png" width="30%">
     <img src="Screenshots/TestTexPryd.png" width="30%">
-    <img src="Screenshots/TestTriangle.png" width="30%">
     <img src="Screenshots/TestUVSphere.png" width="30%">
+    <img src="Screenshots/TestMaterialCubeWLight.png" width="30%">
+    <img src="Screenshots/TestTexCubeWLight.png" width="30%">
 </div>
 
 

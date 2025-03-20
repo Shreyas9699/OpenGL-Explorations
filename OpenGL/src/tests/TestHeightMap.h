@@ -33,6 +33,7 @@ namespace test
 		Camera m_Camera;
 		CameraController m_cameraController;
 		std::unique_ptr<Renderer> m_Renderer;
+		bool enableFrustumCulling = false;
 		bool isWireFrame = false;
 		bool enableGrid = false;
 		bool dynamicTess = false;
@@ -65,6 +66,7 @@ namespace test
 		GLuint m_FrustumVAO, m_FrustumVBO;
 		std::vector<glm::vec3> m_FrustumCorners;
 
+		std::vector<GLint> ComputeVisiblePatchStarts();
 		void RenderMiniMap();
 		void RenderFrustum();
 

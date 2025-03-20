@@ -24,7 +24,7 @@ namespace test
 		m_Shader = std::make_unique<Shader>("res/shaders/Heightmap/heightmapVS.glsl", "res/shaders/Heightmap/heightmapFS.glsl",
 			nullptr, "res/shaders/Heightmap/heightmapTCS.glsl", "res/shaders/Heightmap/heightmapTES.glsl");
 
-		m_NormalShader = std::make_unique<Shader>("res/shaders/Heightmap/heightmapVS.glsl", "res/shaders/Heightmap/heightmapFS.glsl",
+		m_NormalShader = std::make_unique<Shader>("res/shaders/Heightmap/heightmapVS.glsl", "res/shaders/Heightmap/heightmapNormalFS.glsl",
 			"res/shaders/Heightmap/heightmapGS.glsl", "res/shaders/Heightmap/heightmapTCS.glsl", "res/shaders/Heightmap/heightmapTES.glsl");
 
 		texturePath = "res/textures/height/deccan_heightmap.png";
@@ -164,6 +164,10 @@ namespace test
 		{
 			dynamicTess = !dynamicTess;
 		}
+		if (key == GLFW_KEY_F && action == GLFW_PRESS)
+		{
+			enableFrustumCulling = !enableFrustumCulling;
+		}
 		if (key == GLFW_KEY_P && action == GLFW_PRESS)
 		{
 			renderPointsOnly = !renderPointsOnly;
@@ -195,6 +199,20 @@ namespace test
 			texturePath = selectedFile;
 			loadTexture();
 		}
+	}
+
+	std::vector<GLint> TestHeightMap::ComputeVisiblePatchStarts()
+	{
+		std::vector<GLint> visiblePatches;
+		for (size_t idx = 0; idx < m_PatchAABBs.size(); ++idx)
+		{
+			const auto& aabb = m_PatchAABBs[idx];
+			if (m_Frustum.IsAABBVisible(aabb.min, aabb.max))
+			{
+				visiblePatches.push_back(static_cast<GLint>(idx * 4)); // 4 vertices per patch
+			}
+		}
+		return visiblePatches;
 	}
 
 	void TestHeightMap::OnRender()
@@ -244,39 +262,47 @@ namespace test
 		m_Frustum.Update(ProjView);
 
 		// Determine visible patches
-		m_VisiblePatchStarts.clear();
-		for (size_t idx = 0; idx < m_PatchAABBs.size(); ++idx) 
+		if (enableFrustumCulling)
 		{
-			const auto& aabb = m_PatchAABBs[idx];
-			if (m_Frustum.IsAABBVisible(aabb.min, aabb.max)) 
+			m_VisiblePatchStarts.clear();
+			m_VisiblePatchStarts = ComputeVisiblePatchStarts();
+
+			if (!m_VisiblePatchStarts.empty())
 			{
-				m_VisiblePatchStarts.push_back(static_cast<GLint>(idx * 4)); // 4 vertices per patch
+				std::vector<GLsizei> counts(m_VisiblePatchStarts.size(), 4);
+				glMultiDrawArrays(GL_PATCHES, m_VisiblePatchStarts.data(), counts.data(), static_cast<unsigned int>(m_VisiblePatchStarts.size()));
 			}
 		}
-
-		if (!m_VisiblePatchStarts.empty()) 
+		else
 		{
-			std::vector<GLsizei> counts(m_VisiblePatchStarts.size(), 4);
-			glMultiDrawArrays(GL_PATCHES, m_VisiblePatchStarts.data(), counts.data(), static_cast<unsigned int>(m_VisiblePatchStarts.size()));
+			glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
 		}
 		m_Shader->Unbind();
 
 		if (showNormals)
 		{
 			m_NormalShader->Bind();
-			// Set the same uniforms as main shader
-
-			m_NormalShader->setMat4("view", view);
+			m_NormalShader->setFloat("fovCos", fovCos);
+			m_NormalShader->setBool("isDynamicTess", dynamicTess);
+			m_NormalShader->setMat4("viewTCS", view); // Main camera's view for TCS
+			m_NormalShader->setMat4("viewTES", view);
 			m_NormalShader->setMat4("projection", projection);
 			m_NormalShader->setMat4("model", model);
 			m_NormalShader->setVec2("uTexelSize", { 1.0f / m_width, 1.0f / m_height });
 			m_NormalShader->setFloat("normalLength", 2.0f); // Adjust length as needed
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			if (!m_VisiblePatchStarts.empty())
+			if (enableFrustumCulling)
 			{
-				std::vector<GLsizei> counts(m_VisiblePatchStarts.size(), 4);
-				glMultiDrawArrays(GL_PATCHES, m_VisiblePatchStarts.data(), counts.data(), static_cast<unsigned int>(m_VisiblePatchStarts.size()));
+				if (!m_VisiblePatchStarts.empty())
+				{
+					std::vector<GLsizei> counts(m_VisiblePatchStarts.size(), 4);
+					glMultiDrawArrays(GL_PATCHES, m_VisiblePatchStarts.data(), counts.data(), static_cast<unsigned int>(m_VisiblePatchStarts.size()));
+				}
+			}
+			else
+			{
+				glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
 			}
 			m_NormalShader->Unbind();
 		}
@@ -337,20 +363,20 @@ namespace test
 		m_Frustum.Update(projection * view);
 
 		// Determine visible patches
-		m_VisiblePatchStarts.clear();
-		for (size_t idx = 0; idx < m_PatchAABBs.size(); ++idx)
+		if (enableFrustumCulling)
 		{
-			const auto& aabb = m_PatchAABBs[idx];
-			if (m_Frustum.IsAABBVisible(aabb.min, aabb.max))
+			m_VisiblePatchStarts.clear();
+			m_VisiblePatchStarts = ComputeVisiblePatchStarts();
+
+			if (!m_VisiblePatchStarts.empty())
 			{
-				m_VisiblePatchStarts.push_back(static_cast<GLint>(idx * 4)); // 4 vertices per patch
+				std::vector<GLsizei> counts(m_VisiblePatchStarts.size(), 4);
+				glMultiDrawArrays(GL_PATCHES, m_VisiblePatchStarts.data(), counts.data(), static_cast<unsigned int>(m_VisiblePatchStarts.size()));
 			}
 		}
-
-		if (!m_VisiblePatchStarts.empty())
+		else
 		{
-			std::vector<GLsizei> counts(m_VisiblePatchStarts.size(), 4);
-			glMultiDrawArrays(GL_PATCHES, m_VisiblePatchStarts.data(), counts.data(), static_cast<unsigned int>(m_VisiblePatchStarts.size()));
+			glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
 		}
 		m_Shader->Unbind();
 		RenderFrustum();
@@ -571,6 +597,11 @@ namespace test
 		ImGui::Text("`Q` -> Cursor (Mouse pointer) ->");
 		ImGui::SameLine();
 		ImGui::TextColored(color, " [%s]\n", (cusorEnable) ? "ENABLED" : "DISABLED");
+
+		color = enableFrustumCulling ? enabledColor : disabledColor;
+		ImGui::Text("`F` -> Frustum Culling ->");
+		ImGui::SameLine();
+		ImGui::TextColored(color, " [%s]\n", (enableFrustumCulling) ? "ENABLED" : "DISABLED");
 
 		color = dynamicTess ? enabledColor : disabledColor;
 		ImGui::Text("`E` -> Dynamic Tessellation ->");
