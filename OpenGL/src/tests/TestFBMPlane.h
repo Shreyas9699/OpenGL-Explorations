@@ -6,7 +6,7 @@
 
 /*
 * This is an application that implements Fractal Brownian Motion from the book of shaders
-* Added ligh effets to this using Phong lighting model (https://learnopengl.com/Lighting/Basic-Lighting)
+* Added light effects to this using Phong lighting model  (https://learnopengl.com/Lighting/Basic-Lighting)
 */
 
 namespace test

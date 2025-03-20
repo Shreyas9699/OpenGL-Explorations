@@ -5,10 +5,6 @@ This repository is a learning project that explores the fundamentals of 3D rende
 ## Gallery
 Here are some project screenshots and a video:
 
-### Videos
-https://github.com/user-attachments/assets/b141a3f7-1838-497a-84b2-56b992c2555f
-
-
 ### Screenshots
 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
   <img src="Screenshots/TestTriangle.png" width="30%">
@@ -18,6 +14,11 @@ https://github.com/user-attachments/assets/b141a3f7-1838-497a-84b2-56b992c2555f
     <img src="Screenshots/TestMaterialCubeWLight.png" width="30%">
     <img src="Screenshots/TestTexCubeWLight.png" width="30%">
 </div>
+
+### Videos
+[![Watch the video](http://img.youtube.com/vi/pW238u3x3xw/0.jpg)](https://www.youtube.com/watch?v=pW238u3x3xw)
+[![Watch the video](http://img.youtube.com/vi/1TuheDbquEs/0.jpg)](https://www.youtube.com/watch?v=1TuheDbquEs)
+[![Watch the video](http://img.youtube.com/vi/TzpNCsVMecA/0.jpg)](https://www.youtube.com/watch?v=TzpNCsVMecA)
 
 
 ## Features
