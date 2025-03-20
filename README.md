@@ -16,9 +16,9 @@ Here are some project screenshots and a video:
 </div>
 
 ### Videos
-[![Watch the video](http://img.youtube.com/vi/pW238u3x3xw/0.jpg)](https://www.youtube.com/watch?v=pW238u3x3xw)
-[![Watch the video](http://img.youtube.com/vi/1TuheDbquEs/0.jpg)](https://www.youtube.com/watch?v=1TuheDbquEs)
-[![Watch the video](http://img.youtube.com/vi/TzpNCsVMecA/0.jpg)](https://www.youtube.com/watch?v=TzpNCsVMecA)
+| [![Video 1](http://img.youtube.com/vi/pW238u3x3xw/0.jpg)](https://www.youtube.com/watch?v=pW238u3x3xw) | [![Video 2](http://img.youtube.com/vi/1TuheDbquEs/0.jpg)](https://www.youtube.com/watch?v=1TuheDbquEs) |
+| --- | --- |
+| [![Video 3](http://img.youtube.com/vi/TzpNCsVMecA/0.jpg)](https://www.youtube.com/watch?v=TzpNCsVMecA) |
 
 
 ## Features
