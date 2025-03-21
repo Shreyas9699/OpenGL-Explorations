@@ -45,18 +45,25 @@ namespace test
 		m_MiniMapShader = std::make_unique<Shader>("res/shaders/Heightmap/minimapVS.glsl", "res/shaders/Heightmap/minimapFS.glsl");
 
 		// Frustum visualization VAO
-		glGenVertexArrays(1, &m_FrustumVAO);
-		glGenBuffers(1, &m_FrustumVBO);
+		m_Frustum = std::make_unique<Frustum>();
+		m_FrustumVAO = std::make_unique<VertexArray>();
+		m_FrustumVBO = std::make_unique<VertexBuffer>(nullptr, static_cast<unsigned int>(NUM_FRUSTUM_FILL_VERTS * sizeof(glm::vec3)), GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
+		VertexBufferLayout layout;
+		layout.Push<float>(3);
+		m_FrustumVAO->AddBuffer(*m_FrustumVBO, layout);
 
-		glBindVertexArray(m_FrustumVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, m_FrustumVBO);
-		// Allocate space for 36 vertices (12 triangles * 3 verts)
-		glBufferData(GL_ARRAY_BUFFER, NUM_FRUSTUM_FILL_VERTS * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
-		glEnableVertexAttribArray(0);
+		//glGenVertexArrays(1, &m_FrustumVAO);
+		//glGenBuffers(1, &m_FrustumVBO);
 
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
+		//glBindVertexArray(m_FrustumVAO);
+		//glBindBuffer(GL_ARRAY_BUFFER, m_FrustumVBO);
+		//// Allocate space for 36 vertices (12 triangles * 3 verts)
+		//glBufferData(GL_ARRAY_BUFFER, NUM_FRUSTUM_FILL_VERTS * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+		//glEnableVertexAttribArray(0);
+
+		//glBindBuffer(GL_ARRAY_BUFFER, 0);
+		//glBindVertexArray(0);
 	}
 
 	TestHeightMap::~TestHeightMap()
@@ -68,6 +75,9 @@ namespace test
 		m_Shader->Unbind();
 		m_Shader.reset();
 		m_Renderer.reset();
+		m_FrustumVAO.reset();
+		m_FrustumVBO.reset();
+		m_Frustum.reset();
 
 		m_Window->setCustomKeyCallback(nullptr);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -207,7 +217,7 @@ namespace test
 		for (size_t idx = 0; idx < m_PatchAABBs.size(); ++idx)
 		{
 			const auto& aabb = m_PatchAABBs[idx];
-			if (m_Frustum.IsAABBVisible(aabb.min, aabb.max))
+			if (m_Frustum->IsAABBVisible(aabb.min, aabb.max))
 			{
 				visiblePatches.push_back(static_cast<GLint>(idx * 4)); // 4 vertices per patch
 			}
@@ -259,7 +269,7 @@ namespace test
 
 		// Update frustum
 		glm::mat4 ProjView = projection * view;
-		m_Frustum.Update(ProjView);
+		m_Frustum->Update(ProjView);
 
 		// Determine visible patches
 		if (enableFrustumCulling)
@@ -360,7 +370,7 @@ namespace test
 		}
 
 		// Update frustum
-		m_Frustum.Update(projection * view);
+		m_Frustum->Update(projection * view);
 
 		// Determine visible patches
 		if (enableFrustumCulling)
@@ -473,9 +483,10 @@ namespace test
 		frustumTriangles[idx++] = farBottomRight;
 
 		// 5) Upload data to the fill VBO
-		glBindBuffer(GL_ARRAY_BUFFER, m_FrustumVBO);
+		m_FrustumVBO->Bind();
+		m_FrustumVBO->UpdateData(frustumTriangles.data(), NUM_FRUSTUM_FILL_VERTS * sizeof(glm::vec3));
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * frustumTriangles.size(), frustumTriangles.data());
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		m_FrustumVBO->Unbind();
 
 		glm::mat4 bystanderProjection = glm::perspective(glm::radians(m_BystanderCamera.Zoom), (winWidth / 2.0f) / (float)winHeight, m_Near, m_Far);
 		glm::mat4 bystanderView = m_BystanderCamera.GetViewMatrix();
@@ -484,13 +495,13 @@ namespace test
 		m_MiniMapShader->setMat4("view", bystanderView);
 		m_MiniMapShader->setVec4("u_color", glm::vec4(0.0f, 1.0f, 0.0f, 0.3f));
 
-		glBindVertexArray(m_FrustumVAO);
+		m_FrustumVAO->Bind();
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(frustumTriangles.size()));
 		glDisable(GL_BLEND);
-		glBindVertexArray(0);
+		m_FrustumVAO->Unbind();
 		m_MiniMapShader->Unbind();
 		glViewport(0, 0, winWidth, winHeight);
 	}

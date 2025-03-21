@@ -118,7 +118,6 @@
     <None Include="res\shaders\Cube\CubeWithLightVS.glsl" />
     <None Include="res\shaders\Cube\CubeWithTexFS.glsl" />
     <None Include="res\shaders\Cube\CubeWithTexVS.glsl" />
-    <None Include="res\shaders\FBMShader.shader" />
     <None Include="res\shaders\FBM\FragShaderFBM.glsl" />
     <None Include="res\shaders\FBM\VertexFBMShader.glsl" />
     <None Include="res\shaders\Heightmap\heightmapFS.glsl" />

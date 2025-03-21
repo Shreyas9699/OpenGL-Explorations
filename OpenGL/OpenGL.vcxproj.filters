@@ -20,7 +20,6 @@
     <None Include="res\shaders\Basic\QuadShaderVS.glsl" />
     <None Include="res\shaders\Basic\BatchShader.shader" />
     <None Include="res\shaders\Cube\lightCubeVS.glsl" />
-    <None Include="res\shaders\FBMShader.shader" />
     <None Include="res\shaders\Cube\CubeWithLightVS.glsl" />
     <None Include="res\shaders\Cube\lightCubeFS.glsl" />
     <None Include="res\shaders\Cube\CubeWithLightFS.glsl" />

@@ -108,8 +108,8 @@ namespace test
 
 		// setting plane attributes
 		m_plane.VAO = std::make_unique<VertexArray>();
-		m_plane.VBO = std::make_unique<VertexBuffer>(m_Vertices.data(), m_Vertices.size() * sizeof(float));
-		m_plane.IBO = std::make_unique<IndexBuffer>(m_Indices.data(), m_Indices.size());
+		m_plane.VBO = std::make_unique<VertexBuffer>(m_Vertices.data(), static_cast<unsigned int>(m_Vertices.size() * sizeof(float)));
+		m_plane.IBO = std::make_unique<IndexBuffer>(m_Indices.data(), static_cast<unsigned int>(m_Indices.size()));
 		VertexBufferLayout layout1;
 		layout1.Push<float>(3);
 		layout1.Push<float>(3);

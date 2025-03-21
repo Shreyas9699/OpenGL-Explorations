@@ -184,17 +184,38 @@ vec3 generateCirclePosition()
 
 vec3 generateTorusPosition() 
 {
-    float angle1 = rand() * 2.0 * 3.14159265;  // Angle around main torus loop
-    float angle2 = rand() * 2.0 * 3.14159265;  // Angle around the minor ring
+    float angle1 = rand() * 2.0 * 3.14159265;
+    float angle2 = rand() * 2.0 * 3.14159265;
     
-    float majorRadius = torusOuterRadius;
-    float minorRadius = torusInnerRadius + rand() * (torusOuterRadius - torusInnerRadius);
+    float tubeRadius = (torusOuterRadius - torusInnerRadius) / 2.0;
+    float majorRadius = torusInnerRadius + tubeRadius;
+    float minorRadius = tubeRadius;
     
     float x = (majorRadius + minorRadius * cos(angle2)) * cos(angle1);
     float y = minorRadius * sin(angle2);
-    float z = (majorRadius + minorRadius * cos(angle2)) * sin(angle1);
+    float z = (majorRadius + minorRadius * cos(angle1)) * sin(angle1);
     
-    return emitterPosition + vec3(x, y, z);
+    // Apply emitter rotation
+    mat3 rotX = mat3(
+        1, 0, 0,
+        0, cos(radians(emitterRotation.x)), -sin(radians(emitterRotation.x)),
+        0, sin(radians(emitterRotation.x)), cos(radians(emitterRotation.x))
+    );
+    
+    mat3 rotY = mat3(
+        cos(radians(emitterRotation.y)), 0, sin(radians(emitterRotation.y)),
+        0, 1, 0,
+        -sin(radians(emitterRotation.y)), 0, cos(radians(emitterRotation.y))
+    );
+    
+    mat3 rotZ = mat3(
+        cos(radians(emitterRotation.z)), -sin(radians(emitterRotation.z)), 0,
+        sin(radians(emitterRotation.z)), cos(radians(emitterRotation.z)), 0,
+        0, 0, 1
+    );
+    
+    vec3 rotatedOffset = rotX * vec3(x, y, z);
+    return emitterPosition + rotatedOffset;
 }
 
 vec3 generateHemispherePosition() 
@@ -211,6 +232,28 @@ vec3 generateHemispherePosition()
     float r = emitterRadius * pow(rand(), 1.0/3.0); // Uniform distribution
     
     return emitterPosition + vec3(x, abs(y), z) * r; // Only positive Y values
+
+    // Apply emitter rotation
+    mat3 rotX = mat3(
+        1, 0, 0,
+        0, cos(radians(emitterRotation.x)), -sin(radians(emitterRotation.x)),
+        0, sin(radians(emitterRotation.x)), cos(radians(emitterRotation.x))
+    );
+    
+    mat3 rotY = mat3(
+        cos(radians(emitterRotation.y)), 0, sin(radians(emitterRotation.y)),
+        0, 1, 0,
+        -sin(radians(emitterRotation.y)), 0, cos(radians(emitterRotation.y))
+    );
+    
+    mat3 rotZ = mat3(
+        cos(radians(emitterRotation.z)), -sin(radians(emitterRotation.z)), 0,
+        sin(radians(emitterRotation.z)), cos(radians(emitterRotation.z)), 0,
+        0, 0, 1
+    );
+    
+    vec3 rotatedOffset = rotZ * rotY * rotX * (vec3(x, abs(y), z) * r);
+    return emitterPosition + rotatedOffset;
 }
 
 // Generate velocity based on emitter shape
@@ -310,8 +353,28 @@ vec3 generateVelocity(vec3 position)
                     0.0, // No Y deviation
                     (rand() * 2.0 - 1.0) * randomness
                 );
+
+                // Apply emitter rotation
+                mat3 rotX = mat3(
+                    1, 0, 0,
+                    0, cos(radians(emitterRotation.x)), -sin(radians(emitterRotation.x)),
+                    0, sin(radians(emitterRotation.x)), cos(radians(emitterRotation.x))
+                );
                 
-                dir = normalize(dir); // Normalize after adding randomness
+                mat3 rotY = mat3(
+                    cos(radians(emitterRotation.y)), 0, sin(radians(emitterRotation.y)),
+                    0, 1, 0,
+                    -sin(radians(emitterRotation.y)), 0, cos(radians(emitterRotation.y))
+                );
+                
+                mat3 rotZ = mat3(
+                    cos(radians(emitterRotation.z)), -sin(radians(emitterRotation.z)), 0,
+                    sin(radians(emitterRotation.z)), cos(radians(emitterRotation.z)), 0,
+                    0, 0, 1
+                );
+    
+                
+                dir = normalize(rotZ * rotY * rotX * dir); // Normalize after adding randomness
             }
             break;
 
@@ -320,13 +383,35 @@ vec3 generateVelocity(vec3 position)
             if (dir.y < 0) dir.y *= -1.0; // Only emit upwards
             break;
 
-        case 6: // TORUS
+       case 6: // TORUS
             {
+                // First calculate standard direction in XZ plane
                 float angle = rand() * 2.0 * 3.14159265;
                 float radius = torusInnerRadius + rand() * (torusOuterRadius - torusInnerRadius);
                 float x = radius * cos(angle);
                 float z = radius * sin(angle);
-                dir = normalize(vec3(x, 0, z));  // Emit outward from ring
+                vec3 baseDir = normalize(vec3(x, 0, z));
+                
+                // Apply the same rotations to the direction vector
+                mat3 rotX = mat3(
+                    1, 0, 0,
+                    0, cos(radians(emitterRotation.x)), -sin(radians(emitterRotation.x)),
+                    0, sin(radians(emitterRotation.x)), cos(radians(emitterRotation.x))
+                );
+                
+                mat3 rotY = mat3(
+                    cos(radians(emitterRotation.y)), 0, sin(radians(emitterRotation.y)),
+                    0, 1, 0,
+                    -sin(radians(emitterRotation.y)), 0, cos(radians(emitterRotation.y))
+                );
+                
+                mat3 rotZ = mat3(
+                    cos(radians(emitterRotation.z)), -sin(radians(emitterRotation.z)), 0,
+                    sin(radians(emitterRotation.z)), cos(radians(emitterRotation.z)), 0,
+                    0, 0, 1
+                );
+                
+                dir = rotZ * rotY * rotX * baseDir;
             }
             break;
 

@@ -145,6 +145,15 @@ namespace test
 				m_ParticleSys->SetEmissionRate(emitterProp.emissionRate);
 			}
 
+			// Add rotation controls for applicable emitters
+			ImGui::BeginDisabled(emitterProp.shape != EmitterShape::CONE && emitterProp.shape != EmitterShape::BOX && emitterProp.shape != EmitterShape::TORUS &&
+				emitterProp.shape != EmitterShape::HEMISPHERE && emitterProp.shape != EmitterShape::CIRCLE);
+			if (ImGui::SliderFloat3("Rotation (X, Y, Z degrees)", (float*)&emitterProp.rotation, 0.0f, 360.0f, "%.1f"))
+			{
+				m_ParticleSys->SetEmitterRotation(emitterProp.rotation);
+			}
+			ImGui::EndDisabled();
+
 			ImGui::BeginDisabled((emitterProp.shape != EmitterShape::SPHERE) && (emitterProp.shape != EmitterShape::CONE) && (emitterProp.shape != EmitterShape::CIRCLE) && (emitterProp.shape != EmitterShape::HEMISPHERE));
 			if (ImGui::SliderFloat("Particle Emitter Radius", (float*)&emitterProp.radius, 1.0f, 50.0f, "%.1f"))
 			{

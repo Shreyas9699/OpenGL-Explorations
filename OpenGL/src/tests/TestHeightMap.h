@@ -44,10 +44,16 @@ namespace test
 		const unsigned int NUM_PATCH_PTS = 4;
 		unsigned int rez = 20;
 
-		Frustum m_Frustum;
+		std::unique_ptr<Frustum> m_Frustum;
 		std::vector<AABB> m_PatchAABBs;
 		std::vector<GLint> m_VisiblePatchStarts;
 		float m_HeightScale = 100.0f; // Adjust based on your shader's height scale
+		Camera m_BystanderCamera;
+		std::unique_ptr<Shader> m_MiniMapShader;
+		std::unique_ptr<VertexArray> m_FrustumVAO;
+		std::unique_ptr<VertexBuffer> m_FrustumVBO;
+		//GLuint m_FrustumVAO, m_FrustumVBO;
+		std::vector<glm::vec3> m_FrustumCorners;
 
 		//std::vector<const char*> heightmaps = {};
 		float errorMessageTime = 0.0f;
@@ -60,11 +66,6 @@ namespace test
 		void handleKeyPress(int key, int scancode, int action, int mods);
 		void ShowFileExplorer();
 		void loadTexture();
-
-		Camera m_BystanderCamera;
-		std::unique_ptr<Shader> m_MiniMapShader;
-		GLuint m_FrustumVAO, m_FrustumVBO;
-		std::vector<glm::vec3> m_FrustumCorners;
 
 		std::vector<GLint> ComputeVisiblePatchStarts();
 		void RenderMiniMap();
