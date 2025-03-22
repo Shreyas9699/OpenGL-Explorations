@@ -193,7 +193,7 @@ vec3 generateTorusPosition()
     
     float x = (majorRadius + minorRadius * cos(angle2)) * cos(angle1);
     float y = minorRadius * sin(angle2);
-    float z = (majorRadius + minorRadius * cos(angle1)) * sin(angle1);
+    float z = (majorRadius + minorRadius * cos(angle2)) * sin(angle1);
     
     // Apply emitter rotation
     mat3 rotX = mat3(
@@ -214,7 +214,7 @@ vec3 generateTorusPosition()
         0, 0, 1
     );
     
-    vec3 rotatedOffset = rotX * vec3(x, y, z);
+    vec3 rotatedOffset = rotX * rotY * rotZ * vec3(x, y, z);
     return emitterPosition + rotatedOffset;
 }
 
@@ -385,12 +385,28 @@ vec3 generateVelocity(vec3 position)
 
        case 6: // TORUS
             {
-                // First calculate standard direction in XZ plane
-                float angle = rand() * 2.0 * 3.14159265;
-                float radius = torusInnerRadius + rand() * (torusOuterRadius - torusInnerRadius);
-                float x = radius * cos(angle);
-                float z = radius * sin(angle);
-                vec3 baseDir = normalize(vec3(x, 0, z));
+                // Generate the same angles used for position
+                float angle1 = rand() * 2.0 * 3.14159265;  // Around major circle
+                float angle2 = rand() * 2.0 * 3.14159265;  // Around tube
+                
+                // Calculate normal vector pointing outward from the torus surface
+                // First, calculate position on the torus (without center offset)
+                float tubeRadius = (torusOuterRadius - torusInnerRadius) / 2.0;
+                float majorRadius = torusInnerRadius + tubeRadius;
+                float minorRadius = tubeRadius;
+                vec3 pointOnTorus;
+                pointOnTorus.x = (majorRadius + minorRadius * cos(angle2)) * cos(angle1);
+                pointOnTorus.y = minorRadius * sin(angle2);
+                pointOnTorus.z = (majorRadius + minorRadius * cos(angle2)) * sin(angle1);
+                
+                // Calculate vector from torus centerline to this point
+                // (this gives us the normal direction at this point)
+                vec3 centerlinePoint;
+                centerlinePoint.x = majorRadius * cos(angle1);
+                centerlinePoint.y = 0.0;
+                centerlinePoint.z = majorRadius * sin(angle1);
+                
+                vec3 normal = normalize(pointOnTorus - centerlinePoint);
                 
                 // Apply the same rotations to the direction vector
                 mat3 rotX = mat3(
@@ -411,7 +427,7 @@ vec3 generateVelocity(vec3 position)
                     0, 0, 1
                 );
                 
-                dir = rotZ * rotY * rotX * baseDir;
+                dir = rotZ * rotY * rotX * normal;
             }
             break;
 

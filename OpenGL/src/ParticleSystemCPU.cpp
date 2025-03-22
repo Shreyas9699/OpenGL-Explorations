@@ -310,7 +310,7 @@ void ParticleSystemCPU::CreateParticle()
     float sizeEnd = m_UseSizeOverLifetime ? m_DefaultSizeEnd : 1.0f;*/
     if (m_Particles.find(particleID) != m_Particles.end())
     {   
-        m_Particles[particleID] = Particle(
+        m_Particles[particleID] = ParticleCPU(
             position,
             velocity,
             m_DefaultColorBegin,
@@ -324,7 +324,7 @@ void ParticleSystemCPU::CreateParticle()
     else
     {
         m_Particles.insert({ particleID,
-        Particle(
+        ParticleCPU(
             position,
             velocity,
             m_DefaultColorBegin,

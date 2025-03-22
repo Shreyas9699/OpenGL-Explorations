@@ -128,33 +128,33 @@ namespace test
 		if (ImGui::CollapsingHeader("Particle Emitter Properties", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::Text("Particle Emitter properties\n");
-			if (ImGui::Combo("Particle Emitter Shape", &currentEmitterShapeIdx, emitterShape.data(), static_cast<int>(emitterShape.size())))
+			if (ImGui::Combo("Shape", &currentEmitterShapeIdx, emitterShape.data(), static_cast<int>(emitterShape.size())))
 			{
 				emitterProp.shape = static_cast<EmitterShape>(currentEmitterShapeIdx);
 				m_ParticleSys->SetEmitter(emitterProp);
 			}
 
-			if (ImGui::SliderInt("Particle Emitter EmissionRate", &emitterProp.emissionRate, 10, 1500))
+			if (ImGui::SliderInt("Emission Rate", &emitterProp.emissionRate, 10, 1500))
 			{
 				// Update the particle system with the new emitter properties
 				m_ParticleSys->SetEmitter(emitterProp);
 			}
 			ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "SPHERE" && emitterShape[currentEmitterShapeIdx] != "CONE");
-			if (ImGui::SliderFloat("Particle Emitter Radius", (float*)&emitterProp.radius, 1.0f, 10.0f, "%.1f"))
+			if (ImGui::SliderFloat("Radius", (float*)&emitterProp.radius, 1.0f, 10.0f, "%.1f"))
 			{
 				m_ParticleSys->SetEmitterRadius(emitterProp.radius);
 			}
 			ImGui::EndDisabled();
 
 			ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "CONE");
-			if (ImGui::SliderFloat("Particle Emitter Angle", (float*)&emitterProp.angle, 0.0f, 120.0f, "%.1f"))
+			if (ImGui::SliderFloat("Angle", (float*)&emitterProp.angle, 0.0f, 120.0f, "%.1f"))
 			{
 				m_ParticleSys->SetEmitterAngle(emitterProp.angle);
 			}
 			ImGui::EndDisabled();
 
 			ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "BOX");
-			if (ImGui::SliderFloat3("Particle Emitter Dimensions", (float*)&emitterProp.dimensions, 1.0f, 10.0f, "%.1f"))
+			if (ImGui::SliderFloat3("Dimensions", (float*)&emitterProp.dimensions, 1.0f, 10.0f, "%.1f"))
 			{
 				m_ParticleSys->SetEmitterDimensions(emitterProp.dimensions);
 			}
@@ -170,27 +170,27 @@ namespace test
 
 		if (ImGui::CollapsingHeader("Particle Properties", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			if (ImGui::ColorEdit4("Particle Begin Color", (float*)&colorBegin))
+			if (ImGui::ColorEdit4("Begin Color", (float*)&colorBegin))
 			{
 				m_ParticleSys->SetParticleColorBegin(colorBegin);
 			}
 
-			if (ImGui::ColorEdit4("Particle End Color", (float*)&colorEnd))
+			if (ImGui::ColorEdit4("End Color", (float*)&colorEnd))
 			{
 				m_ParticleSys->SetParticleColorEnd(colorEnd);
 			}
 
-			if (ImGui::SliderFloat("Particle Begin Size", (float*)&sizeBegin, 1.0f, 20.0f, "%.1f"))
+			if (ImGui::SliderFloat("Begin Size", (float*)&sizeBegin, 1.0f, 20.0f, "%.1f"))
 			{
 				m_ParticleSys->SetParticleSizeBegin(sizeBegin);
 			}
 
-			if (ImGui::SliderFloat("Particle End Size", (float*)&sizeEnd, 0.1f, 10.0f, "%.1f"))
+			if (ImGui::SliderFloat("End Size", (float*)&sizeEnd, 0.1f, 10.0f, "%.1f"))
 			{
 				m_ParticleSys->SetParticleSizeEnd(sizeEnd);
 			}
 
-			if (ImGui::SliderFloat("Particle lifespan (in sec)", (float*)&lifespan, 0.1f, 20.0f, "%.1f"))
+			if (ImGui::SliderFloat("lifespan (in sec)", (float*)&lifespan, 0.1f, 20.0f, "%.1f"))
 			{
 				m_ParticleSys->SetParticleLifespan(lifespan);
 			}

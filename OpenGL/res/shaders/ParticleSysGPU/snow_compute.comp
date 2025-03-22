@@ -1,0 +1,99 @@
+// Snow snow_compute.comp shader
+#version 430 core
+
+struct Particle {
+    vec4 position;    // xyz = position, w = size
+    vec4 velocity;    // xyz = velocity, w = lifeRemaining
+    vec4 colorBegin;
+    vec4 colorEnd;    // w = lifespan
+};
+
+layout(std430, binding = 0) buffer ParticleBuffer {
+    Particle particles[];
+};
+
+layout(binding = 1, offset = 0) uniform atomic_uint particleCount;
+
+layout(std430, binding = 1) buffer FreeListBuffer {
+    int freeListSize;
+    int freeList[];
+};
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+uniform float deltaTime;
+uniform vec3 windDirection;
+uniform float windStrength;
+uniform float turbulence;
+uniform float fallSpeed;
+uniform float sizeBegin;
+uniform float sizeEnd;
+
+// Simple noise function for turbulence
+float noise(vec3 p) {
+    return fract(sin(dot(p, vec3(12.9898, 78.233, 45.5432))) * 43758.5453);
+}
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    
+    if (index >= particles.length())
+        return;
+        
+    Particle p = particles[index];
+    
+    // Skip inactive particles
+    if (p.velocity.w <= 0.0)
+        return;
+        
+    // Update remaining lifetime
+    p.velocity.w -= deltaTime;
+    
+    // Mark as inactive if lifetime is over
+    if (p.velocity.w <= 0.0) {
+        p.velocity.w = 0.0;
+        
+        // Return index to free list
+        int freeIndex = atomicAdd(freeListSize, 1);
+        freeList[freeIndex] = int(index);
+        
+        particles[index] = p;
+        return;
+    }
+    
+    // Count active particles
+    atomicCounterIncrement(particleCount);
+    
+    // Calculate life progress (0 to 1)
+    float life = p.colorEnd.w;
+    float remainingLife = p.velocity.w;
+    float lifeProgress = 1.0 - (remainingLife / life);
+    
+    // Apply wind force
+    vec3 windForce = windDirection * windStrength;
+    
+    // Apply turbulence (random motion)
+    float time = deltaTime * 10.0;
+    vec3 noiseInput = p.position.xyz * 0.1 + vec3(0.0, 0.0, time);
+    vec3 turbulenceForce = vec3(
+        noise(noiseInput + vec3(0.0, 0.0, 0.0)) - 0.5,
+        noise(noiseInput + vec3(1.0, 0.0, 0.0)) - 0.5,
+        noise(noiseInput + vec3(0.0, 1.0, 0.0)) - 0.5
+    ) * turbulence;
+    
+    // Snow-specific motion: slow falling with turbulence and wind
+    p.velocity.xyz = vec3(
+        windForce.x + turbulenceForce.x,
+        -fallSpeed + turbulenceForce.y * 0.2, // Mainly fall downward
+        windForce.z + turbulenceForce.z
+    );
+    
+    // Update position
+    p.position.xyz += p.velocity.xyz * deltaTime;
+    
+    // Snow particles don't change size much
+    p.position.w = sizeBegin;
+    
+    // Store updated particle
+    particles[index] = p;
+}

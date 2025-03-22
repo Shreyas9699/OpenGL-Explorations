@@ -4,10 +4,44 @@
 #include "VertexBuffer.h"
 #include "VertexBufferLayout.h"
 
+struct ParticleCPU
+{
+	// few extra properties for CPU particles as calculation is done in CPU
+    // only rendering is done in shader
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 velocity = glm::vec3(1.0f);
+    glm::vec4 colorBegin = glm::vec4(glm::vec3(1.0f), 1.0f);
+    glm::vec4 colorEnd = glm::vec4(glm::vec3(0.0f), 1.0f);
+    glm::vec4 color = glm::vec4(glm::vec3(1.0f), 1.0f);
+    float initialLife = 1.5f;
+    float lifeRemaining = 0.0f;
+    bool Active = true;
+    float sizeBegin = 1.0f;
+    float sizeEnd = 1.0f;
+    float size = 1.0f;
+
+    ParticleCPU() = default;
+
+    // Constructor with all parameters
+    ParticleCPU(glm::vec3 position, glm::vec3 velocity, glm::vec4 colorBegin, glm::vec4 colorEnd, float lifeSpan,
+        float lifeRemaining, bool active, float sizeBegin = 1.0f, float sizeEnd = 1.0f)
+        : position(position),
+        velocity(velocity),
+        colorBegin(colorBegin),
+        colorEnd(colorEnd),
+        initialLife(lifeSpan),
+        lifeRemaining(lifeRemaining),
+        Active(active),
+        sizeBegin(sizeBegin),
+        sizeEnd(sizeEnd),
+        size(sizeBegin) {
+    }
+};
+
 class ParticleSystemCPU : public ParticleSystemBase
 {
 private:
-    std::unordered_map<unsigned int, Particle> m_Particles;
+    std::unordered_map<unsigned int, ParticleCPU> m_Particles;
     std::queue<unsigned int> m_ParticlePool;
     std::vector<float> m_Points;
 

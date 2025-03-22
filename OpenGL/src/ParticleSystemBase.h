@@ -9,6 +9,7 @@
 #include <functional>
 #include <queue>
 
+#include "EmitterProperties.h"
 #include "Particle.h"
 #include "Shader_t.h"
 #include "Camera.h"

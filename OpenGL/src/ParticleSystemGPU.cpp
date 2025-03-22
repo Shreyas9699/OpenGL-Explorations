@@ -1,27 +1,90 @@
 #include "ParticleSystemGPU.h"
 #include "Random.h"
-#include "Frustum.h"
+#include "DefaultParticleBehavior.h"
+#include "RainParticleBehavior.h"
+#include "FireParticleBehavior.h"
+#include "SnowParticleBehavior.h"
 
 #include <cmath>
 #include <glm/gtx/quaternion.hpp>
 
-ParticleSystemGPU::ParticleSystemGPU(const char* emitterPath, const char* computePath)
+ParticleSystemGPU::ParticleSystemGPU()
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Compile emitter compute shader
-    m_EmitterShader = std::make_unique<ComputeShader>((emitterPath) ? emitterPath : "res/shaders/ParticleSysGPU/emitter.comp");
-    // Create compute shader
-    m_ComputeShader = std::make_unique<ComputeShader>((computePath) ? computePath : "res/shaders/ParticleSysGPU/compute.comp");
+    // Register standard behaviors
+    RegisterStandardBehaviors();
+
+    // Set default behavior
+    SetBehavior("default");
 
     initParticles();
 }
 
+void ParticleSystemGPU::RegisterStandardBehaviors()
+{
+    // Register default behavior
+    RegisterBehavior("default", std::make_shared<DefaultParticleBehavior>());
+
+    // Register rain behavior
+    RegisterBehavior("rain", std::make_shared<RainParticleBehavior>());
+
+    // Register fire behavior
+    RegisterBehavior("fire", std::make_shared<FireParticleBehavior>());
+
+    // Register snow behavior
+    RegisterBehavior("snow", std::make_shared<SnowParticleBehavior>());
+}
+
+void ParticleSystemGPU::RegisterBehavior(const std::string& name, std::shared_ptr<ParticleBehavior> behavior)
+{
+    m_BehaviorRegistry[name] = behavior;
+    behavior->Initialize();
+}
+
+bool ParticleSystemGPU::SetBehavior(const std::string& name)
+{
+    auto it = m_BehaviorRegistry.find(name);
+    if (it == m_BehaviorRegistry.end()) 
+    {
+        std::cerr << "ERROR::ParticleSystemGPU::SetBehavior    Unknown behavior: " << name << std::endl;
+        return false;
+    }
+
+    m_CurrentBehavior = it->second;
+    m_NeedsReinitialization = true;
+    return true;
+}
+
+void ParticleSystemGPU::initializeShaders()
+{
+    if (!m_CurrentBehavior) 
+    {
+        std::cerr << "ERROR::ParticleSystemGPU::initializeShaders    No behavior set" << std::endl;
+        return;
+    }
+
+    // Create compute shader
+    m_ComputeShader = std::make_unique<ComputeShader>(m_CurrentBehavior->GetComputeShaderPath().c_str());
+
+    // Create emitter shader
+    m_EmitterShader = std::make_unique<ComputeShader>(m_CurrentBehavior->GetEmitterShaderPath().c_str());
+}
+
 void ParticleSystemGPU::initParticles()
 {
+    if (!m_CurrentBehavior) 
+    {
+        std::cerr << "ERROR::ParticleSystemGPU::initParticles    No behavior set" << std::endl;
+        return;
+    }
+
+    // Initialize shaders
+    initializeShaders();
+
     // Resize GPU particles buffer
     m_GPUParticles.resize(m_MaxParticles);
 
@@ -29,12 +92,12 @@ void ParticleSystemGPU::initParticles()
     // Initialize particle count buffer
     GLuint initialZero = 0;
     m_ParticleCountBuffer = std::make_unique<VertexBuffer>(
-        &initialZero, static_cast<unsigned int>(sizeof(GLuint)), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
+        &initialZero, sizeof(GLuint), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
     );
 
     // Initialize atomic buffer
     m_AtomicBuffer = std::make_unique<VertexBuffer>(
-        &initialZero, static_cast<unsigned int>(sizeof(GLuint)), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
+        &initialZero, sizeof(GLuint), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
     );
 
     // Allocate free list + particle index buffer in one loop
@@ -45,31 +108,40 @@ void ParticleSystemGPU::initParticles()
 
     for (GLuint i = 0; i < m_MaxParticles; i++)
     {
-        freeIndices[i + 1] = static_cast<GLint>(m_MaxParticles - 1 - i);  // LIFO Free List
+        freeIndices[i + 1] = m_MaxParticles - 1 - i;  // LIFO Free List
         particleIndices[i] = i;  // Particle indices
 
-        // Initialize GPU particles
+        // Initialize GPU particles with default values
         m_GPUParticles[i].position = glm::vec4(0.0f, 0.0f, 0.0f, m_DefaultSizeBegin);
         m_GPUParticles[i].velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // w = lifeRemaining (0 = inactive)
         m_GPUParticles[i].colorBegin = m_DefaultColorBegin;
         m_GPUParticles[i].colorEnd = glm::vec4(m_DefaultColorEnd.r, m_DefaultColorEnd.g, m_DefaultColorEnd.b, m_DefaultLifespan);
+
+        // Let behavior initialize additional particle properties if needed
+        m_CurrentBehavior->InitializeParticle(&m_GPUParticles[i], i);
     }
 
     // Create free list buffer
     m_FreeListBuffer = std::make_unique<VertexBuffer>(
-        freeIndices.data(), (m_MaxParticles + 1) * static_cast<unsigned int>(sizeof(GLuint)), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
+        freeIndices.data(), (m_MaxParticles + 1) * sizeof(GLint), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
     );
 
     // Create particle SSBO
     m_ParticleSSBO = std::make_unique<VertexBuffer>(
-        m_GPUParticles.data(), m_MaxParticles * static_cast<unsigned int>(sizeof(GPUParticle)), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
+        m_GPUParticles.data(), m_MaxParticles * sizeof(GPUParticle), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
     );
 
     m_ParticleVAO = std::make_unique<VertexArray>();
-    m_InstanceVBO = std::make_unique<VertexBuffer>( particleIndices.data(), m_MaxParticles * static_cast<unsigned int>(sizeof(GLuint)));
+    m_InstanceVBO = std::make_unique<VertexBuffer>(particleIndices.data(), m_MaxParticles * sizeof(GLuint));
     VertexBufferLayout layout;
     layout.Push<int>(1); // For the particle index
     m_ParticleVAO->AddBuffer(*m_InstanceVBO, layout);
+
+    // Let behavior set up any additional resources
+    m_CurrentBehavior->SetupAdditionalResources();
+
+    // Reset the reinitialization flag
+    m_NeedsReinitialization = false;
 }
 
 ParticleSystemGPU::~ParticleSystemGPU()
@@ -88,15 +160,23 @@ ParticleSystemGPU::~ParticleSystemGPU()
 
 void ParticleSystemGPU::Update(float delta, const glm::mat4& viewProj)
 {
+    // Check if behavior has changed and reinitialize if needed
+    if (m_NeedsReinitialization) 
+    {
+        initParticles();
+    }
+
     if (!m_ComputeShader || !m_EmitterShader)
     {
         std::cerr << "ERROR::ParticleSystemGPU::Update    Invalid Compute shader or Emitter shader" << std::endl;
         return;
     }
-    time += delta;
+
     // Reset atomic counter for new particles
     GLuint zero = 0;
     m_AtomicBuffer->UpdateData(&zero, sizeof(GLuint), 0);
+
+    // Reset particle counter to zero
     m_ParticleCountBuffer->UpdateData(&zero, sizeof(GLuint), 0);
 
     // Prepare to emit new particles
@@ -111,7 +191,7 @@ void ParticleSystemGPU::Update(float delta, const glm::mat4& viewProj)
     }
 
     // ---- EMIT PARTICLES ON GPU ----
-    if (newParticlesCount > 0) 
+    if (newParticlesCount > 0)
     {
         // Bind atomic counter for emitter shader to use
         m_AtomicBuffer->BindBase(GL_ATOMIC_COUNTER_BUFFER, 0);
@@ -129,7 +209,6 @@ void ParticleSystemGPU::Update(float delta, const glm::mat4& viewProj)
         m_EmitterShader->setInt("emitterShape", static_cast<int>(m_Emitter.shape));
         m_EmitterShader->setFloat("torusInnerRadius", m_Emitter.torusInnerRadius);
         m_EmitterShader->setFloat("torusOuterRadius", m_Emitter.torusOuterRadius);
-        
         m_EmitterShader->setFloat("particleLifespan", m_DefaultLifespan);
         m_EmitterShader->setFloat("particleSizeBegin", m_DefaultSizeBegin);
         m_EmitterShader->setVec4("particleColorBegin", m_DefaultColorBegin);
@@ -151,20 +230,14 @@ void ParticleSystemGPU::Update(float delta, const glm::mat4& viewProj)
     m_FreeListBuffer->BindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
     // Set compute shader uniforms
-    Frustum frustum;
-    frustum.Update(viewProj);
-    auto& planes = frustum.GetPlanes();
-
     m_ComputeShader->Bind();
-    for (int i = 0; i < 6; ++i) {
-        m_ComputeShader->setVec4("frustumPlanes[" + std::to_string(i) + "]", planes[i]);
-    }
-    m_ComputeShader->setFloat("deltaTime", delta);
-    m_ComputeShader->setVec3("globalForce", m_GlobalForce);
+
+    // Set standard uniforms
     m_ComputeShader->setFloat("sizeBegin", m_DefaultSizeBegin);
     m_ComputeShader->setFloat("sizeEnd", m_DefaultSizeEnd);
-    m_ComputeShader->setFloat("mass", 1.0e-6f);
-    m_ComputeShader->setFloat("time", time);
+
+    // Let behavior update its specific uniforms
+    m_CurrentBehavior->UpdateUniforms(*m_ComputeShader, delta);
 
     // Dispatch compute shader
     // Each workgroup processes 256 particles
