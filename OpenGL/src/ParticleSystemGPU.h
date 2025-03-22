@@ -16,6 +16,7 @@ private:
     std::unique_ptr<VertexBuffer> m_ParticleCountBuffer;
     std::unique_ptr<VertexBuffer> m_FreeListBuffer;
     std::unique_ptr<ComputeShader> m_ComputeShader, m_EmitterShader;
+    float time = 0.0f;
     bool m_UseGPU = true;
 
     std::vector<GPUParticle> m_GPUParticles;
@@ -24,7 +25,7 @@ private:
     void initParticles();
 
 public:
-    ParticleSystemGPU();
+    ParticleSystemGPU(const char* emitterPath = nullptr, const char* computePath = nullptr);
     ~ParticleSystemGPU();
 
     void Update(float delta, const glm::mat4& viewProj = glm::mat4(0.0f)) override;

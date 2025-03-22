@@ -28,6 +28,7 @@
 
 #include "tests/TestParticleCPU.h"
 #include "tests/TestParticleGPU.h"
+#include "tests/TestFireSimulation.h"
 
 
 #include "Shader_t.h"
@@ -74,6 +75,7 @@ int main(void)
     menu->AddTest<test::TestLoadModels>("Load Models", &window);
     menu->AddTest<test::TestParticleCPU>("Particles System CPU", &window);
     menu->AddTest<test::TestParticleGPU>("Particles System GPU", &window);
+    menu->AddTest<test::TestFireSimulation>("Fire Particles Sim", &window);
 
     float lastFrameTime = 0.0f;
     /* Loop until the user closes the window */

@@ -5,7 +5,7 @@
 #include <cmath>
 #include <glm/gtx/quaternion.hpp>
 
-ParticleSystemGPU::ParticleSystemGPU()
+ParticleSystemGPU::ParticleSystemGPU(const char* emitterPath, const char* computePath)
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -13,16 +13,15 @@ ParticleSystemGPU::ParticleSystemGPU()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Compile emitter compute shader
-    m_EmitterShader = std::make_unique<ComputeShader>("res/shaders/ParticleSysGPU/emitter.comp");
+    m_EmitterShader = std::make_unique<ComputeShader>((emitterPath) ? emitterPath : "res/shaders/ParticleSysGPU/emitter.comp");
+    // Create compute shader
+    m_ComputeShader = std::make_unique<ComputeShader>((computePath) ? computePath : "res/shaders/ParticleSysGPU/compute.comp");
 
     initParticles();
 }
 
 void ParticleSystemGPU::initParticles()
 {
-    // Create compute shader
-    m_ComputeShader = std::make_unique<ComputeShader>("res/shaders/ParticleSysGPU/compute.comp");
-
     // Resize GPU particles buffer
     m_GPUParticles.resize(m_MaxParticles);
 
@@ -94,7 +93,7 @@ void ParticleSystemGPU::Update(float delta, const glm::mat4& viewProj)
         std::cerr << "ERROR::ParticleSystemGPU::Update    Invalid Compute shader or Emitter shader" << std::endl;
         return;
     }
-
+    time += delta;
     // Reset atomic counter for new particles
     GLuint zero = 0;
     m_AtomicBuffer->UpdateData(&zero, sizeof(GLuint), 0);
@@ -164,7 +163,8 @@ void ParticleSystemGPU::Update(float delta, const glm::mat4& viewProj)
     m_ComputeShader->setVec3("globalForce", m_GlobalForce);
     m_ComputeShader->setFloat("sizeBegin", m_DefaultSizeBegin);
     m_ComputeShader->setFloat("sizeEnd", m_DefaultSizeEnd);
-    m_ComputeShader->setFloat("mass", 2.1e-6f);
+    m_ComputeShader->setFloat("mass", 1.0e-6f);
+    m_ComputeShader->setFloat("time", time);
 
     // Dispatch compute shader
     // Each workgroup processes 256 particles
