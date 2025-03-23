@@ -30,7 +30,7 @@ protected:
     glm::vec4 m_DefaultColorEnd = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
     float m_DefaultSizeBegin = 1.0f;
     float m_DefaultSizeEnd = 1.0f;
-    float m_DefaultLifespan = 20.0f;
+    float m_DefaultLifespan = 5.0f;
 
     // Emitter Properties
     EmitterProperties m_Emitter;

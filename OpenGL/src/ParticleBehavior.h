@@ -13,7 +13,8 @@ public:
     virtual void Initialize() = 0;
 
     // Update behavior-specific uniforms and parameters
-    virtual void UpdateUniforms(ComputeShader& computeShader, float deltaTime) = 0;
+    virtual void UpdateUniforms(ComputeShader& computeShader) = 0;
+    virtual void UpdateEmitterUniforms(ComputeShader& emitterShader) = 0;
 
     // Get the path to the compute shader for this behavior
     virtual std::string GetComputeShaderPath() const = 0;

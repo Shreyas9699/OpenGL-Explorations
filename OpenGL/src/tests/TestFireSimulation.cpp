@@ -13,16 +13,13 @@ test::TestFireSimulation::TestFireSimulation(Window* window)
 		});
 	glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	m_Shader = std::make_unique<Shader>("res/shaders/ParticleSysGPU/ParticleVSGPU.glsl",
-		"res/shaders/ParticleSysGPU/ParticleFSGPU.glsl");
+	m_Shader = std::make_unique<Shader>("res/shaders/ParticleSysGPU/fire_VS.glsl",
+		"res/shaders/ParticleSysGPU/fire_FS.glsl");
 	m_XZPlane = std::make_unique<XZPlaneGrid>(m_Window->GetAspectRatio(), m_GridSize, m_Near, m_Far);
-	m_ParticleSys = std::make_unique<ParticleSystemGPU>();
-
-	// Set the fire behavior
-	m_ParticleSys->SetBehavior("fire");
+	m_ParticleSys = std::make_unique<ParticleSystemGPU<FireParticle>>("fire");
 
 	emitterProp.shape = EmitterShape::CIRCLE;
-	emitterProp.emissionRate = 2000;
+	emitterProp.emissionRate = 1000;  // Reduced from 2000
 	m_ParticleSys->SetEmitter(emitterProp);
 }
 

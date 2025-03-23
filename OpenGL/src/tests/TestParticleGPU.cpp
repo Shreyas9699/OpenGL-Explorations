@@ -18,10 +18,7 @@ namespace test
 		m_Shader = std::make_unique<Shader>("res/shaders/ParticleSysGPU/ParticleVSGPU.glsl",
 			"res/shaders/ParticleSysGPU/ParticleFSGPU.glsl");
 		m_XZPlane = std::make_unique<XZPlaneGrid>(m_Window->GetAspectRatio(), m_GridSize, m_Near, m_Far);
-		m_ParticleSys = std::make_unique<ParticleSystemGPU>();
-
-		// Set the default behavior
-		m_ParticleSys->SetBehavior("default");
+		m_ParticleSys = std::make_unique<ParticleSystemGPU<GPUParticle>>("default");
 
 		emitterShape = { "POINT", "SPHERE", "CONE", "BOX", "CIRCLE", "HEMISPHERE", "TORUS" };
 

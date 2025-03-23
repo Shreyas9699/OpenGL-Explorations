@@ -495,8 +495,13 @@
     <None Include="res\shaders\ParticleSysGPU\culling.comp" />
     <None Include="res\shaders\Heightmap\minimapFS.glsl" />
     <None Include="res\shaders\Heightmap\minimapVS.glsl" />
-    <None Include="res\shaders\ParticleSysGPU\fireCompute.comp" />
-    <None Include="res\shaders\ParticleSysGPU\fireEmitter.comp" />
+    <None Include="res\shaders\ParticleSysGPU\fire_compute.comp" />
+    <None Include="res\shaders\ParticleSysGPU\fire_emitter.comp" />
+    <None Include="res\shaders\ParticleSysGPU\rain_compute.comp" />
+    <None Include="res\shaders\ParticleSysGPU\snow_compute.comp" />
+    <None Include="res\shaders\ParticleSysGPU\snow_emitter.comp" />
+    <None Include="res\shaders\ParticleSysGPU\fire_VS.glsl" />
+    <None Include="res\shaders\ParticleSysGPU\fire_FS.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">
@@ -1991,6 +1996,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\tests\TestFireSimulation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DefaultParticleBehavior.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EmitterProperties.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FireParticleBehavior.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleBehavior.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RainParticleBehavior.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SnowParticleBehavior.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -37,11 +37,7 @@ void UpdateParticle(inout Particle particle, int index)
     if (particle.velocity.w <= 0.0) 
     {
         int idx = atomicAdd(freelist.count, 1);
-        // Ensure we don't overflow the free list
-        if (idx < freelist.indices.length()) 
-        {
-            freelist.indices[idx] = index;
-        }
+        freelist.indices[idx] = index;
         return;
     }
 

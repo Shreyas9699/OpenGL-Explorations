@@ -1,19 +1,20 @@
-// Emitter compute shader
+// fire_emitter.comp: Compute shader for emitting new fire particles
 #version 430 core
 layout(local_size_x = 256) in;
 
-struct Particle 
+struct FireParticle  
 {
     vec4 position;    // xyz = position, w = size
-    vec4 velocity;    // xyz = velocity, w = lifeRemaining
-    vec4 colorBegin;
-    vec4 colorEnd;    // w = lifespan
+    vec4 velocity;    // xyz = velocity, w = remaining lifetime
+    vec4 colorBegin;  // rgb = color, a = opacity
+    vec4 colorEnd;    // rgb = end color, w = total lifespan
+    float temperature; // particle temperature in Kelvin
+    float smokeAmount; // 0-1 value for smoke transition
 };
 
-// Particle storage buffer
 layout(binding = 0) uniform atomic_uint newParticleCounter;
 layout(std430, binding = 0) buffer ParticleBuffer {
-    Particle particles[];
+    FireParticle particles[];
 };
 
 layout(std430, binding = 1) buffer FreeListBuffer {
@@ -21,21 +22,23 @@ layout(std430, binding = 1) buffer FreeListBuffer {
     int indices[];
 } freelist;
 
-
-// Emitter properties
+// Emission parameters
 uniform int newParticleCount;
 uniform vec3 emitterPosition;
 uniform vec3 emitterRotation;
-uniform vec3 emitterDimensions;
 uniform float emitterRadius;
 uniform float emitterAngle;
-uniform int emitterShape; // 0=POINT, 1=SPHERE, 2=CONE, 3=BOX
+uniform int emitterShape;
 
-// Particle properties
-uniform float particleLifespan;
-uniform float particleSizeBegin;
+
 uniform vec4 particleColorBegin;
 uniform vec4 particleColorEnd;
+uniform float particleLifespan;
+uniform float particleSizeBegin;
+uniform float time;
+
+uniform float minTemperature;
+uniform float maxTemperature;
 
 // Random number generation
 uint seed = 0;
@@ -55,89 +58,19 @@ float rand()
     return float(seed) / 4294967296.0;
 }
 
+vec3 randomInUnitDisk()
+{
+    float t = rand() * 2.0 * 3.14159265;
+    float r = sqrt(rand());
+    float x = r * cos(t);
+    float z = r * sin(t);
+    return vec3(x, 0.0, z);
+}
+
 // Utility functions for different emitter shapes
 vec3 generatePointPosition() 
 {
     return emitterPosition;
-}
-
-vec3 generateSpherePosition() 
-{
-    float u = rand();
-    float v = rand();
-    float theta = 2.0 * 3.14159265 * u;  // Uniform theta
-    float phi = acos(2.0 * v - 1.0);      // Proper phi distribution
-    
-    float x = sin(phi) * cos(theta);
-    float y = sin(phi) * sin(theta);
-    float z = cos(phi);
-    
-    float r = emitterRadius * pow(rand(), 1.0/3.0);
-    return emitterPosition + vec3(x, y, z) * r;
-}
-
-vec3 generateConePosition() 
-{
-    float theta = rand() * 2.0 * 3.14159265;
-    float distance = rand() * emitterRadius;
-    
-    float spread = radians(emitterAngle);
-    float phi = rand() * spread;
-    
-    float x = distance * sin(phi) * cos(theta);
-    float y = distance * sin(phi) * sin(theta);
-    float z = distance * cos(phi);
-    
-    // Apply emitter rotation
-    mat3 rotX = mat3(
-        1, 0, 0,
-        0, cos(radians(emitterRotation.x)), -sin(radians(emitterRotation.x)),
-        0, sin(radians(emitterRotation.x)), cos(radians(emitterRotation.x))
-    );
-    
-    mat3 rotY = mat3(
-        cos(radians(emitterRotation.y)), 0, sin(radians(emitterRotation.y)),
-        0, 1, 0,
-        -sin(radians(emitterRotation.y)), 0, cos(radians(emitterRotation.y))
-    );
-    
-    mat3 rotZ = mat3(
-        cos(radians(emitterRotation.z)), -sin(radians(emitterRotation.z)), 0,
-        sin(radians(emitterRotation.z)), cos(radians(emitterRotation.z)), 0,
-        0, 0, 1
-    );
-    
-    vec3 rotatedOffset = rotZ * rotY * rotX * vec3(x, y, z);
-    return emitterPosition + rotatedOffset;
-}
-
-vec3 generateBoxPosition() 
-{
-    float x = (rand() * 2.0 - 1.0) * emitterDimensions.x * 0.5;
-    float y = (rand() * 2.0 - 1.0) * emitterDimensions.y * 0.5;
-    float z = (rand() * 2.0 - 1.0) * emitterDimensions.z * 0.5;
-    
-    // Apply emitter rotation
-    mat3 rotX = mat3(
-        1, 0, 0,
-        0, cos(radians(emitterRotation.x)), -sin(radians(emitterRotation.x)),
-        0, sin(radians(emitterRotation.x)), cos(radians(emitterRotation.x))
-    );
-    
-    mat3 rotY = mat3(
-        cos(radians(emitterRotation.y)), 0, sin(radians(emitterRotation.y)),
-        0, 1, 0,
-        -sin(radians(emitterRotation.y)), 0, cos(radians(emitterRotation.y))
-    );
-    
-    mat3 rotZ = mat3(
-        cos(radians(emitterRotation.z)), -sin(radians(emitterRotation.z)), 0,
-        sin(radians(emitterRotation.z)), cos(radians(emitterRotation.z)), 0,
-        0, 0, 1
-    );
-    
-    vec3 rotatedOffset = rotZ * rotY * rotX * vec3(x, y, z);
-    return emitterPosition + rotatedOffset;
 }
 
 vec3 generateCirclePosition() 
@@ -178,137 +111,86 @@ vec3 generateCirclePosition()
     return emitterPosition + rotatedOffset;
 }
 
-// Generate velocity based on emitter shape
-vec3 generateVelocity(vec3 position) 
+vec3 generateVelocity(vec3 position)
 {
     vec3 dir;
+    // Calculate distance from center
+    vec2 horizOffset = vec2(position.x - emitterPosition.x, position.z - emitterPosition.z);
+    float distFromCenter = length(horizOffset);
     
-    switch(emitterShape) 
-    {
-        case 0: // POINT
-            // Random direction
-            {
-                float theta = rand() * 2.0 * 3.14159265;
-                float phi = rand() * 3.14159265;
-                dir = vec3(
-                    sin(phi) * cos(theta),
-                    sin(phi) * sin(theta),
-                    cos(phi)
-                );
-            }
-            break;
-            
-        case 1: // SPHERE
-            // Outward from center
-            dir = normalize(position - emitterPosition);
-            if (length(dir) < 0.0001) 
-            {
-                float theta = rand() * 2.0 * 3.14159265;
-                float phi = rand() * 3.14159265;
-                dir = vec3(
-                    sin(phi) * cos(theta),
-                    sin(phi) * sin(theta),
-                    cos(phi)
-                );
-            }
-            break;
-            
-        case 2: // CONE
-            // Within cone angle
-            {
-                float theta = rand() * 2.0 * 3.14159265;
-                float spread = radians(emitterAngle);
-                float phi = rand() * spread;
-                
-                float x = sin(phi) * cos(theta);
-                float y = sin(phi) * sin(theta);
-                float z = cos(phi);
-                
-                // Apply emitter rotation
-                mat3 rotX = mat3(
-                    1, 0, 0,
-                    0, cos(radians(emitterRotation.x)), -sin(radians(emitterRotation.x)),
-                    0, sin(radians(emitterRotation.x)), cos(radians(emitterRotation.x))
-                );
-                
-                mat3 rotY = mat3(
-                    cos(radians(emitterRotation.y)), 0, sin(radians(emitterRotation.y)),
-                    0, 1, 0,
-                    -sin(radians(emitterRotation.y)), 0, cos(radians(emitterRotation.y))
-                );
-                
-                mat3 rotZ = mat3(
-                    cos(radians(emitterRotation.z)), -sin(radians(emitterRotation.z)), 0,
-                    sin(radians(emitterRotation.z)), cos(radians(emitterRotation.z)), 0,
-                    0, 0, 1
-                );
-                
-                dir = normalize(rotZ * rotY * rotX * vec3(x, y, z));
-            }
-            break;
-            
-        case 3: // BOX
-            // Outward from center
-            dir = normalize(position - emitterPosition);
-            if (length(dir) < 0.0001) 
-            {
-                dir = normalize(vec3(
-                    rand() * 2.0 - 1.0,
-                    rand() * 2.0 - 1.0,
-                    rand() * 2.0 - 1.0
-                ));
-            }
-            break;
-        case 4: // CIRCLE
-           // For fire, particles should move upward with some variance based on position
-            {
-                // Calculate distance from center
-                vec2 horizOffset = vec2(position.x - emitterPosition.x, position.z - emitterPosition.z);
-                float distFromCenter = length(horizOffset);
-                
-                // Normalize horizontal offset for directional component
-                vec2 normHorizOffset = distFromCenter > 0.0001 ? horizOffset / distFromCenter : vec2(0.0);
-                
-                // Particles closer to the center should move more directly upward
-                // Particles at the edges should curl slightly inward
-                float centerFactor = smoothstep(0.0, emitterRadius, distFromCenter);
-                
-                // Base upward direction
-                vec3 baseDir = vec3(0.0, 1.0, 0.0);
-                
-                // Add slight inward curl at the edges
-                vec3 inwardCurl = vec3(-normHorizOffset.x * 0.2, 0.0, -normHorizOffset.y * 0.2);
-                
-                // Particles at the edges move more slowly upward
-                float speedFactor = mix(1.0, 0.7, centerFactor);
-                
-                // Combine directions
-                dir = normalize(baseDir + inwardCurl * centerFactor);
-                
-                // Add slight randomness that increases with height
-                // This creates the flame "licking" effect
-                float heightRandomness = 0.15 + (position.y - emitterPosition.y) * 0.05;
-                dir = normalize(dir + vec3(
-                    (rand() * 2.0 - 1.0) * heightRandomness,
-                    rand() * 0.05,  // Small random upward component
-                    (rand() * 2.0 - 1.0) * heightRandomness
-                ));
-                
-                // Adjust speed based on position
-                float speed = mix(2.0, 3.5, rand()) * speedFactor;
-                return dir * speed;
-            }
-            break;
-        default:
-            dir = vec3(0, 1, 0);
-    }
+    // Normalize horizontal offset for directional component
+    vec2 normHorizOffset = distFromCenter > 0.0001 ? horizOffset / distFromCenter : vec2(0.0);
     
-    // Add some randomness to velocity
-    float speed = 2.0 + rand() * 3.0;
+    // Particles closer to the center should move more directly upward
+    // Particles at the edges should curl slightly inward
+    float centerFactor = smoothstep(0.0, emitterRadius, distFromCenter);
+    
+    // Base upward direction
+    vec3 baseDir = vec3(0.0, 1.0, 0.0);
+    
+    // Add slight inward curl at the edges
+    vec3 inwardCurl = vec3(-normHorizOffset.x * 0.2, 0.0, -normHorizOffset.y * 0.2);
+    
+    // Particles at the edges move more slowly upward
+    float speedFactor = mix(1.0, 0.7, centerFactor);
+    
+    // Combine directions
+    dir = normalize(baseDir + inwardCurl * centerFactor);
+    
+    // Add slight randomness that increases with height
+    // This creates the flame "licking" effect
+    float heightRandomness = 0.15 + (position.y - emitterPosition.y) * 0.05;
+    dir = normalize(dir + vec3(
+        (rand() * 2.0 - 1.0) * heightRandomness,
+        rand() * 0.05,  // Small random upward component
+        (rand() * 2.0 - 1.0) * heightRandomness
+    ));
+    
+    // Adjust speed based on position
+    float speed = mix(2.0, 3.5, rand()) * speedFactor;
     return dir * speed;
 }
 
-void main() 
+void EmitParticle(int particleIndex)
+{
+    // Initialize random seed based on particle index and time
+    seed = uint(particleIndex) + uint(time * 10000.0);
+    
+    // Get particle to initialize
+    FireParticle particle = particles[particleIndex];
+    
+    // Set position - distribute across emitter disk
+    vec3 posOffset = randomInUnitDisk() * emitterRadius;
+    particle.position.xyz = generateCirclePosition();
+    
+    // Randomize particle size
+    particle.position.w = particleSizeBegin;
+    
+    // Set initial upward velocity with some randomness
+    particle.velocity.xyz = generateVelocity(particle.position.xyz);
+    
+    // Set lifetime
+    particle.velocity.w = particleLifespan;  // Remaining lifetime
+    particle.colorEnd.w = particleLifespan;  // Total lifespan
+    
+    // Set colors
+    particle.colorBegin = particleColorBegin;
+    particle.colorEnd.rgb = particleColorEnd.rgb;
+    
+    // Set initial temperature - hotter near center
+    float distFromCenter = length(posOffset) / emitterRadius;
+    float tempRandom = rand() * 0.2 - 0.1; // ±10% randomness
+    float temp = mix(maxTemperature, minTemperature, distFromCenter) * (1.0 + tempRandom);
+    particle.temperature = temp;
+    
+    // Initialize smoke amount to zero (pure flame)
+    particle.smokeAmount = 0.0;
+    
+    // Write back to buffer
+    particles[particleIndex] = particle;
+}
+
+void main()
 {
     // Each thread handles one potential new particle
     uint id = gl_GlobalInvocationID.x;
@@ -318,13 +200,12 @@ void main()
         return;
 
     int freeListIndex = atomicAdd(freelist.count, -1) - 1;
-    if (freeListIndex <= 0) 
+    if (freeListIndex < 0) 
     {
         atomicAdd(freelist.count, 1);
         return;
     }
 
-    
     // Get an index in the particle array using atomic counter
     uint particleIndex = freelist.indices[freeListIndex];
     
@@ -333,24 +214,19 @@ void main()
            uint(sin(float(id)) * 43758.5453);
     
     // Generate position based on emitter shape
-    vec3 position;
-    switch(emitterShape) 
-    {
-        case 0: position = generatePointPosition(); break;
-        case 1: position = generateSpherePosition(); break;
-        case 2: position = generateConePosition(); break;
-        case 3: position = generateBoxPosition(); break;
-        case 4: position = generateCirclePosition(); break;
-        default: position = generatePointPosition();
-    }
-    
-    // Generate velocity based on position and shape
+    vec3 position = generateCirclePosition();
     vec3 velocity = generateVelocity(position);
+
+    // Set initial temperature - hotter near center
+    float distFromCenter = length(position) / emitterRadius;
+    float tempRandom = rand() * 0.2 - 0.1; // ±10% randomness
+    float temp = mix(maxTemperature, minTemperature, distFromCenter) * (1.0 + tempRandom);
     
-    // Create the new particle
-    float life = particleLifespan * (0.8 + rand() * 0.4);
+    // Set particle properties
     particles[particleIndex].position = vec4(position, particleSizeBegin);
-    particles[particleIndex].velocity = vec4(velocity, life);
+    particles[particleIndex].velocity = vec4(velocity, particleLifespan);
     particles[particleIndex].colorBegin = particleColorBegin;
-    particles[particleIndex].colorEnd = vec4(particleColorEnd.rgb, life);
+    particles[particleIndex].colorEnd = vec4(particleColorEnd.rgb, particleLifespan);
+    particles[particleIndex].temperature = temp;
+    particles[particleIndex].smokeAmount = 0.0;
 }

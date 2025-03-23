@@ -7,7 +7,7 @@
 // MAX_ABSOLUTE_PARTICLES * MAX_ABSOLUTE_LIFESPAN => max particles alive (current under 0.9 mill for GTX 1050)
 namespace ParticleConfig
 {
-    static constexpr unsigned int MAX_ABSOLUTE_PARTICLES = 60000;
+    static constexpr unsigned int MAX_ABSOLUTE_PARTICLES = 100000;
     static constexpr unsigned int MAX_ABSOLUTE_LIFESPAN = 30;
 };
 
@@ -45,6 +45,17 @@ struct GPUParticle
     glm::vec4 colorBegin;
     glm::vec4 colorEnd;    // w = lifespan
 };
+
+struct FireParticle /*: public GPUParticle*/
+{
+    glm::vec4 position;    // xyz = position, w = size
+    glm::vec4 velocity;    // xyz = velocity, w = lifeRemaining
+    glm::vec4 colorBegin;
+    glm::vec4 colorEnd;    // w = lifespan
+    float temperature;  // 4-byte alignment, no padding
+    float smokeAmount;
+};
+static_assert(sizeof(FireParticle) == 72, "FireParticle must be 72 bytes!");
 
 // Indirect draw command structure
 struct DrawElementsIndirectCommand 

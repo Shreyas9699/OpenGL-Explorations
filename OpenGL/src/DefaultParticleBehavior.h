@@ -10,10 +10,15 @@ private:
 public:
     void Initialize() override {}
 
-    void UpdateUniforms(ComputeShader& computeShader, float deltaTime) override 
+    void UpdateUniforms(ComputeShader& computeShader) override 
     {
-        computeShader.setFloat("deltaTime", deltaTime);
         computeShader.setVec3("globalForce", m_GlobalForce);
+    }
+
+    void UpdateEmitterUniforms(ComputeShader& emitterShader) override
+    {
+        // Implement the method to update emitter-specific uniforms
+        // For example, you can set a default value or leave it empty if not needed
     }
 
     std::string GetComputeShaderPath() const override 
