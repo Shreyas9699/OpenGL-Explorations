@@ -21,12 +21,9 @@ test::TestFireSimulation::TestFireSimulation(Window* window)
 	// Set the fire behavior
 	m_ParticleSys->SetBehavior("fire");
 
-	emitterShape = { "POINT", "SPHERE", "CONE", "BOX", "CIRCLE", "HEMISPHERE", "TORUS" };
-
 	emitterProp.shape = EmitterShape::CIRCLE;
 	emitterProp.emissionRate = 2000;
 	m_ParticleSys->SetEmitter(emitterProp);
-	currentEmitterShapeIdx = static_cast<int>(emitterProp.shape);
 }
 
 test::TestFireSimulation::~TestFireSimulation()
@@ -57,7 +54,6 @@ void test::TestFireSimulation::handleKeyPress(int key, int scancode, int action,
 		}
 	}
 }
-
 
 void test::TestFireSimulation::OnUpdate(Timestep deltaTime, GLFWwindow* win)
 {
@@ -137,59 +133,20 @@ void test::TestFireSimulation::OnImGuiRender()
 	if (ImGui::CollapsingHeader("Particle Emitter Properties", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::Text("Particle Emitter properties\n");
-		if (ImGui::Combo("Particle Emitter Shape", &currentEmitterShapeIdx, emitterShape.data(), static_cast<int>(emitterShape.size())))
-		{
-			emitterProp.shape = static_cast<EmitterShape>(currentEmitterShapeIdx);
-			m_ParticleSys->SetEmitter(emitterProp);
-		}
-
+		ImGui::Text("Particle Emitter Shape CIRCLE");
 		if (ImGui::SliderInt("Particle Emitter EmissionRate", &emitterProp.emissionRate, 1000, 50000))
 		{
 			// Update the particle system with the new emitter properties
 			m_ParticleSys->SetEmissionRate(emitterProp.emissionRate);
-		}
-
-		// Add rotation controls for applicable emitters
-		ImGui::BeginDisabled(emitterProp.shape != EmitterShape::CONE && emitterProp.shape != EmitterShape::BOX && emitterProp.shape != EmitterShape::TORUS &&
-			emitterProp.shape != EmitterShape::HEMISPHERE && emitterProp.shape != EmitterShape::CIRCLE);
+		};
 		if (ImGui::SliderFloat3("Rotation (X, Y, Z degrees)", (float*)&emitterProp.rotation, 0.0f, 360.0f, "%.1f"))
 		{
 			m_ParticleSys->SetEmitterRotation(emitterProp.rotation);
 		}
-		ImGui::EndDisabled();
-
-		ImGui::BeginDisabled((emitterProp.shape != EmitterShape::SPHERE) && (emitterProp.shape != EmitterShape::CONE) && (emitterProp.shape != EmitterShape::CIRCLE) && (emitterProp.shape != EmitterShape::HEMISPHERE));
 		if (ImGui::SliderFloat("Particle Emitter Radius", (float*)&emitterProp.radius, 1.0f, 50.0f, "%.1f"))
 		{
 			m_ParticleSys->SetEmitterRadius(emitterProp.radius);
 		}
-		ImGui::EndDisabled();
-
-		// Torus (inner and outer radius)
-		ImGui::BeginDisabled(emitterProp.shape != EmitterShape::TORUS);
-		if (ImGui::SliderFloat("Torus Inner Radius", &emitterProp.torusInnerRadius, 0.1f, 10.0f, "%.1f"))
-		{
-			m_ParticleSys->SetEmitterTorusInnerRadius(emitterProp.torusInnerRadius);
-		}
-		if (ImGui::SliderFloat("Torus Outer Radius", &emitterProp.torusOuterRadius, 0.5f, 20.0f, "%.1f"))
-		{
-			m_ParticleSys->SetEmitterTorusOuterRadius(emitterProp.torusOuterRadius);
-		}
-		ImGui::EndDisabled();
-
-		ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "CONE");
-		if (ImGui::SliderFloat("Particle Emitter Angle", (float*)&emitterProp.angle, 0.0f, 120.0f, "%.1f"))
-		{
-			m_ParticleSys->SetEmitterAngle(emitterProp.angle);
-		}
-		ImGui::EndDisabled();
-
-		ImGui::BeginDisabled(emitterShape[currentEmitterShapeIdx] != "BOX");
-		if (ImGui::SliderFloat3("Particle Emitter Dimensions", (float*)&emitterProp.dimensions, 1.0f, 10.0f, "%.1f"))
-		{
-			m_ParticleSys->SetEmitterDimensions(emitterProp.dimensions);
-		}
-		ImGui::EndDisabled();
 	}
 
 	// Particle properties

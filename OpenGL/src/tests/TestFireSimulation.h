@@ -30,8 +30,6 @@ namespace test
 		float m_ElapsedTime = 0.0f;
 
 		// particle Emitter properties
-		std::vector<const char*> emitterShape;
-		int currentEmitterShapeIdx = 0;
 		EmitterProperties emitterProp = EmitterProperties(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f), EmitterShape::POINT, 2.0f, 45.0f, glm::vec3(2.0f), 1000);
 
 		void handleKeyPress(int key, int scancode, int action, int mods);
