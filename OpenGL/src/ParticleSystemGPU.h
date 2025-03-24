@@ -126,6 +126,7 @@ template <typename ParticleType>
 void ParticleSystemGPU<ParticleType>::initParticles()
 {
     std::cout << "ParticleSystemGPU<ParticleType>::initParticles()    Started" << std::endl;
+
     if (!m_CurrentBehavior)
     {
         std::cerr << "ERROR::ParticleSystemGPU::initParticles    No behavior set" << std::endl;
@@ -165,7 +166,7 @@ void ParticleSystemGPU<ParticleType>::initParticles()
         m_GPUParticles[i].position = glm::vec4(0.0f, 0.0f, 0.0f, m_DefaultSizeBegin);
         m_GPUParticles[i].velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // w = lifeRemaining (0 = inactive)
         m_GPUParticles[i].colorBegin = m_DefaultColorBegin;
-        m_GPUParticles[i].colorEnd = glm::vec4(m_DefaultColorEnd.rgb, m_DefaultLifespan);
+        m_GPUParticles[i].colorEnd = glm::vec4(m_DefaultColorEnd.r, m_DefaultColorEnd.g, m_DefaultColorEnd.b, m_DefaultLifespan);
 
         // Let behavior initialize additional particle properties if needed
         m_CurrentBehavior->InitializeParticle(&m_GPUParticles[i], i);
@@ -193,6 +194,42 @@ void ParticleSystemGPU<ParticleType>::initParticles()
 
     // Reset the reinitialization flag
     m_NeedsReinitialization = false;
+
+    // Ensure OpenGL state is correct before querying
+    GLint64 freeListBufferSize = 0;
+    if (m_ParticleCountBuffer) 
+    {
+        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_ParticleCountBuffer->GetBufferID());
+        glGetBufferParameteri64v(GL_ATOMIC_COUNTER_BUFFER, GL_BUFFER_SIZE, &freeListBufferSize);
+    }
+    std::cout << "Particle Count Buffer Size: " << freeListBufferSize << " bytes" << std::endl;
+
+    GLint64 atomicBufferSize = 0;
+    if (m_AtomicBuffer) {
+        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_AtomicBuffer->GetBufferID());
+        glGetBufferParameteri64v(GL_ATOMIC_COUNTER_BUFFER, GL_BUFFER_SIZE, &atomicBufferSize);
+    }
+    std::cout << "Atomic Buffer Size: " << atomicBufferSize << " bytes" << std::endl;
+
+    GLint64 particleSSBOSize = 0;
+    if (m_ParticleSSBO) {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ParticleSSBO->GetBufferID());
+        glGetBufferParameteri64v(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &particleSSBOSize);
+    }
+    std::cout << "Particle SSBO Buffer Size: " << particleSSBOSize << " bytes" << std::endl;
+
+    GLint64 instanceVBOSize = 0;
+    if (m_InstanceVBO) {
+        glBindBuffer(GL_ARRAY_BUFFER, m_InstanceVBO->GetBufferID());
+        glGetBufferParameteri64v(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &instanceVBOSize);
+    }
+    std::cout << "Instance VBO Buffer Size: " << instanceVBOSize << " bytes" << std::endl;
+
+    // Compute total GPU memory used
+    double totalMemoryMB = static_cast<double>(particleSSBOSize + atomicBufferSize + freeListBufferSize + instanceVBOSize) / (1024.0 * 1024.0);
+    std::cout << "Total GPU Memory Used by Buffers: " << totalMemoryMB << " MB" << std::endl;
+
+
     std::cout << "ParticleSystemGPU<ParticleType>::initParticles()    Ended" << std::endl;
 }
 

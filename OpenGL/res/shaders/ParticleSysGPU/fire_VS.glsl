@@ -10,6 +10,7 @@ struct FireParticle {
     vec4 colorEnd;    // w = total lifespan
     float temperature;
     float smokeAmount;
+    vec2 padding;
 };
 
 // Bind the same SSBO that the compute shader uses

@@ -8,7 +8,7 @@ private:
     float m_Turbulence = 1.0f;
     float m_RiseSpeed = 5.0f;
     float m_HeatDissipation = 0.8f;
-    float mass = 1.0e-6f;
+    float mass = 1.0e-8f;
     glm::vec3 m_WindDirection = glm::vec3(1.0f, 0.0f, 0.0f);
     float m_WindStrength = 0.5f;
     float m_MinTemperature = 700.0f;

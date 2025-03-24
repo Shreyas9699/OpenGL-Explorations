@@ -14,6 +14,7 @@ public:
 	void Unbind() const;
 	void UpdateData(const void* data, unsigned int size, unsigned int offset = 0) const;
 	void BindBase(GLenum target, unsigned int index) const;
+	unsigned int GetBufferID() const { return m_RendererID; }
 
 	inline unsigned int GetRendererID() const { return m_RendererID; }
 };
