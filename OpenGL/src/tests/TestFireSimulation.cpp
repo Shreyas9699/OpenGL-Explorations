@@ -129,7 +129,6 @@ void test::TestFireSimulation::OnImGuiRender()
 	//  Emitter properties
 	if (ImGui::CollapsingHeader("Particle Emitter Properties", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		ImGui::Text("Particle Emitter properties\n");
 		ImGui::Text("Particle Emitter Shape CIRCLE");
 		if (ImGui::SliderInt("Particle Emitter EmissionRate", &emitterProp.emissionRate, 1000, 50000))
 		{
@@ -180,4 +179,6 @@ void test::TestFireSimulation::OnImGuiRender()
 			m_ParticleSys->SetParticleLifespan(lifespan);
 		}
 	}
+
+	m_ParticleSys->GuiRender();
 }

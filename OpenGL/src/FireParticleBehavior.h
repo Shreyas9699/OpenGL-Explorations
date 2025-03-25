@@ -1,16 +1,19 @@
 // FireParticleBehavior.h
 #pragma once
 #include "ParticleBehavior.h"
+#include "imgui/imgui.h"
 
 class FireParticleBehavior : public ParticleBehavior 
 {
 private:
-    float m_Turbulence = 1.0f;
     float m_RiseSpeed = 5.0f;
     float m_HeatDissipation = 0.8f;
-    float mass = 1.0e-8f;
-    glm::vec3 m_WindDirection = glm::vec3(1.0f, 0.0f, 0.0f);
-    float m_WindStrength = 0.5f;
+    float m_FlickerSpeed = 2.0f;
+    float m_Turbulence = 0.0f;
+    float m_UpwardForce = 3.0f;
+    glm::vec3 m_WindDirection = glm::vec3(0.2f, 0.0f, 0.1f);
+    float m_WindStrength = 0.0f;
+    float m_mass = 1.0e-8f;
     float m_MinTemperature = 700.0f;
     float m_MaxTemperature = 1200.0f;
 
@@ -19,8 +22,10 @@ public:
 
     void UpdateUniforms(ComputeShader& computeShader) override 
     {
-        computeShader.setVec3("windDirection", m_WindDirection);
-        computeShader.setFloat("windStrength", m_WindStrength);
+        computeShader.setVec3("WindDirection", m_WindDirection);
+        computeShader.setFloat("WindStrength", m_WindStrength);
+        computeShader.setFloat("TurbulenceScale", m_Turbulence);
+        computeShader.setFloat("FlameFlickerSpeed", m_FlickerSpeed);
     }
 
     void UpdateEmitterUniforms(ComputeShader& emitterShader) override
@@ -28,7 +33,7 @@ public:
         // Set uniforms for fire emitter shader
         emitterShader.setFloat("minTemperature", m_MinTemperature);
         emitterShader.setFloat("maxTemperature", m_MaxTemperature);
-		emitterShader.setFloat("mass", mass);
+		emitterShader.setFloat("mass", m_mass);
     }
 
     std::string GetComputeShaderPath() const override 
@@ -61,5 +66,23 @@ public:
     void SetHeatDissipation(float dissipation) 
     {
         m_HeatDissipation = dissipation;
+    }
+
+    void GuiInputs() override 
+    {
+        if (ImGui::CollapsingHeader("Fire Sim Properties", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            /*ImGui::SliderFloat("Rise Speed", &m_RiseSpeed, 0.0f, 10.0f);
+        ImGui::SliderFloat("Heat Dissipation", &m_HeatDissipation, 0.0f, 1.0f);*/
+            ImGui::SliderFloat("Turbulence", &m_Turbulence, 0.0f, 1.0f, "%.1f");
+            ImGui::SliderFloat("Upward Force", &m_UpwardForce, 0.0f, 10.0f, "%.1f");
+            ImGui::SliderFloat("Wind Strength", &m_WindStrength, 0.0f, 1.0f, "%.2f");
+            ImGui::SliderFloat("Wind Direction X", &m_WindDirection.x, -1.0f, 1.0f, "%.1f");
+            ImGui::SliderFloat("Wind Direction Y", &m_WindDirection.y, -1.0f, 1.0f, "%.1f");
+            ImGui::SliderFloat("Wind Direction Z", &m_WindDirection.z, -1.0f, 1.0f, "%.1f");
+            //ImGui::SliderFloat("Mass", &m_mass, 1.0e-8f, 1.0e-6f);
+            ImGui::SliderFloat("Min Temperature", &m_MinTemperature, 0.0f, 2000.0f);
+            ImGui::SliderFloat("Max Temperature", &m_MaxTemperature, 0.0f, 2000.0f);
+        }
     }
 };

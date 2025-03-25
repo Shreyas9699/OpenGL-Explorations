@@ -69,10 +69,21 @@ vec3 randomInUnitDisk()
 }
 
 // Utility functions for different emitter shapes
-vec3 generatePointPosition() 
+vec3 generateSpherePosition() 
 {
-    return emitterPosition;
+    float u = rand();
+    float v = rand();
+    float theta = 2.0 * 3.14159265 * u;  // Uniform theta
+    float phi = acos(2.0 * v - 1.0);      // Proper phi distribution
+    
+    float x = sin(phi) * cos(theta);
+    float y = sin(phi) * sin(theta);
+    float z = cos(phi);
+    
+    float r = emitterRadius * pow(rand(), 1.0/3.0);
+    return emitterPosition + vec3(x, y, z) * r;
 }
+
 
 vec3 generateCirclePosition() 
 {
@@ -110,6 +121,35 @@ vec3 generateCirclePosition()
     
     vec3 rotatedOffset = rotZ * rotY * rotX * vec3(x, y, z);
     return emitterPosition + rotatedOffset;
+}
+
+vec3 generateConePosition() 
+{
+    float height = emitterRadius * rand();
+    float theta = rand() * 2.0 * 3.14159265;
+    float radius = height * tan(radians(emitterAngle));
+    
+    float x = radius * cos(theta);
+    float z = radius * sin(theta);
+    
+    return emitterPosition + vec3(x, height, z);
+}
+
+vec3 generateVelocity2(vec3 position)
+{
+    vec3 dir = vec3(0.0, 1.0, 0.0);
+    
+    // Increased randomness
+    float horizontalSpread = 0.4;  // Higher value = more chaotic spread
+    dir += vec3(
+        (rand() * 2.0 - 1.0) * horizontalSpread,
+        0.5 + rand() * 0.5,  // More variable upward motion
+        (rand() * 2.0 - 1.0) * horizontalSpread
+    );
+    
+    // Variable speed with more variation
+    float speed = mix(2.0, 4.5, rand());
+    return normalize(dir) * speed;
 }
 
 vec3 generateVelocity(vec3 position)
@@ -216,18 +256,21 @@ void main()
     
     // Generate position based on emitter shape
     vec3 position = generateCirclePosition();
-    vec3 velocity = generateVelocity(position);
+    vec3 velocity = generateVelocity2(position);
 
     // Set initial temperature - hotter near center
     float distFromCenter = length(position) / emitterRadius;
     float tempRandom = rand() * 0.2 - 0.1; // ±10% randomness
-    float temp = mix(maxTemperature, minTemperature, distFromCenter) * (0.9 + 0.2 * tempRandom);
+    float temp = mix(maxTemperature, minTemperature, distFromCenter * distFromCenter); // * (0.9 + 0.2 * tempRandom);
+
+    //Introduces randomness in initial flame colors:
+    vec3 colorVar = vec3(rand()*0.15-0.075, rand()*0.3-0.15, 0.0);
     
     // Set particle properties
     particles[particleIndex].position = vec4(position, particleSizeBegin);
-    particles[particleIndex].velocity = vec4(velocity, particleLifespan);
+    particles[particleIndex].velocity = vec4(velocity, particleLifespan * (0.75 + rand()*0.5)); //Adds ±25% lifetime variation for organic decay:
     particles[particleIndex].colorBegin = particleColorBegin;
-    particles[particleIndex].colorEnd = vec4(particleColorEnd.rgb, particleLifespan);
+    particles[particleIndex].colorEnd = vec4(particleColorEnd.rgb + colorVar, particleLifespan);
     particles[particleIndex].temperature = temp;
     particles[particleIndex].smokeAmount = 0.0;
 }

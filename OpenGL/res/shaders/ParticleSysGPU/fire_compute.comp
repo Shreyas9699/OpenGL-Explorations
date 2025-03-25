@@ -1,15 +1,13 @@
-// fireCompute.comp: Compute shader for updating particles for fire simulation
-#version 430 core
-layout(local_size_x = 256) in;
+#version 450
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
-struct FireParticle  
-{
-    vec4 position;    // xyz = position, w = size
-    vec4 velocity;    // xyz = velocity, w = remaining lifetime
-    vec4 colorBegin;  // rgb = color, a = opacity
-    vec4 colorEnd;    // rgb = end color, w = total lifespan
-    float temperature; // particle temperature in Kelvin
-    float smokeAmount; // 0-1 value for smoke transition
+struct FireParticle {
+    vec4 position;
+    vec4 velocity;
+    vec4 colorBegin;
+    vec4 colorEnd;
+    float temperature;
+    float smokeAmount;
     vec2 padding;
 };
 
@@ -17,275 +15,162 @@ layout(std430, binding = 0) buffer ParticleBuffer {
     FireParticle particles[];
 };
 
-layout(std430, binding = 1) buffer FreeListBuffer {
+layout(std430, binding = 1) buffer FreeList {
     int count;
     int indices[];
 } freelist;
 
-layout(binding = 1, offset = 0) uniform atomic_uint activeParticleCount;
+layout(binding = 2, offset = 0) uniform atomic_uint activeParticleCount;
 
+// Physics parameters
 uniform float deltaTime;
 uniform float time;
-uniform float sizeBegin;
-uniform float sizeEnd;
-uniform vec3 globalForce = vec3(0.0, -9.8, 0.0);
+uniform float mass;
+uniform vec3 gravity = vec3(0, -9.8, 0);
+uniform float buoyancy = 4.0;
+uniform float airResistance = 0.12;
+uniform float temperatureDecay = 180.0;
+uniform float turbulenceScale = 0.8;
 
+// Fire behavior controls
 uniform vec3 windDirection;
 uniform float windStrength;
-uniform float mass;
+uniform float baseVorticity = 2.5;
+uniform float flickerSpeed = 3.0;
 
-float dragCoefficient = 0.47;
-float airDensity = 1.225;
-float particleSize = 0.1;
+// Improved 3D noise for turbulence
+vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
 
-vec3 wobbleEffect(FireParticle p, float amp, float freq)
+// 3D Simplex Noise (returns vec3)
+vec3 snoise(vec3 pos) 
 {
-    float lifespan = p.colorEnd.w;
-    float lifeRemaining = p.velocity.w;
-    float lifePercent = lifeRemaining / lifespan;
-    float lifeFactor = 1.0 - lifePercent;
-    float offsetX = amp * sin((freq + lifeFactor) * lifeRemaining);
-    float offsetZ = amp * cos((freq + lifeFactor) * lifeRemaining);
-
-    return vec3(p.position.x + offsetX, p.position.y, p.position.z + offsetZ);
-}
-
-vec3 hash(vec3 p) {
-    p = vec3(dot(p, vec3(127.1, 311.7, 74.7)),
-             dot(p, vec3(269.5, 183.3, 246.1)),
-             dot(p, vec3(113.5, 271.9, 124.6)));
-    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
-}
-
-// Simplex noise function
-float noise(vec3 p) {
-    vec3 i = floor(p);
-    vec3 f = fract(p);
+    const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
     
-    vec3 u = f * f * (3.0 - 2.0 * f);
+    vec3 i = floor(pos + dot(pos, C.yyy));
+    vec3 x0 = pos - i + dot(i, C.xxx);
     
-    return mix(mix(mix(dot(hash(i + vec3(0.0, 0.0, 0.0)), f - vec3(0.0, 0.0, 0.0)),
-                       dot(hash(i + vec3(1.0, 0.0, 0.0)), f - vec3(1.0, 0.0, 0.0)), u.x),
-                   mix(dot(hash(i + vec3(0.0, 1.0, 0.0)), f - vec3(0.0, 1.0, 0.0)),
-                       dot(hash(i + vec3(1.0, 1.0, 0.0)), f - vec3(1.0, 1.0, 0.0)), u.x), u.y),
-               mix(mix(dot(hash(i + vec3(0.0, 0.0, 1.0)), f - vec3(0.0, 0.0, 1.0)),
-                       dot(hash(i + vec3(1.0, 0.0, 1.0)), f - vec3(1.0, 0.0, 1.0)), u.x),
-                   mix(dot(hash(i + vec3(0.0, 1.0, 1.0)), f - vec3(0.0, 1.0, 1.0)),
-                       dot(hash(i + vec3(1.0, 1.0, 1.0)), f - vec3(1.0, 1.0, 1.0)), u.x), u.y), u.z);
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min(g.xyz, l.zxy);
+    vec3 i2 = max(g.xyz, l.zxy);
+    
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy;
+    vec3 x3 = x0 - D.yyy;
+    
+    i = mod(i, 289.0);
+    vec4 p = permute(permute(permute(
+             i.z + vec4(0.0, i1.z, i2.z, 1.0))
+           + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+           + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+    
+    float n_ = 0.142857142857;
+    vec3 ns = n_ * D.wyz - D.xzx;
+    
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+    
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_);
+    
+    vec4 x = x_ * ns.x + ns.yyyy;
+    vec4 y = y_ * ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+    
+    vec4 b0 = vec4(x.xy, y.xy);
+    vec4 b1 = vec4(x.zw, y.zw);
+    
+    vec4 s0 = floor(b0)*2.0 + 1.0;
+    vec4 s1 = floor(b1)*2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+    
+    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+    
+    vec3 p0 = vec3(a0.xy,h.x);
+    vec3 p1 = vec3(a0.zw,h.y);
+    vec3 p2 = vec3(a1.xy,h.z);
+    vec3 p3 = vec3(a1.zw,h.w);
+    
+    vec4 norm = inversesqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+    
+    vec4 values = vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3));
+    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+    m = m * m;
+    
+    return 42.0 * vec3(
+        m.x * values.x * p0 + 
+        m.y * values.y * p1 + 
+        m.z * values.z * p2 + 
+        m.w * values.w * p3
+    );
 }
 
-// Curl noise for realistic turbulence
-vec3 curlNoise(vec3 p, float time) 
+vec3 get_turbulence(vec3 pos) 
 {
-    const float epsilon = 0.001;
-    float n1, n2;
-    vec3 curl = vec3(0.0);
-    
-    // Calculate curl for X component
-    n1 = noise(p + vec3(0.0, epsilon, 0.0) + time * 0.1);
-    n2 = noise(p + vec3(0.0, -epsilon, 0.0) + time * 0.1);
-    curl.x = (n1 - n2) / (2.0 * epsilon);
-    
-    n1 = noise(p + vec3(0.0, 0.0, epsilon) + time * 0.1);
-    n2 = noise(p + vec3(0.0, 0.0, -epsilon) + time * 0.1);
-    curl.x -= (n1 - n2) / (2.0 * epsilon);
-    
-    // Calculate curl for Y component
-    n1 = noise(p + vec3(0.0, 0.0, epsilon) + time * 0.1);
-    n2 = noise(p + vec3(0.0, 0.0, -epsilon) + time * 0.1);
-    curl.y = (n1 - n2) / (2.0 * epsilon);
-    
-    n1 = noise(p + vec3(epsilon, 0.0, 0.0) + time * 0.1);
-    n2 = noise(p + vec3(-epsilon, 0.0, 0.0) + time * 0.1);
-    curl.y -= (n1 - n2) / (2.0 * epsilon);
-    
-    // Calculate curl for Z component
-    n1 = noise(p + vec3(epsilon, 0.0, 0.0) + time * 0.1);
-    n2 = noise(p + vec3(-epsilon, 0.0, 0.0) + time * 0.1);
-    curl.z = (n1 - n2) / (2.0 * epsilon);
-    
-    n1 = noise(p + vec3(0.0, epsilon, 0.0) + time * 0.1);
-    n2 = noise(p + vec3(0.0, -epsilon, 0.0) + time * 0.1);
-    curl.z -= (n1 - n2) / (2.0 * epsilon);
-    
-    return curl;
+    vec3 turb = snoise(pos * 0.5 + time) * 0.5;
+    turb += snoise(pos * 2.0 + time * 1.3) * 0.25;
+    turb += snoise(pos * 4.0 + time * 2.1) * 0.125;
+    return turb * turbulenceScale;
 }
 
-void UpdateParticle(inout FireParticle particle, int index)
+void UpdateParticle(inout FireParticle p, int index) 
 {
-    particle.velocity.w -= deltaTime;
-    
-    // If particle just died, add to free list and return
-    if (particle.velocity.w <= 0.0) 
-    {
-        int idx = atomicAdd(freelist.count, 1);
-        // Ensure we don't overflow the free list
-        freelist.indices[idx] = index;
-        return;
-    }
-
-    atomicCounterIncrement(activeParticleCount);
-
-    float lifespan = particle.colorEnd.w;
-    float lifeRemaining = particle.velocity.w;
-    float lifePercent = lifeRemaining / lifespan;
-    
-    // Temperature modeling
-    float tempDecay = 0.97;
-    particle.temperature *= tempDecay;
-    
-    // Adjust size based on life - grow then shrink
-    float sizeMultiplier = sin(lifePercent * 3.14159);
-    particle.position.w = mix(sizeEnd, sizeBegin * 1.5, sizeMultiplier);
-    
-    // Transition from flame to smoke
-    if (lifePercent < 0.7) 
-    {
-        particle.smokeAmount += 0.2 * deltaTime;
-        particle.smokeAmount = min(particle.smokeAmount, 1.0);
-    }
-    
-    // Temperature-based color
-    float tempFactor = clamp((particle.temperature - 600.0) / 600.0, 0.0, 1.0);
-    vec3 hotColor = vec3(1.0, 0.7, 0.3); // Yellow-orange
-    vec3 coldColor = vec3(0.7, 0.1, 0.0); // Dark red
-    vec3 flameColor = mix(coldColor, hotColor, tempFactor);
-    
-    // Smoke color blending
-    vec3 smokeColor = vec3(0.2, 0.2, 0.2);
-    vec3 finalColor = mix(flameColor, smokeColor, particle.smokeAmount);
-    
-    // Update particle color
-    particle.colorBegin.rgb = finalColor;
-    
-    // Adjust opacity
-    float opacityMultiplier = sin(lifePercent * 3.14159 * 1.5);
-    particle.colorBegin.a = mix(0.0, 1.0, opacityMultiplier) * (1.0 - particle.smokeAmount * 0.5);
-    
-    // Gravity (pulls downward)
-    vec3 gravityForce = globalForce * mass;
-    
-    // Buoyancy (pushes upward, decreases over lifetime)
-    float temperatureFactor = (particle.temperature - 300.0) / 1000.0;
-    float smokeBouyancyFactor = mix(1.0, 0.3, particle.smokeAmount);
-    vec3 buoyancyForce = vec3(0.0, 10.0 * temperatureFactor * smokeBouyancyFactor, 0.0);
-    
-    // Drag (opposes motion)
-    //float crossSectionalArea = 3.1415 * particle.position.w * particle.position.w;
-    //vec3 dragForce = -0.5 * dragCoefficient * airDensity * crossSectionalArea * length(particle.velocity.xyz) * normalize(particle.velocity.xyz);
-    
-    // Curl noise for realistic turbulence
-    vec3 curlEffect = curlNoise(particle.position.xyz * 0.1, time);
-    float turbulenceStrength = 3.0 * (1.0 - lifePercent);
-    vec3 turbulenceForce = curlEffect * turbulenceStrength;
-    
-    // Wind force
-    vec3 windForce = normalize(windDirection) * windStrength;
-    
-    // Convection - particles rising faster as they get higher
-    float convectionStrength = 0.5 * particle.position.y;
-    vec3 convectionForce = vec3(0.0, convectionStrength, 0.0);
-    
-    // Add flickering effect
-    float flickerFreq = 10.0;
-    float flickerAmp = 0.5;
-    float flicker = sin(time * flickerFreq + particle.position.x * 5.0) * flickerAmp;
-    
-    // Compute an inward pull effect - creates the teardrop shape
-    vec3 outwardDir = normalize(vec3(particle.position.x, 0.0, particle.position.z));
-    float distFromCenter = length(vec2(particle.position.x, particle.position.z));
-    
-    // Stronger inward pull higher up in the flame
-    float heightFactor = clamp(particle.position.y / 2.0, 0.0, 1.0);
-    float inwardStrength = heightFactor * 2.0;
-    vec3 inwardForce = -outwardDir * inwardStrength * distFromCenter;
-    
-    // Vortex effect - creates swirling
-    vec3 vortexForce = vec3(0.0);
-    if (distFromCenter > 0.01) 
-    {
-        vec3 vortexDir = vec3(-outwardDir.z, 0.0, outwardDir.x); // Perpendicular to outward in XZ plane
-        float vortexStrength = 0.5 * heightFactor;
-        vortexForce = vortexDir * vortexStrength * distFromCenter;
-    }
-    
-    // Total force applied
-    vec3 totalForce = gravityForce + buoyancyForce + /*dragForce*/ + turbulenceForce + 
-                      windForce + /*convectionForce*/ + /*inwardForce*/ + vortexForce;
-    
-    // Add flicker to vertical component
-    totalForce.y += flicker;
-
-    // Apply total force to velocity
-    particle.velocity.xyz += totalForce * deltaTime;
-    
-    // Apply velocity to position
-    particle.position.xyz += particle.velocity.xyz * deltaTime;
-}
-
-void UpdateParticle2(inout FireParticle particle, int index)
-{
-    particle.velocity.w -= deltaTime;
-    
-    // If particle just died, add to free list and return
-    if (particle.velocity.w <= 0.0) 
+    // Lifetime management
+    p.velocity.w -= deltaTime;
+    if(p.velocity.w <= 0.0) 
     {
         int idx = atomicAdd(freelist.count, 1);
         freelist.indices[idx] = index;
         return;
     }
-
     atomicCounterIncrement(activeParticleCount);
 
-    float lifespan = particle.colorEnd.w;
-    float lifeRemaining = particle.velocity.w;
-    float lifePercent = lifeRemaining / lifespan;
-    
-    particle.position.w = mix(sizeEnd, sizeBegin, lifePercent);
-    
-    // Gravity (pulls downward)
-    vec3 gravityForce = globalForce * mass;
-    
-    // Buoyancy (pushes upward, decreases over lifetime)
-    float heatFactor = (1.0 - lifePercent) * 2.0;
-    vec3 buoyancyForce = vec3(0.0, 8.0 * heatFactor, 0.0);
-    
-    // Drag (opposes motion)
-    float crossSectionalArea = 3.1415 * particleSize * particleSize;
-    vec3 dragForce = -0.5 * dragCoefficient * airDensity * crossSectionalArea * length(particle.velocity.xyz) * normalize(particle.velocity.xyz);
-    
-    // Turbulence (adds randomness)
-    float turbulenceStrength = 2.0 * (1.0 - lifePercent);
-    float noiseX = sin(lifeRemaining * 10.0 + particle.position.x * 5.0);
-    float noiseZ = cos(lifeRemaining * 8.0 + particle.position.z * 4.0);
-    vec3 turbulenceForce = vec3(turbulenceStrength * noiseX, 0.0f, turbulenceStrength * noiseZ);
-    
-    // Total force applied
-    vec3 totalForce = gravityForce + buoyancyForce + dragForce + turbulenceForce;
-    
-    // Calculate outward direction in XZ plane
-    vec3 outwardDir = normalize(vec3(particle.position.x, 0.0, particle.position.z));
+    // Age calculations
+    float age = 1.0 - (p.velocity.w / p.colorEnd.w);
+    float tempFactor = p.temperature / 2500.0;
 
-    // Compute an inward pull effect
-    float lifeProgress = 1.0 - lifePercent;
-    float inwardForceStrength = smoothstep(0.2, 1.0, lifeProgress); // No inward force initially
-    totalForce -= inwardForceStrength * outwardDir * 0.5;
+    // Physics forces
+    vec3 acceleration = gravity * mass;
+    acceleration.y += buoyancy * tempFactor;
+    
+    // Controllable wind/turbulence
+    vec3 wind = windDirection * windStrength;
+    vec3 turbulence = get_turbulence(p.position.xyz);
+    
+    // Combine forces
+    acceleration += wind + turbulence;
+    
+    // Velocity integration
+    p.velocity.xyz += acceleration * deltaTime;
+    p.velocity.xyz *= exp(-airResistance * deltaTime);
+    p.position.xyz += p.velocity.xyz * deltaTime;
 
-    // Apply total force to velocity
-    particle.velocity.xyz += totalForce * deltaTime;
-    particle.position.xyz += particle.velocity.xyz * deltaTime;
-    //particle.position.xyz = wobbleEffect(particle, 0.5, 2.0);
+    // Temperature cooling
+    p.temperature -= temperatureDecay * deltaTime * (1.0 + age*2.0);
+    p.temperature = max(p.temperature, 0.0);
+
+    // Size evolution
+    p.position.w = mix(p.colorEnd.w * 0.05, p.colorBegin.w, 1.0 - age*age);
+
+    // Smoke generation
+    p.smokeAmount = smoothstep(0.5, 0.9, age) * (1.0 - tempFactor);
 }
 
-void main()
+void main() 
 {
     uint id = gl_GlobalInvocationID.x;
-    
-    if (id >= particles.length())
-        return;
+    if(id >= particles.length()) return;
 
-    if (particles[id].velocity.w <= 0.0)
-            return;
+    FireParticle p = particles[id];
+    if(p.velocity.w <= 0.0) return;
 
     UpdateParticle(particles[id], int(id));
 }

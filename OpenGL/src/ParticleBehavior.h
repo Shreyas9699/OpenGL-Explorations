@@ -27,4 +27,7 @@ public:
 
     // Optional: Additional behavior-specific buffers or resources
     virtual void SetupAdditionalResources() {}
+
+    // Optional: Additional behavior-specific buffers or resources
+    virtual void GuiInputs() {}
 };

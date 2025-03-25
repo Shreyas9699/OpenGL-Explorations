@@ -41,6 +41,7 @@ public:
     // ParticleSystemGPU.h
     void Update(float delta, const glm::mat4& viewProj = glm::mat4(0.0f)) override;
     void Render(Shader& shader) override;
+	void GuiRender();
     void SetEmitter(const EmitterProperties& emitterProp) override;
     void SetEmissionRate(int rate) override;
 
@@ -362,6 +363,12 @@ void ParticleSystemGPU<ParticleType>::Render(Shader& shader)
     GLCall(glDrawArrays(GL_POINTS, 0, m_MaxParticles));
     m_ParticleVAO->Unbind();
     shader.Unbind();
+}
+
+template<typename ParticleType>
+inline void ParticleSystemGPU<ParticleType>::GuiRender()
+{
+    m_CurrentBehavior->GuiInputs();
 }
 
 template <typename ParticleType>

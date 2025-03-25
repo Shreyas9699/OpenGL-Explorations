@@ -49,7 +49,7 @@ void main()
     
     float dist = length((view * model * vec4(pos, 1.0)).xyz);
     gl_PointSize = size * lifePercent * scaling_factor / dist;
-    
+
     particleColor = mix(particle.colorEnd, particle.colorBegin, lifePercent);
     particleAlpha = particleColor.a * lifePercent;
 }
