@@ -55,7 +55,7 @@ namespace test
 		};
 
 		m_cube.VAO = std::make_unique<VertexArray>();
-		m_cube.VBO = std::make_unique<VertexBuffer>(vertices, sizeof(vertices));
+		m_cube.VBO = std::make_unique<VertexBuffer>(vertices, static_cast<unsigned int>(sizeof(vertices)));
 		VertexBufferLayout layout1;
 		layout1.Push<float>(3);
 		layout1.Push<float>(3);
@@ -63,8 +63,8 @@ namespace test
 
 		m_Sphere = std::make_unique<UVSphere>(1.0f, 64, 32);
 		m_sphere.VAO = std::make_unique<VertexArray>();
-		m_sphere.VBO = std::make_unique<VertexBuffer>(m_Sphere->GetVertex().data(), m_Sphere->GetVertex().size() * sizeof(float));
-		m_sphere.IBO = std::make_unique<IndexBuffer>(m_Sphere->GetIndex().data(), m_Sphere->GetIndex().size());
+		m_sphere.VBO = std::make_unique<VertexBuffer>(m_Sphere->GetVertex().data(), static_cast<unsigned int>(m_Sphere->GetVertex().size() * sizeof(float)));
+		m_sphere.IBO = std::make_unique<IndexBuffer>(m_Sphere->GetIndex().data(), static_cast<unsigned int>(m_Sphere->GetIndex().size()));
 
 		VertexBufferLayout layout2;
 		layout2.Push<float>(3); // positions
@@ -159,7 +159,7 @@ namespace test
 		//ImGui::ColorEdit4("Change Object Color", ObjectColor);
 
 		ImGui::Text("Select Material:");
-		if (ImGui::Combo("Material Type", &current_material_index, material_names.data(), material_names.size()))
+		if (ImGui::Combo("Material Type", &current_material_index, material_names.data(), static_cast<int>(material_names.size())))
 		{
 			mat_prop = getMaterialProperties(static_cast<MaterialType>(current_material_index));
 		}

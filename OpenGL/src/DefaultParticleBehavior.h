@@ -31,6 +31,15 @@ public:
         return "res/shaders/ParticleSysGPU/emitter.comp";
     }
 
+    void InitializeParticle(void* particleData, int index)
+    {
+        GPUParticle* particle = static_cast<GPUParticle*>(particleData);
+        particle->position = glm::vec4(0.0f);
+        particle->velocity = glm::vec4(0.0f);
+        particle->colorBegin = glm::vec4(0.0f);
+        particle->colorEnd = glm::vec4(0.0f);
+    }
+
     void SetGlobalForce(const glm::vec3& force) 
     {
         m_GlobalForce = force;

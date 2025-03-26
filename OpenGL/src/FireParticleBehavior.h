@@ -6,6 +6,7 @@
 class FireParticleBehavior : public ParticleBehavior 
 {
 private:
+    glm::vec3 m_GlobalForce = glm::vec3(0.0f, -9.8f, 0.0f);
     float m_RiseSpeed = 5.0f;
     float m_HeatDissipation = 0.8f;
     float m_FlickerSpeed = 2.0f;
@@ -22,10 +23,11 @@ public:
 
     void UpdateUniforms(ComputeShader& computeShader) override 
     {
-        computeShader.setVec3("WindDirection", m_WindDirection);
-        computeShader.setFloat("WindStrength", m_WindStrength);
-        computeShader.setFloat("TurbulenceScale", m_Turbulence);
-        computeShader.setFloat("FlameFlickerSpeed", m_FlickerSpeed);
+        computeShader.setVec3("globalForce", m_GlobalForce);
+        computeShader.setVec3("windDirection", m_WindDirection);
+        computeShader.setFloat("windStrength", m_WindStrength);
+        computeShader.setFloat("turbulenceScale", m_Turbulence);
+        computeShader.setFloat("flickerSpeed", m_FlickerSpeed);
     }
 
     void UpdateEmitterUniforms(ComputeShader& emitterShader) override
@@ -49,6 +51,9 @@ public:
     void InitializeParticle(void* particleData, int index)
     {
 		FireParticle* particle = static_cast<FireParticle*>(particleData);
+        particle->position = glm::vec4(0.0f);
+        particle->velocity = glm::vec4(0.0f);
+		particle->lifespan = 0.0f;
 		particle->temperature = 0.0f;
 		particle->smokeAmount = 0.0f;
     }
@@ -68,7 +73,7 @@ public:
         m_HeatDissipation = dissipation;
     }
 
-    void GuiInputs() override 
+    void CustomGUI() override
     {
         if (ImGui::CollapsingHeader("Fire Sim Properties", ImGuiTreeNodeFlags_DefaultOpen))
         {

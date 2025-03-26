@@ -489,11 +489,9 @@
     <ClInclude Include="src\ParticleSystemBase.h" />
     <ClInclude Include="src\ParticleSystemCPU.h" />
     <ClInclude Include="src\ParticleSystemGPU.h" />
-    <ClInclude Include="src\RainParticleBehavior.h" />
     <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\Shader_t.h" />
     <ClInclude Include="src\Material.h" />
-    <ClInclude Include="src\SnowParticleBehavior.h" />
     <ClInclude Include="src\Sphere.h" />
     <ClInclude Include="src\tests\TestFireSimulation.h" />
     <ClInclude Include="src\tests\Test.h" />

@@ -2010,11 +2010,5 @@
     <ClInclude Include="src\ParticleBehavior.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\RainParticleBehavior.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\SnowParticleBehavior.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

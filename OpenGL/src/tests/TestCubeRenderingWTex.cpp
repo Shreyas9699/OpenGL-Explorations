@@ -66,7 +66,7 @@ namespace test
 		};
 
 		m_VA = std::make_unique<VertexArray>();
-		m_VB = std::make_unique<VertexBuffer>(vertices, sizeof(vertices));
+		m_VB = std::make_unique<VertexBuffer>(vertices, static_cast<unsigned int>(sizeof(vertices)));
 		VertexBufferLayout layout;
 		layout.Push<float>(3);
 		layout.Push<float>(3);

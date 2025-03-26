@@ -2,15 +2,14 @@
 #version 430 core
 layout(local_size_x = 256) in;
 
-struct FireParticle  
+struct FireParticle 
 {
     vec4 position;    // xyz = position, w = size
-    vec4 velocity;    // xyz = velocity, w = remaining lifetime
-    vec4 colorBegin;  // rgb = color, a = opacity
-    vec4 colorEnd;    // rgb = end color, w = total lifespan
-    float temperature; // particle temperature in Kelvin
-    float smokeAmount; // 0-1 value for smoke transition
-    vec2 padding;
+    vec4 velocity;    // xyz = velocity, w = lifeRemaining
+    float lifespan;
+    float temperature;
+    float smokeAmount;
+    float padding;
 };
 
 layout(binding = 0) uniform atomic_uint newParticleCounter;
@@ -23,7 +22,7 @@ layout(std430, binding = 1) buffer FreeListBuffer {
     int indices[];
 } freelist;
 
-// Emission parameters
+// Emitter parameters
 uniform int newParticleCount;
 uniform vec3 emitterPosition;
 uniform vec3 emitterRotation;
@@ -31,13 +30,15 @@ uniform float emitterRadius;
 uniform float emitterAngle;
 uniform int emitterShape;
 
-
+// Particle properties
 uniform vec4 particleColorBegin;
 uniform vec4 particleColorEnd;
 uniform float particleLifespan;
 uniform float particleSizeBegin;
+
 uniform float time;
 
+// Fire temp properties
 uniform float minTemperature;
 uniform float maxTemperature;
 
@@ -67,23 +68,6 @@ vec3 randomInUnitDisk()
     float z = r * sin(t);
     return vec3(x, 0.0, z);
 }
-
-// Utility functions for different emitter shapes
-vec3 generateSpherePosition() 
-{
-    float u = rand();
-    float v = rand();
-    float theta = 2.0 * 3.14159265 * u;  // Uniform theta
-    float phi = acos(2.0 * v - 1.0);      // Proper phi distribution
-    
-    float x = sin(phi) * cos(theta);
-    float y = sin(phi) * sin(theta);
-    float z = cos(phi);
-    
-    float r = emitterRadius * pow(rand(), 1.0/3.0);
-    return emitterPosition + vec3(x, y, z) * r;
-}
-
 
 vec3 generateCirclePosition() 
 {
@@ -212,11 +196,7 @@ void EmitParticle(int particleIndex)
     
     // Set lifetime
     particle.velocity.w = particleLifespan;  // Remaining lifetime
-    particle.colorEnd.w = particleLifespan;  // Total lifespan
-    
-    // Set colors
-    particle.colorBegin = particleColorBegin;
-    particle.colorEnd.rgb = particleColorEnd.rgb;
+    particle.lifespan = particleLifespan;  // Total lifespan
     
     // Set initial temperature - hotter near center
     float distFromCenter = length(posOffset) / emitterRadius;
@@ -269,8 +249,7 @@ void main()
     // Set particle properties
     particles[particleIndex].position = vec4(position, particleSizeBegin);
     particles[particleIndex].velocity = vec4(velocity, particleLifespan * (0.75 + rand()*0.5)); //Adds ±25% lifetime variation for organic decay:
-    particles[particleIndex].colorBegin = particleColorBegin;
-    particles[particleIndex].colorEnd = vec4(particleColorEnd.rgb + colorVar, particleLifespan);
+    particles[particleIndex].lifespan = particleLifespan * (0.75 + rand()*0.5);
     particles[particleIndex].temperature = temp;
     particles[particleIndex].smokeAmount = 0.0;
 }

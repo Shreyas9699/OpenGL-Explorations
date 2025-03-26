@@ -51,7 +51,7 @@ namespace test
 		//};
 
 		m_VA = std::make_unique<VertexArray>();
-		m_VB = std::make_unique<VertexBuffer>(pyramidVertices.data(), pyramidVertices.size() * sizeof(float));
+		m_VB = std::make_unique<VertexBuffer>(pyramidVertices.data(), static_cast<unsigned int>(pyramidVertices.size() * sizeof(float)));
 		//m_IB = std::make_unique<IndexBuffer>(indicies.data(), indicies.size() * sizeof(unsigned int));
 
 		VertexBufferLayout layout;

@@ -144,12 +144,12 @@ void ParticleSystemGPU<ParticleType>::initParticles()
     // Initialize particle count buffer
     GLuint initialZero = 0;
     m_ParticleCountBuffer = std::make_unique<VertexBuffer>(
-        &initialZero, sizeof(GLuint), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
+        &initialZero, static_cast<unsigned int>(sizeof(GLuint)), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
     );
 
     // Initialize atomic buffer
     m_AtomicBuffer = std::make_unique<VertexBuffer>(
-        &initialZero, sizeof(GLuint), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
+        &initialZero, static_cast<unsigned int>(sizeof(GLuint)), GL_ATOMIC_COUNTER_BUFFER, GL_DYNAMIC_DRAW
     );
 
     // Allocate free list + particle index buffer in one loop
@@ -162,30 +162,26 @@ void ParticleSystemGPU<ParticleType>::initParticles()
     {
         freeIndices[i + 1] = m_MaxParticles - 1 - i;  // LIFO Free List
         particleIndices[i] = i;  // Particle indices
-
-        // Initialize GPU particles with default values
-        m_GPUParticles[i].position = glm::vec4(0.0f, 0.0f, 0.0f, m_DefaultSizeBegin);
-        m_GPUParticles[i].velocity = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // w = lifeRemaining (0 = inactive)
-        m_GPUParticles[i].colorBegin = m_DefaultColorBegin;
-        m_GPUParticles[i].colorEnd = glm::vec4(m_DefaultColorEnd.r, m_DefaultColorEnd.g, m_DefaultColorEnd.b, m_DefaultLifespan);
-
-        // Let behavior initialize additional particle properties if needed
         m_CurrentBehavior->InitializeParticle(&m_GPUParticles[i], i);
     }
 
     // Create free list buffer
     m_FreeListBuffer = std::make_unique<VertexBuffer>(
-        freeIndices.data(), (m_MaxParticles + 1) * sizeof(GLint), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
+        freeIndices.data(), 
+        static_cast<unsigned int>((m_MaxParticles + 1) * sizeof(GLint)), 
+        GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
     );
 
     // Create particle SSBO
     std::cout << "ParticleType size: " << sizeof(ParticleType) << std::endl; // Must print 72
     m_ParticleSSBO = std::make_unique<VertexBuffer>(
-        m_GPUParticles.data(), m_MaxParticles * sizeof(ParticleType), GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
+        m_GPUParticles.data(), 
+        static_cast<unsigned int>(m_MaxParticles * sizeof(ParticleType)), 
+        GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
     );
 
     m_ParticleVAO = std::make_unique<VertexArray>();
-    m_InstanceVBO = std::make_unique<VertexBuffer>(particleIndices.data(), m_MaxParticles * sizeof(GLuint));
+    m_InstanceVBO = std::make_unique<VertexBuffer>(particleIndices.data(), static_cast<unsigned int>(m_MaxParticles * sizeof(GLuint)));
     VertexBufferLayout layout;
     layout.Push<int>(1); // For the particle index
     m_ParticleVAO->AddBuffer(*m_InstanceVBO, layout);
@@ -368,7 +364,7 @@ void ParticleSystemGPU<ParticleType>::Render(Shader& shader)
 template<typename ParticleType>
 inline void ParticleSystemGPU<ParticleType>::GuiRender()
 {
-    m_CurrentBehavior->GuiInputs();
+    m_CurrentBehavior->CustomGUI();
 }
 
 template <typename ParticleType>

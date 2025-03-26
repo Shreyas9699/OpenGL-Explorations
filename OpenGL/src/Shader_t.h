@@ -36,27 +36,38 @@ public:
         gShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         tcShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         teShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+        try 
+        {
+            vShaderFile.open(vertexPath);
+            std::stringstream vShaderStream;
+            vShaderStream << vShaderFile.rdbuf();
+            vShaderFile.close();
+            vertexCode = vShaderStream.str();
+        }
+		catch (std::ifstream::failure& e)
+		{
+			std::cerr << "[" << vertexPath << "]"
+                << "ERROR::SHADER::VERTEX::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+		}
+
         try
         {
-            // open files
-            vShaderFile.open(vertexPath);
             fShaderFile.open(fragmentPath);
-            std::stringstream vShaderStream, fShaderStream;
-
-            // read file's buffer contents into streams
-            vShaderStream << vShaderFile.rdbuf();
+            std::stringstream fShaderStream;
             fShaderStream << fShaderFile.rdbuf();
-
-            // close file handlers
-            vShaderFile.close();
-            fShaderFile.close();
-
-            // convert stream into string
-            vertexCode = vShaderStream.str();
+			fShaderFile.close();
             fragmentCode = fShaderStream.str();
+        }
+        catch (std::ifstream::failure& e)
+        {
+            std::cerr << "[" << fragmentPath << "]"
+                << "ERROR::SHADER::FRAGMENT::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+        }
 
-            // if geometry shader path is present, also load a geometry shader
-            if (geometryPath != nullptr)
+        if(geometryPath != nullptr)
+        {
+            try
             {
                 gShaderFile.open(geometryPath);
                 std::stringstream gShaderStream;
@@ -64,7 +75,16 @@ public:
                 gShaderFile.close();
                 geometryCode = gShaderStream.str();
             }
-            if (tessControlPath != nullptr)
+            catch (std::ifstream::failure& e)
+            {
+                std::cerr << "[" << geometryPath << "]"
+                    << "ERROR::SHADER::GEOMETRY::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+            }
+        }
+
+        if (tessControlPath != nullptr)
+        {
+            try
             {
                 tcShaderFile.open(tessControlPath);
                 std::stringstream tcShaderStream;
@@ -72,7 +92,16 @@ public:
                 tcShaderFile.close();
                 tessControlCode = tcShaderStream.str();
             }
-            if (tessEvalPath != nullptr)
+            catch (std::ifstream::failure& e)
+            {
+                std::cerr << "[" << tessControlPath << "]"
+                    << "ERROR::SHADER::TESSCONTROL::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+            }
+        }
+
+        if (tessEvalPath != nullptr)
+        {
+            try
             {
                 teShaderFile.open(tessEvalPath);
                 std::stringstream teShaderStream;
@@ -80,11 +109,11 @@ public:
                 teShaderFile.close();
                 tessEvalCode = teShaderStream.str();
             }
-        }
-        catch (std::ifstream::failure& e)
-        {
-            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: "
-                << e.what() << std::endl;
+            catch (std::ifstream::failure& e)
+            {
+                std::cerr << "[" << tessEvalPath << "]"
+                    << "ERROR::SHADER::TESSEVALUATION::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+            }
         }
 
         const char* vShaderCode = vertexCode.c_str();
@@ -97,13 +126,13 @@ public:
         vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vShaderCode, NULL);
         glCompileShader(vertex);
-        checkCompileErrors(vertex, "VERTEX");
+        checkCompileErrors(vertex, "VERTEX", vertexPath);
 
         // fragment Shader
         fragment = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
-        checkCompileErrors(fragment, "FRAGMENT");
+        checkCompileErrors(fragment, "FRAGMENT", fragmentPath);
         // if geometry shader is given, compile geometry shader
 
         unsigned int geometry;
@@ -113,7 +142,7 @@ public:
             geometry = glCreateShader(GL_GEOMETRY_SHADER);
             glShaderSource(geometry, 1, &gShaderCode, NULL);
             glCompileShader(geometry);
-            checkCompileErrors(geometry, "GEOMETRY");
+            checkCompileErrors(geometry, "GEOMETRY", geometryPath);
         }
 
         // if tessellation shader is given, compile tessellation shader
@@ -124,7 +153,7 @@ public:
             tessControl = glCreateShader(GL_TESS_CONTROL_SHADER);
             glShaderSource(tessControl, 1, &tcShaderCode, NULL);
             glCompileShader(tessControl);
-            checkCompileErrors(tessControl, "TESS_CONTROL");
+            checkCompileErrors(tessControl, "TESS_CONTROL", tessControlPath);
         }
 
         unsigned int tessEval;
@@ -134,7 +163,7 @@ public:
             tessEval = glCreateShader(GL_TESS_EVALUATION_SHADER);
             glShaderSource(tessEval, 1, &teShaderCode, NULL);
             glCompileShader(tessEval);
-            checkCompileErrors(tessEval, "TESS_EVALUATION");
+            checkCompileErrors(tessEval, "TESS_EVALUATION", tessEvalPath);
         }
 
         // shader Program
@@ -243,7 +272,7 @@ public:
 private:
     // utility function for checking shader compilation/linking errors.
     // ------------------------------------------------------------------------
-    void checkCompileErrors(GLuint shader, std::string type)
+    void checkCompileErrors(GLuint shader, std::string type, const char* path = nullptr)
     {
         GLint success;
         GLchar infoLog[1024];
@@ -253,7 +282,7 @@ private:
             if (!success)
             {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+                std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
             }
         }
         else
@@ -262,7 +291,8 @@ private:
             if (!success)
             {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+                std::cerr << "[" << path << "]"
+                    << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
             }
         }
     }

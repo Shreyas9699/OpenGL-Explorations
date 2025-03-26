@@ -50,13 +50,12 @@ struct FireParticle /*: public GPUParticle*/
 {
     glm::vec4 position;    // xyz = position, w = size
     glm::vec4 velocity;    // xyz = velocity, w = lifeRemaining
-    glm::vec4 colorBegin;
-    glm::vec4 colorEnd;    // w = lifespan
+    float lifespan;
     float temperature;  // 4-byte alignment, no padding
     float smokeAmount;
-	float padding[2];	// 4-byte alignment
+	float padding;	// 4-byte alignment
 };
-static_assert(sizeof(FireParticle) == 80, "FireParticle must be 72 bytes!");
+static_assert(sizeof(FireParticle) % 16 == 0, "FireParticle must be multiple of 16!");
 
 // Indirect draw command structure
 struct DrawElementsIndirectCommand 

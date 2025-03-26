@@ -1,15 +1,16 @@
 #version 450
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
-struct FireParticle {
-    vec4 position;
-    vec4 velocity;
-    vec4 colorBegin;
-    vec4 colorEnd;
+struct FireParticle 
+{
+    vec4 position;    // xyz = position, w = size
+    vec4 velocity;    // xyz = velocity, w = lifeRemaining
+    float lifespan;
     float temperature;
     float smokeAmount;
-    vec2 padding;
+    float padding;
 };
+
 
 layout(std430, binding = 0) buffer ParticleBuffer {
     FireParticle particles[];
@@ -22,11 +23,15 @@ layout(std430, binding = 1) buffer FreeList {
 
 layout(binding = 2, offset = 0) uniform atomic_uint activeParticleCount;
 
+//
+uniform vec3 globalForce = vec3(0, -9.8, 0);
+uniform float sizeBegin;
+uniform float sizeEnd;
+
 // Physics parameters
 uniform float deltaTime;
 uniform float time;
 uniform float mass;
-uniform vec3 gravity = vec3(0, -9.8, 0);
 uniform float buoyancy = 4.0;
 uniform float airResistance = 0.12;
 uniform float temperatureDecay = 180.0;
@@ -134,11 +139,11 @@ void UpdateParticle(inout FireParticle p, int index)
     atomicCounterIncrement(activeParticleCount);
 
     // Age calculations
-    float age = 1.0 - (p.velocity.w / p.colorEnd.w);
+    float age = 1.0 - (p.velocity.w / p.lifespan);
     float tempFactor = p.temperature / 2500.0;
 
     // Physics forces
-    vec3 acceleration = gravity * mass;
+    vec3 acceleration = globalForce * mass;
     acceleration.y += buoyancy * tempFactor;
     
     // Controllable wind/turbulence
@@ -158,7 +163,7 @@ void UpdateParticle(inout FireParticle p, int index)
     p.temperature = max(p.temperature, 0.0);
 
     // Size evolution
-    p.position.w = mix(p.colorEnd.w * 0.05, p.colorBegin.w, 1.0 - age*age);
+    p.position.w = mix(sizeEnd, sizeBegin, 1.0 - age*age);
 
     // Smoke generation
     p.smokeAmount = smoothstep(0.5, 0.9, age) * (1.0 - tempFactor);

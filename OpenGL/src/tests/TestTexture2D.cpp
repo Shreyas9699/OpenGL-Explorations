@@ -25,12 +25,12 @@ namespace test
         };
 
         m_VA = std::make_unique<VertexArray>();
-        m_VB = std::make_unique<VertexBuffer>(positions.data(), positions.size() * sizeof(float));
+        m_VB = std::make_unique<VertexBuffer>(positions.data(), static_cast<unsigned int>(positions.size() * sizeof(float)));
         VertexBufferLayout layout;
         layout.Push<float>(2);
         layout.Push<float>(2);
         m_VA->AddBuffer(*m_VB, layout);
-        m_IB = std::make_unique<IndexBuffer>(indices.data(), indices.size());
+        m_IB = std::make_unique<IndexBuffer>(indices.data(), static_cast<unsigned int>(indices.size()));
         m_Renderer = std::make_unique<Renderer>();
 
         m_Shader = std::make_unique<Shader>("res/shaders/Basic/TextureShaderVS.glsl", "res/shaders/Basic/TextureShaderFS.glsl");

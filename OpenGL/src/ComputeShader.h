@@ -29,7 +29,7 @@ public:
 		}
 		catch (std::ifstream::failure& e)
 		{
-			std::cerr << "ERROR::COMPUTESHADER::FILE_NOT_SUCCESSFULLY_READ: "
+			std::cerr << "[" << path << "]" << "ERROR::COMPUTESHADER::FILE_NOT_SUCCESSFULLY_READ: "
 				<< e.what() << std::endl;
 		}
 
@@ -40,12 +40,12 @@ public:
 		compute = glCreateShader(GL_COMPUTE_SHADER);
 		glShaderSource(compute, 1, &compShaderCode, NULL);
 		glCompileShader(compute);
-		checkCompileErrors(compute, "COMPUTE");
+		checkCompileErrors(compute, "COMPUTE", path);
 
 		ID = glCreateProgram();
 		glAttachShader(ID, compute);
 		glLinkProgram(ID);
-		checkCompileErrors(ID, "PROGRAM");
+		checkCompileErrors(ID, "PROGRAM", path);
 
 		glDeleteShader(compute);
 	}
@@ -143,7 +143,7 @@ public:
 	}
 
 private:
-	void checkCompileErrors(GLuint shader, std::string type)
+	void checkCompileErrors(GLuint shader, std::string type, const char* path = nullptr)
 	{
 		GLint success;
 		GLchar infoLog[1024];
@@ -153,7 +153,8 @@ private:
 			if (!success)
 			{
 				glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-				std::cout << "ERROR::COMPUTESHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+				std::cerr << "ERROR::COMPUTESHADER_COMPILATION_ERROR of type: " << type << "\n" 
+					<< infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
 			}
 		}
 		else
@@ -162,7 +163,9 @@ private:
 			if (!success)
 			{
 				glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-				std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+				std::cerr << "[" << path << "]"
+					<< "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" 
+					<< infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
 			}
 		}
 	}

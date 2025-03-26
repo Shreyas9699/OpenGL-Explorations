@@ -12,8 +12,8 @@ namespace test
 		m_Sphere = std::make_unique<UVSphere>(m_radius, m_segment, m_rings);
 
 		m_VA = std::make_unique<VertexArray>();
-		m_VB = std::make_unique<VertexBuffer>(m_Sphere->GetVertex().data(), m_Sphere->GetVertex().size() * sizeof(float));
-		m_IB = std::make_unique<IndexBuffer>(m_Sphere->GetIndex().data(), m_Sphere->GetIndex().size());
+		m_VB = std::make_unique<VertexBuffer>(m_Sphere->GetVertex().data(), static_cast<unsigned int>(m_Sphere->GetVertex().size() * sizeof(float)));
+		m_IB = std::make_unique<IndexBuffer>(m_Sphere->GetIndex().data(), static_cast<unsigned int>(m_Sphere->GetIndex().size()));
 
 		VertexBufferLayout layout;
 		layout.Push<float>(3); // positions
@@ -52,8 +52,8 @@ namespace test
 			m_IB.reset();
 
 			m_VA = std::make_unique<VertexArray>();
-			m_VB = std::make_unique<VertexBuffer>(m_Sphere->GetVertex().data(), m_Sphere->GetVertex().size() * sizeof(float));
-			m_IB = std::make_unique<IndexBuffer>(m_Sphere->GetIndex().data(), m_Sphere->GetIndex().size());
+			m_VB = std::make_unique<VertexBuffer>(m_Sphere->GetVertex().data(), static_cast<unsigned int>(m_Sphere->GetVertex().size() * sizeof(float)));
+			m_IB = std::make_unique<IndexBuffer>(m_Sphere->GetIndex().data(), static_cast<unsigned int>(m_Sphere->GetIndex().size()));
 
 			VertexBufferLayout layout;
 			layout.Push<float>(3);
