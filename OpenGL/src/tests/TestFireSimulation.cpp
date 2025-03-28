@@ -136,7 +136,7 @@ namespace test
 		if (ImGui::CollapsingHeader("Particle Emitter Properties", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::Text("Particle Emitter Shape CIRCLE");
-			if (ImGui::SliderInt("Emission Rate", &emitterProp.emissionRate, 1000, 50000))
+			if (ImGui::SliderInt("Emission Rate", &emitterProp.emissionRate, 10000, 70000))
 			{
 				// Update the particle system with the new emitter properties
 				m_ParticleSys->SetEmissionRate(emitterProp.emissionRate);
@@ -168,7 +168,7 @@ namespace test
 				m_ParticleSys->SetParticleSizeEnd(sizeEnd);
 			}
 
-			if (ImGui::SliderFloat("Particle lifespan (in sec)", (float*)&lifespan, 0.1f, 30.0f, "%.1f"))
+			if (ImGui::SliderFloat("Particle lifespan (in sec)", (float*)&lifespan, 1.0f, 13.0f, "%.1f"))
 			{
 				m_ParticleSys->SetParticleLifespan(lifespan);
 			}

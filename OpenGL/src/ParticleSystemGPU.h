@@ -126,8 +126,6 @@ void ParticleSystemGPU<ParticleType>::initializeShaders()
 template <typename ParticleType>
 void ParticleSystemGPU<ParticleType>::initParticles()
 {
-    std::cout << "ParticleSystemGPU<ParticleType>::initParticles()    Started" << std::endl;
-
     if (!m_CurrentBehavior)
     {
         std::cerr << "ERROR::ParticleSystemGPU::initParticles    No behavior set" << std::endl;
@@ -225,9 +223,6 @@ void ParticleSystemGPU<ParticleType>::initParticles()
     // Compute total GPU memory used
     double totalMemoryMB = static_cast<double>(particleSSBOSize + atomicBufferSize + freeListBufferSize + instanceVBOSize) / (1024.0 * 1024.0);
     std::cout << "Total GPU Memory Used by Buffers: " << totalMemoryMB << " MB" << std::endl;
-
-
-    std::cout << "ParticleSystemGPU<ParticleType>::initParticles()    Ended" << std::endl;
 }
 
 template <typename ParticleType>

@@ -21,7 +21,7 @@ layout(std430, binding = 1) buffer FreeList {
     int indices[];
 } freelist;
 
-layout(binding = 2, offset = 0) uniform atomic_uint activeParticleCount;
+layout(binding = 1, offset = 0) uniform atomic_uint activeParticleCount;
 
 //
 uniform vec3 globalForce = vec3(0, -9.8, 0);
