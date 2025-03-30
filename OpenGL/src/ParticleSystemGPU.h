@@ -70,6 +70,23 @@ ParticleSystemGPU<ParticleType>::ParticleSystemGPU(const std::string& name)
 }
 
 template <typename ParticleType>
+ParticleSystemGPU<ParticleType>::~ParticleSystemGPU()
+{
+    m_CurrentBehavior->Cleanup();
+    m_Shader.reset();
+    m_ParticleVAO.reset();
+    m_InstanceVBO.reset();
+    m_ParticleSSBO.reset();
+    m_AtomicBuffer.reset();
+    m_ParticleCountBuffer.reset();
+    m_FreeListBuffer.reset();
+    m_ComputeShader.reset();
+    m_EmitterShader.reset();
+    m_CurrentBehavior.reset();
+    m_BehaviorRegistry.clear();
+}
+
+template <typename ParticleType>
 void ParticleSystemGPU<ParticleType>::RegisterStandardBehaviors()
 {
     // Register default behavior
@@ -226,21 +243,6 @@ void ParticleSystemGPU<ParticleType>::initParticles()
 }
 
 template <typename ParticleType>
-ParticleSystemGPU<ParticleType>::~ParticleSystemGPU()
-{
-    m_ParticleVAO.reset();
-    m_InstanceVBO.reset();
-    m_ParticleSSBO.reset();
-    m_AtomicBuffer.reset();
-    m_ParticleCountBuffer.reset();
-    m_FreeListBuffer.reset();
-
-    m_ComputeShader.reset();
-    m_EmitterShader.reset();
-    m_Shader.reset();
-}
-
-template <typename ParticleType>
 void ParticleSystemGPU<ParticleType>::Update(float delta, const glm::mat4& viewProj)
 {
 	m_ElapsedTime += delta;
@@ -278,7 +280,7 @@ void ParticleSystemGPU<ParticleType>::Update(float delta, const glm::mat4& viewP
     if (newParticlesCount > 0)
     {
         // Bind atomic counter for emitter shader to use
-        m_AtomicBuffer->BindBase(GL_ATOMIC_COUNTER_BUFFER, 0);
+        m_AtomicBuffer->BindBase(GL_ATOMIC_COUNTER_BUFFER, 1);
         m_ParticleSSBO->BindBase(GL_SHADER_STORAGE_BUFFER, 0);
         m_FreeListBuffer->BindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
@@ -340,8 +342,8 @@ void ParticleSystemGPU<ParticleType>::Update(float delta, const glm::mat4& viewP
 
     // Ensure compute shader finishes before rendering
     GLCall(glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT));
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_ParticleCountBuffer->GetRendererID());
-    glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &m_ActiveParticleCount);
+    GLCall(glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_ParticleCountBuffer->GetRendererID()));
+    GLCall(glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &m_ActiveParticleCount));
 }
 
 template <typename ParticleType>

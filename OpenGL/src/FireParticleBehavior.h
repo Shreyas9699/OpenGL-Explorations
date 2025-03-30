@@ -3,6 +3,7 @@
 #include "ParticleBehavior.h"
 #include "imgui/imgui.h"
 
+
 class FireParticleBehavior : public ParticleBehavior 
 {
 private:
@@ -20,6 +21,7 @@ private:
 
 public:
     void Initialize() override {}
+	void Cleanup() override {}
 
     void UpdateUniforms(ComputeShader& computeShader) override 
     {

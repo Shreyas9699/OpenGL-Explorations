@@ -10,7 +10,10 @@ public:
     virtual ~ParticleBehavior() = default;
 
     // Initialize any behavior-specific resources
-    virtual void Initialize() = 0;
+    virtual void Initialize() {}
+
+    // Clean up any behavior-specific resources
+    virtual void Cleanup() {}
 
     // Update behavior-specific uniforms and parameters
     virtual void UpdateUniforms(ComputeShader& computeShader) = 0;

@@ -9,6 +9,7 @@ private:
 
 public:
     void Initialize() override {}
+    void Cleanup() override {}
 
     void UpdateUniforms(ComputeShader& computeShader) override 
     {

@@ -200,7 +200,7 @@ void EmitParticle(int particleIndex)
     
     // Set initial temperature - hotter near center
     float distFromCenter = length(posOffset) / emitterRadius;
-    float tempRandom = rand() * 0.2 - 0.1; // ±10% randomness
+    float tempRandom = rand() * 0.2 - 0.1; // 10% randomness
     float temp = mix(maxTemperature, minTemperature, distFromCenter) * (1.0 + tempRandom);
     particle.temperature = temp;
     
@@ -240,7 +240,7 @@ void main()
 
     // Set initial temperature - hotter near center
     float distFromCenter = length(position) / emitterRadius;
-    float tempRandom = rand() * 0.2 - 0.1; // ±10% randomness
+    float tempRandom = rand() * 0.2 - 0.1; // 10% randomness
     float temp = mix(maxTemperature, minTemperature, distFromCenter * distFromCenter); // * (0.9 + 0.2 * tempRandom);
 
     //Introduces randomness in initial flame colors:
@@ -248,7 +248,7 @@ void main()
     
     // Set particle properties
     particles[particleIndex].position = vec4(position, particleSizeBegin);
-    particles[particleIndex].velocity = vec4(velocity, particleLifespan * (0.75 + rand()*0.5)); //Adds ±25% lifetime variation for organic decay:
+    particles[particleIndex].velocity = vec4(velocity, particleLifespan * (0.75 + rand()*0.5)); //Adds 25% lifetime variation for organic decay:
     particles[particleIndex].lifespan = particleLifespan * (0.75 + rand()*0.5);
     particles[particleIndex].temperature = temp;
     particles[particleIndex].smokeAmount = 0.0;

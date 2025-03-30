@@ -55,7 +55,7 @@ struct FireParticle /*: public GPUParticle*/
     float smokeAmount;
 	float padding;	// 4-byte alignment
 };
-static_assert(sizeof(FireParticle) % 16 == 0, "FireParticle must be multiple of 16!");
+static_assert(sizeof(FireParticle) == 48, "FireParticle size mismatch!");
 
 // Indirect draw command structure
 struct DrawElementsIndirectCommand 
