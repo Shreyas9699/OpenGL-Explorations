@@ -42,12 +42,12 @@ public:
 
     std::string GetComputeShaderPath() const override 
     {
-        return "res/shaders/ParticleSysGPU/fire_compute.comp";
+        return "res/shaders/fireParticle/fire_compute.comp";
     }
 
     std::string GetEmitterShaderPath() const override 
     {
-        return "res/shaders/ParticleSysGPU/fire_emitter.comp";
+        return "res/shaders/fireParticle/fire_emitter.comp";
     }
 
     void InitializeParticle(void* particleData, int index)

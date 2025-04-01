@@ -106,10 +106,10 @@
     <None Include="res\shaders\Heightmap\minimapVS.glsl" />
     <None Include="res\shaders\ParticleSysGPU\culling.comp" />
     <None Include="res\shaders\ParticleSysGPU\emitter.comp" />
-    <None Include="res\shaders\ParticleSysGPU\fire_compute.comp" />
-    <None Include="res\shaders\ParticleSysGPU\fire_emitter.comp" />
-    <None Include="res\shaders\ParticleSysGPU\fire_FS.glsl" />
-    <None Include="res\shaders\ParticleSysGPU\fire_VS.glsl" />
+    <None Include="res\shaders\fireParticle\fire_compute.comp" />
+    <None Include="res\shaders\fireParticle\fire_emitter.comp" />
+    <None Include="res\shaders\fireParticle\fire_FS.glsl" />
+    <None Include="res\shaders\fireParticle\fire_VS.glsl" />
     <None Include="res\shaders\ParticleSysGPU\ParticleFSGPU.glsl" />
     <None Include="res\shaders\ParticleSysGPU\ParticleVSGPU.glsl" />
     <None Include="res\shaders\ParticleSysGPU\rain_compute.comp" />

@@ -495,13 +495,13 @@
     <None Include="res\shaders\ParticleSysGPU\culling.comp" />
     <None Include="res\shaders\Heightmap\minimapFS.glsl" />
     <None Include="res\shaders\Heightmap\minimapVS.glsl" />
-    <None Include="res\shaders\ParticleSysGPU\fire_compute.comp" />
-    <None Include="res\shaders\ParticleSysGPU\fire_emitter.comp" />
+    <None Include="res\shaders\fireParticle\fire_compute.comp" />
+    <None Include="res\shaders\fireParticle\fire_emitter.comp" />
     <None Include="res\shaders\ParticleSysGPU\rain_compute.comp" />
     <None Include="res\shaders\ParticleSysGPU\snow_compute.comp" />
     <None Include="res\shaders\ParticleSysGPU\snow_emitter.comp" />
-    <None Include="res\shaders\ParticleSysGPU\fire_VS.glsl" />
-    <None Include="res\shaders\ParticleSysGPU\fire_FS.glsl" />
+    <None Include="res\shaders\fireParticle\fire_VS.glsl" />
+    <None Include="res\shaders\fireParticle\fire_FS.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">

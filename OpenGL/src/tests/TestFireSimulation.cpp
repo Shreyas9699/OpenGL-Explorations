@@ -15,8 +15,8 @@ namespace test
 			});
 		glfwSetInputMode(m_Window->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		m_Shader = std::make_unique<Shader>("res/shaders/ParticleSysGPU/fire_VS.glsl",
-			"res/shaders/ParticleSysGPU/fire_FS.glsl");
+		m_Shader = std::make_unique<Shader>("res/shaders/fireParticle/fire_VS.glsl",
+			"res/shaders/fireParticle/fire_FS.glsl");
 		m_XZPlane = std::make_unique<XZPlaneGrid>(m_Window->GetAspectRatio(), m_GridSize, m_Near, m_Far);
 		m_ParticleSys = std::make_unique<ParticleSystemGPU<FireParticle>>("fire");
 
