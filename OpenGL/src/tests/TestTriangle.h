@@ -11,6 +11,7 @@ namespace test
 		Window* m_Window;
 		float m_Color[4];
 		float m_aspectRatio;
+		float m_Timer = 0.0f;
 		glm::mat4 m_Projection;
 		std::unique_ptr<VertexArray> m_VA;
 		std::unique_ptr<VertexBuffer> m_VB;
