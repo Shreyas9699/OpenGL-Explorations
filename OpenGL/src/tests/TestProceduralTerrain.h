@@ -4,11 +4,6 @@
 #include "Window.h"
 #include <memory>
 
-/*
-* This is an application that implements Fractal Brownian Motion from the book of shaders
-* Added light effects to this using Phong lighting model  (https://learnopengl.com/Lighting/Basic-Lighting)
-*/
-
 namespace test
 {
 	class TestProceduralTerrain : public Test
@@ -24,7 +19,7 @@ namespace test
 
 		float m_PlaneWidth = 10.0f;		// Default width
 		float m_PlaneHeight = 10.0f;	// Default height (depth)
-		float m_Scale = 0.3f;			// Scale of the FBM
+		float m_Scale = 1.0f;			// Scale of the FBM
 		int m_Octaves = 4;				// Octaves of the FBM
 		int m_Seed = 0;					// Seed of the FBM
 		float m_Persistence = 0.5f;		// Persistence of the FBM

@@ -214,7 +214,7 @@ namespace test
 		bool dimensionsChanged = false;
 		dimensionsChanged |= ImGui::InputFloat("Plane Width", &m_PlaneWidth, 0.0f, 0.0f, "%.1f");
 		dimensionsChanged |= ImGui::InputFloat("Plane Height", &m_PlaneHeight, 0.0f, 0.0f, "%.1f");
-		ImGui::SliderFloat("Scale", &m_Scale, 0.3f, 30.0f, "%.1f");
+		ImGui::SliderFloat("Scale", &m_Scale, 0.3f, 20.0f, "%.2f");
 		if (ImGui::InputInt("Octaves", &m_Octaves))
 		{
 			if (m_Octaves < 0)

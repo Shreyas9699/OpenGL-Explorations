@@ -61,32 +61,96 @@ vec2 getOctaveOffsets(int octave, int seed)
     return vec2(xOffset, yOffset);
 }
 
-
-void main()
+vec3 GenerateColor(float nHeight)
 {
-    vec2 st = gl_FragCoord.xy / u_resolution.xy; // (gl_FragCoord.xy / u_resolution.y) * 2.0 - 1.0;
+    // Define terrain thresholds
+    float DEEP_WATER = 0.30;
+    float SHALLOW_WATER = 0.40;
+    float SHORE = 0.45;
+    float GRASS = 0.55;
+    float FOREST = 0.65;
+    float ROCK = 0.75;
+    float SNOW = 0.85;
+    
+    // Define colors
+    vec3 deepWaterColor = vec3(0.05, 0.13, 0.35);
+    vec3 shallowWaterColor = vec3(0.15, 0.30, 0.60);
+    vec3 sandColor = vec3(0.85, 0.75, 0.55);
+    vec3 grassColor = vec3(0.35, 0.50, 0.20);
+    vec3 forestColor = vec3(0.20, 0.30, 0.15);
+    vec3 rockColor = vec3(0.50, 0.45, 0.40);
+    vec3 darkRockColor = vec3(0.35, 0.30, 0.25);
+    vec3 snowColor = vec3(0.95, 0.95, 0.95);
+    
+    // Apply terrain types
+    vec3 v_Color;
+    
+    if (nHeight < 0.3) 
+    {
+        v_Color = deepWaterColor;
+    }
+    else if (nHeight < 0.4) 
+    {
+        v_Color = shallowWaterColor;
+    } 
+    else if (nHeight < 0.45) 
+    {
+        v_Color = sandColor;
+    }
+    else if (nHeight < 0.55) 
+    {
+        v_Color = grassColor;
+    }
+    else if (nHeight < 0.65) 
+    {
+        v_Color = forestColor;
+    }
+    else if (nHeight < 0.75) 
+    {
+        v_Color = rockColor;
+    }
+    else if (nHeight < 0.85) 
+    {
+        v_Color = darkRockColor;
+    }
+    else 
+    {
+        v_Color = snowColor;
+    }
+    return v_Color;
+}
+
+
+void main() 
+{
+    // Map frag coordinates to [-1,1]
+    vec2 st = gl_FragCoord.xy / u_resolution.xy;
     st = st * 2.0 - 1.0;
 
+    // FBM parameters
     float amplitude = 1.0;
-    float frequency = 4.0;
+    float frequency = 1.0;
     float nHeight = 0.0;
-    float minNoise = 1e10;
-    float maxNoise = -1e10;
+    float totalAmplitude = 0.0;
     
-    for (int i = 0; i < octaves; i++)
-    {
+    // Fractal Brownian Motion loop
+    for (int i = 0; i < octaves; i++) {
         vec2 octaveOffsets = getOctaveOffsets(i, seed);
-        float noise = snoise(st / scale * frequency + octaveOffsets);
+        // Scale coordinates: note the order of operations
+        float noise = snoise((st + octaveOffsets) * frequency / scale);
+        // Remap from [-1, 1] to [0, 1]
+        noise = noise * 0.5 + 0.5;
+        
         nHeight += noise * amplitude;
-
-        minNoise = min(minNoise, noise);
-        maxNoise = max(maxNoise, noise);
+        totalAmplitude += amplitude;
         
         amplitude *= persistence;
         frequency *= lacunarity;
     }
-    nHeight = (nHeight - minNoise) / (maxNoise - minNoise);
-
-    FragColor = vec4(vec3(nHeight), 1.0); // * 0.5 + 0.5
-    //FragColor = vec4(v_Color, 1.0);
-} 
+    // Normalize final noise value to [0,1]
+    nHeight /= totalAmplitude;
+    
+    // Choose terrain color based on normalized height
+    vec3 v_Color = GenerateColor(nHeight);
+    FragColor = vec4(v_Color, 1.0);
+}
