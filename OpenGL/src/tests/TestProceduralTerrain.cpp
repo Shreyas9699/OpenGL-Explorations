@@ -10,7 +10,7 @@ namespace test
 	TestProceduralTerrain::TestProceduralTerrain(Window* win)
 		: m_Window(win),
 		  m_planeColor{ 0.2f, 0.6f, 0.8f, 1.0f },
-		  m_Camera(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, -90.0f),
+		  m_Camera(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, -90.0f),
 		  m_cameraController(m_Window->GetWindow(), m_Camera)
 	{
 		glEnable(GL_DEPTH_TEST);
@@ -81,40 +81,67 @@ namespace test
 		m_plane.VBO.reset();
 		m_plane.IBO.reset();
 
-		// Define the 4 corners using width and height
-		float halfWidth = m_PlaneWidth / 2.0f;
-		float halfHeight = m_PlaneHeight / 2.0f;
+		// Grid resolution - this is key for terrain detail
+		// Higher values create more detailed terrain but impact performance
+		int resolution = 100; // Number of vertices per side
 
-		// Vertex data: position (xyz) and normal (xyz)
-		m_Vertices = {
-			// Bottom-left vertex
-			-halfWidth, 0.0f, -halfHeight, 0.0f, 1.0f, 0.0f,
+		// Calculate the spacing between vertices
+		float gridSpacingX = m_PlaneWidth / (resolution - 1);
+		float gridSpacingZ = m_PlaneHeight / (resolution - 1);
 
-			// Bottom-right vertex
-			halfWidth, 0.0f, -halfHeight, 0.0f, 1.0f, 0.0f,
+		// Generate vertices in a grid pattern
+		for (int z = 0; z < resolution; z++) {
+			for (int x = 0; x < resolution; x++) {
+				// Calculate position of this vertex in the grid
+				float posX = x * gridSpacingX - (m_PlaneWidth / 2.0f);
+				float posZ = z * gridSpacingZ - (m_PlaneHeight / 2.0f);
 
-			// Top-right vertex
-			halfWidth, 0.0f, halfHeight, 0.0f, 1.0f, 0.0f,
+				// Add vertex position (XYZ)
+				m_Vertices.push_back(posX);   // X position
+				m_Vertices.push_back(0.0f);   // Y position (will be displaced in shader)
+				m_Vertices.push_back(posZ);   // Z position
 
-			// Top-left vertex
-			-halfWidth, 0.0f, halfHeight, 0.0f, 1.0f, 0.0f
-		};
+				// Add normal (will be recalculated in the shader based on height)
+				m_Vertices.push_back(0.0f);   // normal X
+				m_Vertices.push_back(1.0f);   // normal Y
+				m_Vertices.push_back(0.0f);   // normal Z
+			}
+		}
 
-		// Indices for two triangles (counter-clockwise winding)
-		m_Indices = {
-			0, 2, 1,  // First triangle
-			0, 3, 2   // Second triangle
-		};
+		// Generate indices for triangles
+		for (int z = 0; z < resolution - 1; z++) {
+			for (int x = 0; x < resolution - 1; x++) {
+				// Calculate indices for the quad's corners
+				int topLeft = z * resolution + x;
+				int topRight = topLeft + 1;
+				int bottomLeft = (z + 1) * resolution + x;
+				int bottomRight = bottomLeft + 1;
 
-		// Set up buffers
+				// First triangle (counter-clockwise winding)
+				m_Indices.push_back(topLeft);
+				m_Indices.push_back(bottomLeft);
+				m_Indices.push_back(bottomRight);
+
+				// Second triangle (counter-clockwise winding)
+				m_Indices.push_back(topLeft);
+				m_Indices.push_back(bottomRight);
+				m_Indices.push_back(topRight);
+			}
+		}
+
+		// Set up buffers with the grid data
 		m_plane.VAO = std::make_unique<VertexArray>();
 		m_plane.VBO = std::make_unique<VertexBuffer>(m_Vertices.data(), static_cast<unsigned int>(m_Vertices.size() * sizeof(float)));
 		m_plane.IBO = std::make_unique<IndexBuffer>(m_Indices.data(), static_cast<unsigned int>(m_Indices.size()));
 
 		VertexBufferLayout layout;
-		layout.Push<float>(3);    // position
-		layout.Push<float>(3);    // normal
+		layout.Push<float>(3);    // position (xyz)
+		layout.Push<float>(3);    // normal (xyz)
 		m_plane.VAO->AddBuffer(*m_plane.VBO, layout);
+
+		// Log info about the mesh
+		std::cout << "Generated terrain mesh with " << resolution * resolution << " vertices and "
+			<< (resolution - 1) * (resolution - 1) * 2 << " triangles." << std::endl;
 	}
 
 	void TestProceduralTerrain::handleKeyPress(int key, int scancode, int action, int mods)
