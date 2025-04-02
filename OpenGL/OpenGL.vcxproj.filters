@@ -502,6 +502,8 @@
     <None Include="res\shaders\ParticleSysGPU\snow_emitter.comp" />
     <None Include="res\shaders\fireParticle\fire_VS.glsl" />
     <None Include="res\shaders\fireParticle\fire_FS.glsl" />
+    <None Include="res\shaders\terrain\fragmentShader.glsl" />
+    <None Include="res\shaders\terrain\vertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">
@@ -1001,6 +1003,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\tests\TestFireSimulation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\TestProceduralTerrain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2008,6 +2013,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ParticleBehavior.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vendor\stb\stb_perlin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\TestProceduralTerrain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

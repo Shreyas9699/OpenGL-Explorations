@@ -30,6 +30,8 @@
 #include "tests/TestParticleGPU.h"
 #include "tests/TestFireSimulation.h"
 
+#include "tests/TestProceduralTerrain.h"
+
 
 #include "Shader_t.h"
 #include "Camera.h"
@@ -75,7 +77,8 @@ int main(void)
     menu->AddTest<test::TestLoadModels>("Load Models", &window);
     menu->AddTest<test::TestParticleCPU>("Particles System CPU", &window);
     menu->AddTest<test::TestParticleGPU>("Particles System GPU", &window);
-    menu->AddTest<test::TestFireSimulation>("Fire Particles Sim", &window);
+    menu->AddTest<test::TestFireSimulation>("Fire Particles Sim", &window); //TestProceduralTerrain
+    menu->AddTest<test::TestProceduralTerrain>("Procedural Terrain", &window);
 
     float lastFrameTime = 0.0f;
     /* Loop until the user closes the window */
