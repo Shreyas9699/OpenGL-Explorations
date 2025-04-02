@@ -39,6 +39,15 @@ namespace test
 
 	void TestProceduralTerrain::UpdatePlaneVertices()
 	{
+		if (m_PlaneWidth <= 0)
+		{
+			m_PlaneWidth = 1.0f;
+		}
+		if (m_PlaneHeight <= 0)
+		{
+			m_PlaneHeight = 1.0f;
+		}
+
 		float halfWidth = m_PlaneWidth / 2.0f;
 		float halfHeight = m_PlaneHeight / 2.0f;
 
@@ -178,6 +187,11 @@ namespace test
 		model = glm::rotate(model, glm::radians(horizontalrotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 		m_Shader->setMat4("model", model);
 		m_Shader->setFloat("scale", m_Scale);
+		m_Shader->setInt("seed", m_Seed);
+		m_Shader->setInt("octaves", m_Octaves);
+		m_Shader->setFloat("persistence", m_Persistence);
+		m_Shader->setFloat("lacunarity", m_Lacunarity);
+		m_Shader->setVec2("offset", m_Offset);
 		m_Shader->Unbind();
 		if (isWireFrame)
 		{
@@ -198,10 +212,28 @@ namespace test
 
 		// Add controls for plane dimensions
 		bool dimensionsChanged = false;
-		dimensionsChanged |= ImGui::SliderFloat("Plane Width", &m_PlaneWidth, 1.0f, 50.0f, "%.1f");
-		dimensionsChanged |= ImGui::SliderFloat("Plane Height", &m_PlaneHeight, 1.0f, 50.0f, "%.1f");
+		dimensionsChanged |= ImGui::InputFloat("Plane Width", &m_PlaneWidth, 0.0f, 0.0f, "%.1f");
+		dimensionsChanged |= ImGui::InputFloat("Plane Height", &m_PlaneHeight, 0.0f, 0.0f, "%.1f");
+		ImGui::SliderFloat("Scale", &m_Scale, 0.3f, 30.0f, "%.1f");
+		if (ImGui::InputInt("Octaves", &m_Octaves))
+		{
+			if (m_Octaves < 0)
+			{
+				m_Octaves = 0;
+			}
+		}
+		ImGui::SliderFloat("Persistence", &m_Persistence, 0.0f, 1.0f, "%.1f");
+		if (ImGui::InputFloat("Lacunarity", &m_Lacunarity, 0.0f, 0.0f, "%.1f")) 
+		{
+			if (m_Lacunarity < 1.0f) 
+			{
+				m_Lacunarity = 1.0f;
+			}
+		}
+		ImGui::SliderInt("Seed", &m_Seed, 0, 1000);
+		ImGui::SliderFloat("Offset X", &m_Offset.x, 0.0f, 30.0f, "%.1f");
+		ImGui::SliderFloat("Offset Y", &m_Offset.y, 0.0f, 30.0f, "%.1f");
 
-		ImGui::SliderFloat("Scale", &m_Scale, 0.1f, 1.0f, "%.1f");
 
 		if (dimensionsChanged) 
 		{

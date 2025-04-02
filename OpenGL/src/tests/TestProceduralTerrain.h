@@ -24,7 +24,13 @@ namespace test
 
 		float m_PlaneWidth = 10.0f;		// Default width
 		float m_PlaneHeight = 10.0f;	// Default height (depth)
-		float m_Scale = 0.1f;			// Scale of the FBM
+		float m_Scale = 0.3f;			// Scale of the FBM
+		int m_Octaves = 4;				// Octaves of the FBM
+		int m_Seed = 0;					// Seed of the FBM
+		float m_Persistence = 0.5f;		// Persistence of the FBM
+		float m_Lacunarity = 2.0f;		// Lacunarity of the FBM
+		glm::vec2 m_Offset = glm::vec2(0.0f, 0.0f);
+
 		std::vector<float> m_Vertices;
 		std::vector<uint32_t> m_Indices;
 
