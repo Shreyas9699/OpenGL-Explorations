@@ -1,74 +1,58 @@
 // Tessellation Control Shader for procedural terrain rendering
 #version 430 core
 layout(vertices = 4) out;
-in vec3 v_Pos[];
-//in vec3 v_Normal[];
 
-out vec3 tc_Pos[];
-//out vec3 tc_Normal;
+in vec3 vs_Pos[];
+out vec3 tcs_Pos[];
 
 uniform mat4 model;
 uniform mat4 view;
-uniform float fovCos;
 
-void main()
+void main() 
 {
-    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
-    tc_Pos[gl_InvocationID] = v_Pos[gl_InvocationID];
-
-    if (gl_InvocationID == 0)
+    tcs_Pos[gl_InvocationID] = vs_Pos[gl_InvocationID];
+    
+    if (gl_InvocationID == 0) 
     {
-        // Dynamic tesstllation levels based on distance.
-        const int MIN_TESS_LEVEL = 4;
-        const int MAX_TESS_LEVEL = 64;
-        const float MIN_DISTANCE = 20;
-        const float MAX_DISTANCE = 800;
+        // Transform patch corners to world space
+        vec4 worldPos00 = model * vec4(vs_Pos[0], 1.0);
+        vec4 worldPos01 = model * vec4(vs_Pos[1], 1.0);
+        vec4 worldPos10 = model * vec4(vs_Pos[2], 1.0);
+        vec4 worldPos11 = model * vec4(vs_Pos[3], 1.0);
         
-        vec4 eyeSpacePos00 = view * model * gl_in[0].gl_Position;
-        vec4 eyeSpacePos01 = view * model * gl_in[1].gl_Position;
-        vec4 eyeSpacePos10 = view * model * gl_in[2].gl_Position;
-        vec4 eyeSpacePos11 = view * model * gl_in[3].gl_Position;
+        // Get the camera position from the inverse view matrix
+        vec3 cameraPos = vec3(inverse(view)[3]);
         
-        // "distance" from camera scaled between 0 and 1
-        float distance00 = clamp( (length(eyeSpacePos00.xyz) - MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0 );
-        float distance01 = clamp( (length(eyeSpacePos01.xyz) - MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0 );
-        float distance10 = clamp( (length(eyeSpacePos10.xyz) - MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0 );
-        float distance11 = clamp( (length(eyeSpacePos11.xyz) - MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0 );
+        // Calculate distances from camera to each corner
+        float dist00 = distance(cameraPos, worldPos00.xyz);
+        float dist01 = distance(cameraPos, worldPos01.xyz);
+        float dist10 = distance(cameraPos, worldPos10.xyz);
+        float dist11 = distance(cameraPos, worldPos11.xyz);
         
-        float cosAngle00 = dot(normalize(eyeSpacePos00.xyz), vec3(0.0, 0.0, -1.0));
-        float cosAngle01 = dot(normalize(eyeSpacePos01.xyz), vec3(0.0, 0.0, -1.0));
-        float cosAngle10 = dot(normalize(eyeSpacePos10.xyz), vec3(0.0, 0.0, -1.0));
-        float cosAngle11 = dot(normalize(eyeSpacePos11.xyz), vec3(0.0, 0.0, -1.0));
+        // Calculate the center of the patch
+        vec3 patchCenter = (worldPos00.xyz + worldPos01.xyz + worldPos10.xyz + worldPos11.xyz) * 0.25;
         
-        float tessLevel0 = 0.0;
-        float tessLevel1 = 0.0;
-        float tessLevel2 = 0.0;
-        float tessLevel3 = 0.0;
+        // Calculate distance to patch center
+        float distToCenter = distance(cameraPos, patchCenter);
         
-        float coverage = max(max(cosAngle00, cosAngle01), max(cosAngle10, cosAngle11));
+        // Dynamic tessellation constants
+        const float MIN_DISTANCE = 1.0;
+        const float MAX_DISTANCE = 10.0;
+        const int MIN_TESS_LEVEL = 1;
+        const int MAX_TESS_LEVEL = 32;
         
-        if (coverage > fovCos) 
-        {
-            tessLevel0 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00) );
-            tessLevel1 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance00, distance01) );
-            tessLevel2 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance01, distance11) );
-            tessLevel3 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance11, distance10) );
-        }
-        else 
-        {
-            // Reduced LOD for peripheral patches
-            tessLevel0 = mix(MIN_TESS_LEVEL/2, MIN_TESS_LEVEL, (coverage - (fovCos - 0.2)) / 0.4);
-            tessLevel1 = mix(MIN_TESS_LEVEL/2, MIN_TESS_LEVEL, (coverage - (fovCos - 0.2)) / 0.4);
-            tessLevel2 = mix(MIN_TESS_LEVEL/2, MIN_TESS_LEVEL, (coverage - (fovCos - 0.2)) / 0.4);
-            tessLevel3 = mix(MIN_TESS_LEVEL/2, MIN_TESS_LEVEL, (coverage - (fovCos - 0.2)) / 0.4);
-        }
+        // Apply simple distance-based tessellation
+        float tessellationFactor = 1.0 - clamp((distToCenter - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);
+        float tessLevel = mix(float(MIN_TESS_LEVEL), float(MAX_TESS_LEVEL), tessellationFactor);
         
-        gl_TessLevelOuter[0] = tessLevel0;
-        gl_TessLevelOuter[1] = tessLevel1;
-        gl_TessLevelOuter[2] = tessLevel2;
-        gl_TessLevelOuter[3] = tessLevel3;
+        // Apply distance-based tessellation to each edge
+        gl_TessLevelOuter[0] = tessLevel;
+        gl_TessLevelOuter[1] = tessLevel;
+        gl_TessLevelOuter[2] = tessLevel;
+        gl_TessLevelOuter[3] = tessLevel;
         
-        gl_TessLevelInner[0] = max(tessLevel1, tessLevel3);
-        gl_TessLevelInner[1] = max(tessLevel0, tessLevel2);
+        // Apply to inner tessellation levels
+        gl_TessLevelInner[0] = tessLevel;
+        gl_TessLevelInner[1] = tessLevel;
     }
 }

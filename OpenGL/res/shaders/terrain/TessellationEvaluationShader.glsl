@@ -1,21 +1,20 @@
 // Tessellation Evaluation Shader for procedural terrain rendering
 #version 430 core
-layout (triangles, equal_spacing, cw) in;
-in vec3 tc_Pos[];
+layout(quads, fractional_odd_spacing, ccw) in;
 
-out float te_Height;
+in vec3 tcs_Pos[];
+out float v_Height;
 
+uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform mat4 model;
-
-uniform vec2 u_resolution;
-uniform float scale = 0.0001;
+uniform float scale;
 uniform int seed;
 uniform int octaves;
 uniform float persistence;
 uniform float lacunarity;
-uniform vec2 offset = vec2(0.0);
+uniform vec2 offset;
+uniform float heightMultiplier;
 
 vec3 mod289(vec3 x)  { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec2 mod289(vec2 x)  { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -65,41 +64,51 @@ vec2 getOctaveOffsets(int octave, int seed)
     return vec2(xOffset, yOffset);
 }
 
-void main()
+float getAnimationCurve(float height)
 {
-    // Barycentric interpolation
-    vec3 pos = gl_TessCoord.x * tc_Pos[0] +
-               gl_TessCoord.y * tc_Pos[1] +
-               gl_TessCoord.z * tc_Pos[2];
+    // to remove height effect on water
+    if(height < 0.4)
+        return 0.0;
 
-    vec2 st = pos.xz * scale;
-    
-    // Compute FBM (Fractal Brownian Motion) noise for height displacement
+    return smoothstep(0.4, 1.0, height);
+}
+
+void main() 
+{
+    float u = gl_TessCoord.x, v = gl_TessCoord.y;
+
+    // Bilinear interpolation of model-space position
+    vec3 top = mix(tcs_Pos[0], tcs_Pos[1], u);
+    vec3 bottom = mix(tcs_Pos[3], tcs_Pos[2], u);
+    vec3 pos = mix(top, bottom, v);
+
+    // Generate height using FBM
+    vec2 st = (pos.xz + 1.0) * 0.5; // Normalize coordinates
+    float height = 0.0;
     float amplitude = 1.0;
     float frequency = 1.0;
-    float nHeight = 0.0;
     float totalAmplitude = 0.0;
-    
+
+     // Fractal Brownian Motion loop
     for (int i = 0; i < octaves; i++) 
     {
         vec2 octaveOffsets = getOctaveOffsets(i, seed);
+        // Scale coordinates: note the order of operations
         float noise = snoise((st + octaveOffsets) * frequency / scale);
-        noise = noise * 0.5 + 0.5; // Remap from [-1,1] to [0,1]
+        // Remap from [-1, 1] to [0, 1]
+        noise = noise * 0.5 + 0.5;
         
-        nHeight += noise * amplitude;
+        height += noise * amplitude;
         totalAmplitude += amplitude;
         
         amplitude *= persistence;
         frequency *= lacunarity;
     }
-    nHeight /= totalAmplitude;  // Normalize final noise value to [0,1]
+    // Normalize final noise value to [0,1]
+    height /= totalAmplitude;
     
-    // Displace the vertex along the Y-axis by the noise height.
-    pos.y = nHeight;
-    
-    // Pass the height to the fragment shader
-    te_Height = nHeight;
-    
-    // Transform to clip space
+    pos.y = getAnimationCurve(height) * heightMultiplier;
+
     gl_Position = projection * view * model * vec4(pos, 1.0);
+    v_Height = height;
 }

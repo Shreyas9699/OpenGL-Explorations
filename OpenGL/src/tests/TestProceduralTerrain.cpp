@@ -22,8 +22,12 @@ namespace test
 
 		GeneratePlane();
 
-		m_Shader = std::make_unique<Shader>("res/shaders/terrain/vertexShader.glsl", "res/shaders/terrain/fragmentShader.glsl");
-			//, nullptr, "res/shaders/terrain/TessellationControlShader.glsl", "res/shaders/terrain/TessellationEvaluationShader.glsl");
+		m_Shader = std::make_unique<Shader>("res/shaders/terrain/vertexShader.glsl", 
+			"res/shaders/terrain/fragmentShader.glsl",
+			nullptr, 
+			"res/shaders/terrain/TessellationControlShader.glsl", 
+			"res/shaders/terrain/TessellationEvaluationShader.glsl"
+		);
 		m_Renderer = std::make_unique<Renderer>();
 	}
 
@@ -50,7 +54,7 @@ namespace test
 		m_plane.IBO.reset();
 
 		// Calculate the spacing between vertices
-		m_Resolution = (int)(m_PlaneWidth * m_PlaneHeight);
+		//m_Resolution = (int)(m_PlaneWidth * m_PlaneHeight);
 		float gridSpacingX = m_PlaneWidth / (m_Resolution - 1);
 		float gridSpacingZ = m_PlaneHeight / (m_Resolution - 1);
 
@@ -74,36 +78,34 @@ namespace test
 			}
 		}
 
-		// Generate indices for triangles
+		// Generate indices for quad patches
+		m_Indices.clear();
 		for (int z = 0; z < m_Resolution - 1; z++) {
 			for (int x = 0; x < m_Resolution - 1; x++) {
-				// Calculate indices for the quad's corners
 				int topLeft = z * m_Resolution + x;
 				int topRight = topLeft + 1;
 				int bottomLeft = (z + 1) * m_Resolution + x;
 				int bottomRight = bottomLeft + 1;
 
-				// First triangle (counter-clockwise winding)
+				// Quad indices: top-left, top-right, bottom-right, bottom-left
 				m_Indices.push_back(topLeft);
-				m_Indices.push_back(bottomLeft);
-				m_Indices.push_back(bottomRight);
-
-				// Second triangle (counter-clockwise winding)
-				m_Indices.push_back(topLeft);
-				m_Indices.push_back(bottomRight);
 				m_Indices.push_back(topRight);
+				m_Indices.push_back(bottomRight);
+				m_Indices.push_back(bottomLeft);
 			}
 		}
 
 		// Set up buffers with the grid data
 		m_plane.VAO = std::make_unique<VertexArray>();
 		m_plane.VBO = std::make_unique<VertexBuffer>(m_Vertices.data(), static_cast<unsigned int>(m_Vertices.size() * sizeof(float)));
-		m_plane.IBO = std::make_unique<IndexBuffer>(m_Indices.data(), static_cast<unsigned int>(m_Indices.size()));
-
 		VertexBufferLayout layout;
 		layout.Push<float>(3);    // position (xyz)
 		layout.Push<float>(3);    // normal (xyz)
 		m_plane.VAO->AddBuffer(*m_plane.VBO, layout);
+
+		m_plane.VAO->Bind();
+		m_plane.IBO = std::make_unique<IndexBuffer>(m_Indices.data(), static_cast<unsigned int>(m_Indices.size()));
+		m_plane.VAO->Unbind();
 
 		// Log info about the mesh
 		std::cout << "Generated terrain mesh with " << m_Resolution * m_Resolution << " vertices and "
@@ -171,10 +173,6 @@ namespace test
 		//	glm::vec3(0.0f, 0.0f, 0.0f),    // Looking at the origin
 		//	glm::vec3(0.0f, 0.0f, -1.0f)    // Up direction
 		//);
-		float verticalFov = glm::radians(m_Camera.Zoom);
-		float horizontalFov = 2.0f * atan(tan(verticalFov / 2.0f) * m_cameraController.GetAspectRatio());
-		float fovCos = cos(std::min(verticalFov, horizontalFov));
-
 		m_Shader->setVec2("u_resolution", { m_Window->GetWindowWidth(), m_Window->GetWindowHeight() });
 		m_Shader->setMat4("view", view);
 		m_Shader->setMat4("projection", projection);
@@ -182,7 +180,6 @@ namespace test
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 		model = glm::rotate(model, glm::radians(horizontalrotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 		m_Shader->setMat4("model", model);
-		m_Shader->setFloat("fovCos", fovCos);
 		m_Shader->setFloat("scale", m_Scale);
 		m_Shader->setInt("seed", m_Seed);
 		m_Shader->setInt("octaves", m_Octaves);
@@ -190,6 +187,7 @@ namespace test
 		m_Shader->setFloat("lacunarity", m_Lacunarity);
 		m_Shader->setVec2("offset", m_Offset);
 		m_Shader->setFloat("heightMultiplier", m_heightMultiplier);
+		m_Shader->setFloat("wireframe", isWireFrame);
 		m_plane.VAO->Bind();
 		if (isWireFrame)
 		{
@@ -201,11 +199,12 @@ namespace test
 		}
 		m_plane.VAO->Bind();
 		//GLCall(glDrawArrays(GL_TRIANGLES, 0, 3));
-		/*GLCall(glPatchParameteri(GL_PATCH_VERTICES, 4));
-		GLCall(glDrawArrays(GL_PATCHES, 0, (m_Resolution - 1) * (m_Resolution - 1) * 4));*/
+		GLCall(glPatchParameteri(GL_PATCH_VERTICES, 4));
+		//GLCall(glDrawArrays(GL_PATCHES, 0, (m_Resolution - 1) * (m_Resolution - 1) * 4));
+		GLCall(glDrawElements(GL_PATCHES, m_plane.IBO->GetCount(), GL_UNSIGNED_INT, nullptr););
 		m_plane.VAO->Unbind();
 		m_Shader->Unbind();
-		m_Renderer->Draw(*m_plane.VAO, *m_plane.IBO, *m_Shader);
+		//m_Renderer->Draw(*m_plane.VAO, *m_plane.IBO, *m_Shader);
 	}
 
 	void TestProceduralTerrain::OnImGuiRender()
@@ -215,8 +214,8 @@ namespace test
 
 		// Add controls for plane dimensions
 		bool dimensionsChanged = false;
-		dimensionsChanged |= ImGui::InputFloat("Plane Width", &m_PlaneWidth, 0.0f, 0.0f, "%.1f");
-		dimensionsChanged |= ImGui::InputFloat("Plane Height", &m_PlaneHeight, 0.0f, 0.0f, "%.1f");
+		dimensionsChanged |= ImGui::SliderFloat("Plane Width", &m_PlaneWidth, 5.0f, 100.0f, "%.1f");
+		dimensionsChanged |= ImGui::SliderFloat("Plane Height", &m_PlaneHeight, 5.0f, 100.0f, "%.1f");
 		ImGui::SliderFloat("Scale", &m_Scale, 0.3f, 20.0f, "%.2f");
 		if (ImGui::InputInt("Octaves", &m_Octaves))
 		{
