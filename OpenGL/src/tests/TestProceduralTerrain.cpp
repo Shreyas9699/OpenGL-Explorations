@@ -10,7 +10,7 @@ namespace test
 	TestProceduralTerrain::TestProceduralTerrain(Window* win)
 		: m_Window(win),
 		  m_planeColor{ 0.2f, 0.6f, 0.8f, 1.0f },
-		  m_Camera(glm::vec3(0.0f, 13.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, -90.0f),
+		  m_Camera(glm::vec3(0.0f, 10.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), 45.0f, -90.0f),
 		  m_cameraController(m_Window->GetWindow(), m_Camera)
 	{
 		glEnable(GL_DEPTH_TEST);
@@ -23,6 +23,7 @@ namespace test
 		GeneratePlane();
 
 		m_Shader = std::make_unique<Shader>("res/shaders/terrain/vertexShader.glsl", "res/shaders/terrain/fragmentShader.glsl");
+			//, nullptr, "res/shaders/terrain/TessellationControlShader.glsl", "res/shaders/terrain/TessellationEvaluationShader.glsl");
 		m_Renderer = std::make_unique<Renderer>();
 	}
 
@@ -35,40 +36,7 @@ namespace test
 		m_Renderer.reset();
 
 		m_Window->setCustomKeyCallback(nullptr);
-	}
-
-	void TestProceduralTerrain::UpdatePlaneVertices()
-	{
-		if (m_PlaneWidth <= 0)
-		{
-			m_PlaneWidth = 1.0f;
-		}
-		if (m_PlaneHeight <= 0)
-		{
-			m_PlaneHeight = 1.0f;
-		}
-
-		float halfWidth = m_PlaneWidth / 2.0f;
-		float halfHeight = m_PlaneHeight / 2.0f;
-
-		// Update positions in the existing vertex data
-		m_Vertices[0] = -halfWidth;  // Vertex 0 x
-		m_Vertices[2] = -halfHeight; // Vertex 0 z
-
-		m_Vertices[6] = halfWidth;   // Vertex 1 x
-		m_Vertices[8] = -halfHeight; // Vertex 1 z
-
-		m_Vertices[12] = halfWidth;  // Vertex 2 x
-		m_Vertices[14] = halfHeight; // Vertex 2 z
-
-		m_Vertices[18] = -halfWidth; // Vertex 3 x
-		m_Vertices[20] = halfHeight; // Vertex 3 z
-
-		// Update the vertex buffer
-		if (m_plane.VBO) 
-		{
-			m_plane.VBO->UpdateData(m_Vertices.data(), static_cast<unsigned int>(m_Vertices.size() * sizeof(float)));
-		}
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
 	void TestProceduralTerrain::GeneratePlane()
@@ -81,17 +49,15 @@ namespace test
 		m_plane.VBO.reset();
 		m_plane.IBO.reset();
 
-		// Grid resolution - this is key for terrain detail
-		// Higher values create more detailed terrain but impact performance
-		int resolution = 100; // Number of vertices per side
-
 		// Calculate the spacing between vertices
-		float gridSpacingX = m_PlaneWidth / (resolution - 1);
-		float gridSpacingZ = m_PlaneHeight / (resolution - 1);
+		m_Resolution = (int)(m_PlaneWidth * m_PlaneHeight);
+		float gridSpacingX = m_PlaneWidth / (m_Resolution - 1);
+		float gridSpacingZ = m_PlaneHeight / (m_Resolution - 1);
 
 		// Generate vertices in a grid pattern
-		for (int z = 0; z < resolution; z++) {
-			for (int x = 0; x < resolution; x++) {
+		m_Vertices.reserve(m_Resolution * m_Resolution * 6);
+		for (int z = 0; z < m_Resolution; z++) {
+			for (int x = 0; x < m_Resolution; x++) {
 				// Calculate position of this vertex in the grid
 				float posX = x * gridSpacingX - (m_PlaneWidth / 2.0f);
 				float posZ = z * gridSpacingZ - (m_PlaneHeight / 2.0f);
@@ -109,12 +75,12 @@ namespace test
 		}
 
 		// Generate indices for triangles
-		for (int z = 0; z < resolution - 1; z++) {
-			for (int x = 0; x < resolution - 1; x++) {
+		for (int z = 0; z < m_Resolution - 1; z++) {
+			for (int x = 0; x < m_Resolution - 1; x++) {
 				// Calculate indices for the quad's corners
-				int topLeft = z * resolution + x;
+				int topLeft = z * m_Resolution + x;
 				int topRight = topLeft + 1;
-				int bottomLeft = (z + 1) * resolution + x;
+				int bottomLeft = (z + 1) * m_Resolution + x;
 				int bottomRight = bottomLeft + 1;
 
 				// First triangle (counter-clockwise winding)
@@ -140,8 +106,8 @@ namespace test
 		m_plane.VAO->AddBuffer(*m_plane.VBO, layout);
 
 		// Log info about the mesh
-		std::cout << "Generated terrain mesh with " << resolution * resolution << " vertices and "
-			<< (resolution - 1) * (resolution - 1) * 2 << " triangles." << std::endl;
+		std::cout << "Generated terrain mesh with " << m_Resolution * m_Resolution << " vertices and "
+			<< (m_Resolution - 1) * (m_Resolution - 1) * 2 << " triangles." << std::endl;
 	}
 
 	void TestProceduralTerrain::handleKeyPress(int key, int scancode, int action, int mods)
@@ -193,19 +159,22 @@ namespace test
 
 	void TestProceduralTerrain::OnRender()
 	{
-		GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
+		GLCall(glClearColor(0.1f, 0.1f, 0.1f, 1.0f));
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		m_Shader->Bind();
 		
-		// view/projection transformations
 		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), 0.1f, 100.0f);
-		//glm::mat4 view = m_Camera.GetViewMatrix();
-		glm::mat4 view = glm::lookAt(
-			m_Camera.Position,				// Camera position (above the terrain)
-			glm::vec3(0.0f, 0.0f, 0.0f),    // Looking at the origin
-			glm::vec3(0.0f, 0.0f, -1.0f)    // Up direction
-		);
+		glm::mat4 view = m_Camera.GetViewMatrix();
+		//glm::mat4 view = glm::lookAt(
+		//	m_Camera.Position,				// Camera position (above the terrain)
+		//	glm::vec3(0.0f, 0.0f, 0.0f),    // Looking at the origin
+		//	glm::vec3(0.0f, 0.0f, -1.0f)    // Up direction
+		//);
+		float verticalFov = glm::radians(m_Camera.Zoom);
+		float horizontalFov = 2.0f * atan(tan(verticalFov / 2.0f) * m_cameraController.GetAspectRatio());
+		float fovCos = cos(std::min(verticalFov, horizontalFov));
+
 		m_Shader->setVec2("u_resolution", { m_Window->GetWindowWidth(), m_Window->GetWindowHeight() });
 		m_Shader->setMat4("view", view);
 		m_Shader->setMat4("projection", projection);
@@ -213,13 +182,15 @@ namespace test
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 		model = glm::rotate(model, glm::radians(horizontalrotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 		m_Shader->setMat4("model", model);
+		m_Shader->setFloat("fovCos", fovCos);
 		m_Shader->setFloat("scale", m_Scale);
 		m_Shader->setInt("seed", m_Seed);
 		m_Shader->setInt("octaves", m_Octaves);
 		m_Shader->setFloat("persistence", m_Persistence);
 		m_Shader->setFloat("lacunarity", m_Lacunarity);
 		m_Shader->setVec2("offset", m_Offset);
-		m_Shader->Unbind();
+		m_Shader->setFloat("heightMultiplier", m_heightMultiplier);
+		m_plane.VAO->Bind();
 		if (isWireFrame)
 		{
 			GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
@@ -228,8 +199,13 @@ namespace test
 		{
 			GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 		}
+		m_plane.VAO->Bind();
+		//GLCall(glDrawArrays(GL_TRIANGLES, 0, 3));
+		/*GLCall(glPatchParameteri(GL_PATCH_VERTICES, 4));
+		GLCall(glDrawArrays(GL_PATCHES, 0, (m_Resolution - 1) * (m_Resolution - 1) * 4));*/
+		m_plane.VAO->Unbind();
+		m_Shader->Unbind();
 		m_Renderer->Draw(*m_plane.VAO, *m_plane.IBO, *m_Shader);
-
 	}
 
 	void TestProceduralTerrain::OnImGuiRender()
@@ -259,18 +235,18 @@ namespace test
 		}
 		ImGui::SliderInt("Seed", &m_Seed, 0, 1000);
 		ImGui::SliderFloat("Offset X", &m_Offset.x, 0.0f, 30.0f, "%.1f");
-		ImGui::SliderFloat("Offset Y", &m_Offset.y, 0.0f, 30.0f, "%.1f");
-
+		ImGui::SliderFloat("Offset Y", &m_Offset.y, 0.0f, 30.0f, "%.1f"); //m_heightMultiplier
+		ImGui::SliderFloat("Height Multiplier", &m_heightMultiplier, 0.0f, 10.0f, "%.2f");
 
 		if (dimensionsChanged) 
 		{
-			UpdatePlaneVertices(); // Use the efficient update method
+			GeneratePlane();  // Use the efficient update method
 		}
 
 		ImGui::Text("Press below keys to enable/disable:\n");
 		ImGui::Text("`R` -> Plane Rotation\n");
 		ImGui::Text("`T` -> Rendering Plane in Wireframe\n");
 		//ImGui::Text("`M` -> Plane Movement\n");
-		//ImGui::Text("Press `Q` to enable/disable Cursor (Mouse pointer)\n");
+		ImGui::Text("Press `Q` to enable/disable Cursor (Mouse pointer)\n");
 	}
 }

@@ -156,6 +156,8 @@
     <None Include="res\shaders\Basic\TextureShaderFS.glsl" />
     <None Include="res\shaders\Basic\TextureShaderVS.glsl" />
     <None Include="res\shaders\terrain\fragmentShader.glsl" />
+    <None Include="res\shaders\terrain\TessellationControlShader.glsl" />
+    <None Include="res\shaders\terrain\TessellationEvaluationShader.glsl" />
     <None Include="res\shaders\terrain\vertexShader.glsl" />
     <None Include="src\vendor\glm\detail\func_common.inl" />
     <None Include="src\vendor\glm\detail\func_common_simd.inl" />

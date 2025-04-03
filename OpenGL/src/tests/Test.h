@@ -76,6 +76,12 @@ namespace test
 		float quadratic;
 	};
 
+	struct AABB
+	{
+		glm::vec3 min;
+		glm::vec3 max;
+	};
+
 	struct Object
 	{
 		std::unique_ptr<VertexArray> VAO;

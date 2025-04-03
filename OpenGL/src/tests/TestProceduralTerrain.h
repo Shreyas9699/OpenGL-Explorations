@@ -1,6 +1,6 @@
 #pragma once
 #include "TestIncludeHeader.h"
-#include "Sphere.h"
+#include "Frustum.h"
 #include "Window.h"
 #include <memory>
 
@@ -17,6 +17,10 @@ namespace test
 		CameraController m_cameraController;
 		std::unique_ptr<Renderer> m_Renderer;
 
+		// Grid resolution - this is key for terrain detail
+		// Higher values create more detailed terrain but impact performance
+		int m_Resolution = 100; // Number of vertices per side
+
 		float m_PlaneWidth = 10.0f;		// Default width
 		float m_PlaneHeight = 10.0f;	// Default height (depth)
 		float m_Scale = 1.0f;			// Scale of the FBM
@@ -25,6 +29,7 @@ namespace test
 		float m_Persistence = 0.5f;		// Persistence of the FBM
 		float m_Lacunarity = 2.0f;		// Lacunarity of the FBM
 		glm::vec2 m_Offset = glm::vec2(0.0f, 0.0f);
+		float m_heightMultiplier = 1.0f;
 
 		std::vector<float> m_Vertices;
 		std::vector<uint32_t> m_Indices;
@@ -39,7 +44,7 @@ namespace test
 
 		void handleKeyPress(int key, int scancode, int action, int mods);
 		void GeneratePlane();
-		void UpdatePlaneVertices();
+
 	public:
 		TestProceduralTerrain(Window* win);
 		~TestProceduralTerrain();

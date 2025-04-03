@@ -8,12 +8,6 @@
 
 namespace test
 {
-	struct AABB 
-	{
-		glm::vec3 min;
-		glm::vec3 max;
-	};
-
 	class TestHeightMap : public Test
 	{
 		int temp = 1;

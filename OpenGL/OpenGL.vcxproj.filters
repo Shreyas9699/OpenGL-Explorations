@@ -504,6 +504,8 @@
     <None Include="res\shaders\fireParticle\fire_FS.glsl" />
     <None Include="res\shaders\terrain\fragmentShader.glsl" />
     <None Include="res\shaders\terrain\vertexShader.glsl" />
+    <None Include="res\shaders\terrain\TessellationEvaluationShader.glsl" />
+    <None Include="res\shaders\terrain\TessellationControlShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">

@@ -1,15 +1,13 @@
-// Vertex shader for procedural terrain rendering
+// Tessellation Evaluation Shader for procedural terrain rendering
 #version 430 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aNormal;
+layout (triangles, equal_spacing, cw) in;
+in vec3 tc_Pos[];
+
+out float te_Height;
 
 uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 model;
-
-out float v_Height;
-out vec3 v_Pos;
-out vec3 v_Normal;
 
 uniform vec2 u_resolution;
 uniform float scale = 0.0001;
@@ -18,7 +16,6 @@ uniform int octaves;
 uniform float persistence;
 uniform float lacunarity;
 uniform vec2 offset = vec2(0.0);
-uniform float heightMultiplier;
 
 vec3 mod289(vec3 x)  { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec2 mod289(vec2 x)  { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -68,38 +65,26 @@ vec2 getOctaveOffsets(int octave, int seed)
     return vec2(xOffset, yOffset);
 }
 
-float getAnimationCurve(float height)
-{
-    // to remove height effect on water
-    if(height < 0.425)
-        return 0.0;
-
-    return smoothstep(0.425, 1.0, height);
-}
-
 void main()
 {
-    v_Pos = aPos;
-    v_Normal = aNormal;
+    // Barycentric interpolation
+    vec3 pos = gl_TessCoord.x * tc_Pos[0] +
+               gl_TessCoord.y * tc_Pos[1] +
+               gl_TessCoord.z * tc_Pos[2];
 
-    // Map frag coordinates to [-1,1]
-    //vec2 st = gl_FragCoord.xy / u_resolution.xy;
-    //st = st * 2.0 - 1.0;
-    vec2 st = (aPos.xz + vec2(1.0)) * 0.5;
-
-    // FBM parameters
+    vec2 st = pos.xz * scale;
+    
+    // Compute FBM (Fractal Brownian Motion) noise for height displacement
     float amplitude = 1.0;
     float frequency = 1.0;
     float nHeight = 0.0;
     float totalAmplitude = 0.0;
     
-    // Fractal Brownian Motion loop
-    for (int i = 0; i < octaves; i++) {
+    for (int i = 0; i < octaves; i++) 
+    {
         vec2 octaveOffsets = getOctaveOffsets(i, seed);
-        // Scale coordinates: note the order of operations
         float noise = snoise((st + octaveOffsets) * frequency / scale);
-        // Remap from [-1, 1] to [0, 1]
-        noise = noise * 0.5 + 0.5;
+        noise = noise * 0.5 + 0.5; // Remap from [-1,1] to [0,1]
         
         nHeight += noise * amplitude;
         totalAmplitude += amplitude;
@@ -107,11 +92,14 @@ void main()
         amplitude *= persistence;
         frequency *= lacunarity;
     }
-    // Normalize final noise value to [0,1]
-    nHeight /= totalAmplitude;
+    nHeight /= totalAmplitude;  // Normalize final noise value to [0,1]
     
-    vec3 pos = vec3(aPos.x, getAnimationCurve(nHeight) * heightMultiplier, aPos.z); // add smoothstep
-    v_Height = nHeight;
-
+    // Displace the vertex along the Y-axis by the noise height.
+    pos.y = nHeight;
+    
+    // Pass the height to the fragment shader
+    te_Height = nHeight;
+    
+    // Transform to clip space
     gl_Position = projection * view * model * vec4(pos, 1.0);
 }
