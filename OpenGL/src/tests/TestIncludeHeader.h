@@ -4,3 +4,4 @@
 #include "Renderer.h"
 #include "Camera.h"
 #include "CameraController.h"
+#include "UtilityStructs.h"

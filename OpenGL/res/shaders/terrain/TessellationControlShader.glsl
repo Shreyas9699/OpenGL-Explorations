@@ -36,14 +36,14 @@ void main()
         float distToCenter = distance(cameraPos, patchCenter);
         
         // Dynamic tessellation constants
-        const float MIN_DISTANCE = 1.0;
-        const float MAX_DISTANCE = 10.0;
+        const float MIN_DISTANCE = 5.0;
+        const float MAX_DISTANCE = 50.0;
         const int MIN_TESS_LEVEL = 1;
         const int MAX_TESS_LEVEL = 32;
         
         // Apply simple distance-based tessellation
         float tessellationFactor = 1.0 - clamp((distToCenter - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE), 0.0, 1.0);
-        float tessLevel = mix(float(MIN_TESS_LEVEL), float(MAX_TESS_LEVEL), tessellationFactor);
+        float tessLevel = mix(float(MIN_TESS_LEVEL), float(MAX_TESS_LEVEL), tessellationFactor * tessellationFactor);
         
         // Apply distance-based tessellation to each edge
         gl_TessLevelOuter[0] = tessLevel;

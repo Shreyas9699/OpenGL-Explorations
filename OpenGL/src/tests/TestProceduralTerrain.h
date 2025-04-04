@@ -2,20 +2,33 @@
 #include "TestIncludeHeader.h"
 #include "Frustum.h"
 #include "Window.h"
+#include "TerrainChunk.h"
 #include <memory>
 
 namespace test
 {
+	// Custom hash function for std::pair<int,int>
+	struct PairHash
+	{
+		std::size_t operator()(const std::pair<int, int>& p) const
+		{
+			// Combine the hash of both integers
+			return std::hash<int>{}(p.first) ^ (std::hash<int>{}(p.second) << 1);
+		}
+	};
+
 	class TestProceduralTerrain : public Test
 	{
 	private:
 		Window* m_Window;
-		float m_planeColor[4];
-		Object m_plane;
+
+		std::unordered_map<std::pair<int, int>, std::unique_ptr<TerrainChunk>, PairHash> m_Chunks;
+		float m_ChunkSize = 100.0f;
+		int m_ViewDistance = 5;
+
 		std::unique_ptr<Shader> m_Shader;
 		Camera m_Camera;
 		CameraController m_cameraController;
-		std::unique_ptr<Renderer> m_Renderer;
 
 		// Grid resolution - this is key for terrain detail
 		// Higher values create more detailed terrain but impact performance
@@ -31,16 +44,9 @@ namespace test
 		glm::vec2 m_Offset = glm::vec2(0.0f, 0.0f);
 		float m_heightMultiplier = 1.0f;
 
-		std::vector<float> m_Vertices;
-		std::vector<uint32_t> m_Indices;
-
-		bool isRotating = false;
-		bool isMoving = false;
 		bool isWireFrame = false;
 		bool cusorEnable = false;
 		float lastTtime = 0.0f;
-		float horizontalrotationAngle = 0.0f;
-		float rotationSpeed = 10.0f;
 
 		void handleKeyPress(int key, int scancode, int action, int mods);
 		void GeneratePlane();

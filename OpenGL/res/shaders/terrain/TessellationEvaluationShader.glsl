@@ -82,8 +82,10 @@ void main()
     vec3 bottom = mix(tcs_Pos[3], tcs_Pos[2], u);
     vec3 pos = mix(top, bottom, v);
 
+    vec4 worldPos = model * vec4(pos, 1.0);
+
     // Generate height using FBM
-    vec2 st = (pos.xz + 1.0) * 0.5; // Normalize coordinates
+    vec2 st = worldPos.xz; //(worldPos.xz + 1.0) * 0.5; // Normalize coordinates
     float height = 0.0;
     float amplitude = 1.0;
     float frequency = 1.0;
@@ -109,6 +111,6 @@ void main()
     
     pos.y = getAnimationCurve(height) * heightMultiplier;
 
-    gl_Position = projection * view * model * vec4(pos, 1.0);
+    gl_Position = projection * view * vec4(pos, 1.0);
     v_Height = height;
 }

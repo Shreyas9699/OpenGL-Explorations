@@ -3,6 +3,7 @@
 #include "Texture.h"
 #include "Window.h"
 #include "Frustum.h"
+#include "UtilityStructs.h"
 #include <stb_image/stb_image.h>
 #include <filesystem>
 
