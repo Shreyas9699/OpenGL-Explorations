@@ -1,9 +1,10 @@
 // Tessellation Evaluation Shader for procedural terrain rendering
-#version 430 core
+#version 450 core
 layout(quads, fractional_odd_spacing, ccw) in;
-
 in vec3 tcs_Pos[];
+
 out float v_Height;
+out vec3 v_Normal;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -108,8 +109,17 @@ void main()
     }
     // Normalize final noise value to [0,1]
     height /= totalAmplitude;
-    
     pos.y = getAnimationCurve(height) * heightMultiplier;
+
+    float delta = 0.5;
+
+    float hL = snoise(st + vec2(-delta, 0.0));
+    float hR = snoise(st + vec2(delta, 0.0));
+    float hD = snoise(st + vec2(0.0, -delta));
+    float hU = snoise(st + vec2(0.0, delta));
+
+    vec3 normal = normalize(vec3(hL - hR, 2.0, hD - hU));
+    v_Normal = normal;
 
     gl_Position = projection * view * vec4(pos, 1.0);
     v_Height = height;

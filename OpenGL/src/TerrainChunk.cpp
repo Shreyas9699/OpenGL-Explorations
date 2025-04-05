@@ -22,7 +22,7 @@ void TerrainChunk::GenerateMesh()
 	float gridSpacingX = m_ChunkSize / (m_Resolution - 1);
 	float gridSpacingZ = m_ChunkSize / (m_Resolution - 1);
 
-	m_Vertices.reserve((m_Resolution - 1) * (m_Resolution - 1) * 3 * 2);
+	m_Vertices.reserve((m_Resolution - 1) * (m_Resolution - 1) * 3);
 	for (int z = 0; z < m_Resolution; z++)
 	{
 		for (int x = 0; x < m_Resolution; x++)
@@ -32,11 +32,6 @@ void TerrainChunk::GenerateMesh()
 			m_Vertices.push_back(xPos);
 			m_Vertices.push_back(0.0f);
 			m_Vertices.push_back(zPos);
-			
-			// Normals (temporary)
-			m_Vertices.push_back(0.0f);
-			m_Vertices.push_back(1.0f);
-			m_Vertices.push_back(0.0f);
 		}
 	}
 
@@ -62,7 +57,6 @@ void TerrainChunk::GenerateMesh()
 	m_Plane.VBO = std::make_unique<VertexBuffer>(m_Vertices.data(), static_cast<unsigned int>(m_Vertices.size() * sizeof(float)));
 	VertexBufferLayout layout;
 	layout.Push<float>(3);    // position (xyz)
-	layout.Push<float>(3);    // normal (xyz)
 	m_Plane.VAO->AddBuffer(*m_Plane.VBO, layout);
 
 	m_Plane.VAO->Bind();

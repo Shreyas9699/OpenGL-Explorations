@@ -1,5 +1,5 @@
 // Tessellation Control Shader for procedural terrain rendering
-#version 430 core
+#version 450 core
 layout(vertices = 4) out;
 
 in vec3 vs_Pos[];

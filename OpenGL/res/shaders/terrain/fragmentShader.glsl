@@ -1,10 +1,12 @@
 // Fragment Shader for terrain rendering
-#version 430 core
+#version 450 core
 in float v_Height;
+in vec3 v_Normal;
 
 out vec4 FragColor;
 
 uniform bool wireframe;
+uniform vec3 u_lightDir = vec3(0.5, 1.0, 0.3);
 
 vec3 GenerateColor(float nHeight)
 {
@@ -69,9 +71,12 @@ void main()
 {
     // Choose terrain color based on normalized height
     vec3 v_Color = vec3(1.0);
+    vec3 lightDir = normalize(u_lightDir);
+    float diff = max(dot(v_Normal, lightDir), 0.2);
+
     if (!wireframe)
     {
         v_Color = GenerateColor(v_Height);
     }
-    FragColor = vec4(v_Color, 1.0);
+    FragColor = vec4(v_Color * diff, 1.0);
 }
