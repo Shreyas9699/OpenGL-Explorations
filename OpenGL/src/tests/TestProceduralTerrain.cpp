@@ -59,10 +59,8 @@ namespace test
 		}
 	}
 
-	void TestProceduralTerrain::OnUpdate(Timestep deltaTime, GLFWwindow* window)
+	void TestProceduralTerrain::UpdateChunks()
 	{
-		m_cameraController.Update(deltaTime);
-
 		// Update chunks loading based on camera position
 		glm::vec3 cameraPos = m_Camera.Position;
 		int currentChunkX = static_cast<int>(std::floor(cameraPos.x / m_ChunkSize));
@@ -100,7 +98,37 @@ namespace test
 				m_Chunks[chunk] = std::make_unique<TerrainChunk>(chunk.first, chunk.second, m_ChunkSize, m_Resolution);
 			}
 		}
+	}
+
+	void TestProceduralTerrain::ComputeVisiblePatchStarts()
+	{
+		m_VisibleChunks = 0;
+		m_CulledChunks = 0;
+		m_TotalChunks = m_Chunks.size();
+
+		for (auto& [coord, chunk] : m_Chunks)
+		{
+			AABB chunkAABB = chunk->GetAABB(m_heightMultiplier);
+
+			if (m_EnableFrustumCulling && !m_Frustum->IsAABBVisible(chunkAABB.min, chunkAABB.max))
+			{
+				m_CulledChunks++;
+				continue;
+			}
+
+			glm::mat4 model = chunk->GetModelMatrix();
+			chunk->Render();
+			m_VisibleChunks++;
+		}
+	}
+
+	void TestProceduralTerrain::OnUpdate(Timestep deltaTime, GLFWwindow* window)
+	{
+		m_cameraController.Update(deltaTime);
+
+		UpdateChunks();
 		
+		// Update Shaders
 		m_Shader->Bind();
 		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), 0.1f, 10000.0f);
 		glm::mat4 view = m_Camera.GetViewMatrix();
@@ -124,23 +152,7 @@ namespace test
 		glm::mat4 viewProj = projection * view;
 		m_Frustum->Update(viewProj);
 
-		m_VisibleChunks = 0;
-		m_CulledChunks = 0;
-		m_TotalChunks = m_Chunks.size();
-
-		for (auto& [coord, chunk] : m_Chunks) {
-			AABB chunkAABB = chunk->GetAABB(m_heightMultiplier);
-
-			if (m_EnableFrustumCulling && !m_Frustum->IsAABBVisible(chunkAABB.min, chunkAABB.max))
-			{
-				m_CulledChunks++;
-				continue;
-			}
-
-			glm::mat4 model = chunk->GetModelMatrix();
-			chunk->Render();
-			m_VisibleChunks++;
-		}
+		ComputeVisiblePatchStarts();
 	}
 
 	void TestProceduralTerrain::OnRender()

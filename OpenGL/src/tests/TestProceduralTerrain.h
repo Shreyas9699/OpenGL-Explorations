@@ -31,7 +31,7 @@ namespace test
 		CameraController m_cameraController;
 
 		std::unique_ptr<Frustum> m_Frustum;
-		int m_TotalChunks = 0;
+		size_t m_TotalChunks = 0;
 		int m_VisibleChunks = 0;
 		int m_CulledChunks = 0;
 		bool m_EnableFrustumCulling = true;
@@ -57,6 +57,8 @@ namespace test
 		TestProceduralTerrain(Window* win);
 		~TestProceduralTerrain();
 
+		void UpdateChunks();
+		void ComputeVisiblePatchStarts();
 
 		void OnUpdate(Timestep deltaTime, GLFWwindow* window = nullptr) override;
 		void OnRender() override;
