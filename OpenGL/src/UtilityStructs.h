@@ -72,6 +72,19 @@ struct AABB
 {
 	glm::vec3 min;
 	glm::vec3 max;
+
+	glm::vec3 GetCenter() const 
+	{
+		return (min + max) * 0.5f;
+	}
+
+	float GetRadiusAlongDirection(const glm::vec3& dir) const 
+	{
+		const glm::vec3 extents = (max - min) * 0.5f;
+		return extents.x * std::abs(dir.x) +
+			extents.y * std::abs(dir.y) +
+			extents.z * std::abs(dir.z);
+	}
 };
 
 struct Object

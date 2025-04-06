@@ -30,12 +30,15 @@ namespace test
 		Camera m_Camera;
 		CameraController m_cameraController;
 
+		std::unique_ptr<Frustum> m_Frustum;
+		int m_TotalChunks = 0;
+		int m_VisibleChunks = 0;
+		int m_CulledChunks = 0;
+		bool m_EnableFrustumCulling = true;
+
 		// Grid resolution - this is key for terrain detail
 		// Higher values create more detailed terrain but impact performance
-		int m_Resolution = 100; // Number of vertices per side
-
-		float m_PlaneWidth = 10.0f;		// Default width
-		float m_PlaneHeight = 10.0f;	// Default height (depth)
+		int m_Resolution = 100;			// Number of vertices per side
 		float m_Scale = 5.0f;			// Scale of the FBM
 		int m_Octaves = 4;				// Octaves of the FBM
 		int m_Seed = 0;					// Seed of the FBM
@@ -49,7 +52,6 @@ namespace test
 		float lastTtime = 0.0f;
 
 		void handleKeyPress(int key, int scancode, int action, int mods);
-		void GeneratePlane();
 
 	public:
 		TestProceduralTerrain(Window* win);

@@ -20,14 +20,14 @@ namespace test
 				this->handleKeyPress(key, scancode, action, mods);
 			});
 
-		GeneratePlane();
-
 		m_Shader = std::make_unique<Shader>("res/shaders/terrain/vertexShader.glsl", 
 			"res/shaders/terrain/fragmentShader.glsl",
 			nullptr, 
 			"res/shaders/terrain/TessellationControlShader.glsl", 
 			"res/shaders/terrain/TessellationEvaluationShader.glsl"
 		);
+
+		m_Frustum = std::make_unique<Frustum>();
 	}
 
 	TestProceduralTerrain::~TestProceduralTerrain()
@@ -36,13 +36,6 @@ namespace test
 
 		m_Window->setCustomKeyCallback(nullptr);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
-
-	void TestProceduralTerrain::GeneratePlane()
-	{
-		// Log info about the mesh
-		std::cout << "Generated terrain mesh with " << m_Resolution * m_Resolution << " vertices and "
-			<< (m_Resolution - 1) * (m_Resolution - 1) * 2 << " triangles." << std::endl;
 	}
 
 	void TestProceduralTerrain::handleKeyPress(int key, int scancode, int action, int mods)
@@ -99,7 +92,6 @@ namespace test
 			}
 		}
 
-
 		// Add new chunks
 		for (const auto& chunk : neededChunks)
 		{
@@ -127,6 +119,28 @@ namespace test
 		m_Shader->setFloat("heightMultiplier", m_heightMultiplier);
 		m_Shader->setFloat("wireframe", isWireFrame);
 		m_Shader->Unbind();
+
+		// Update frustum after setting up projection/view
+		glm::mat4 viewProj = projection * view;
+		m_Frustum->Update(viewProj);
+
+		m_VisibleChunks = 0;
+		m_CulledChunks = 0;
+		m_TotalChunks = m_Chunks.size();
+
+		for (auto& [coord, chunk] : m_Chunks) {
+			AABB chunkAABB = chunk->GetAABB(m_heightMultiplier);
+
+			if (m_EnableFrustumCulling && !m_Frustum->IsAABBVisible(chunkAABB.min, chunkAABB.max))
+			{
+				m_CulledChunks++;
+				continue;
+			}
+
+			glm::mat4 model = chunk->GetModelMatrix();
+			chunk->Render();
+			m_VisibleChunks++;
+		}
 	}
 
 	void TestProceduralTerrain::OnRender()
@@ -156,18 +170,11 @@ namespace test
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		ImGui::Text("FPS: %.1f (%.3f ms)", io.Framerate, 1000.0f / io.Framerate);
 
-		// Add controls for plane dimensions
-		bool dimensionsChanged = false;
-		dimensionsChanged |= ImGui::SliderFloat("Plane Width", &m_PlaneWidth, 5.0f, 100.0f, "%.1f");
-		dimensionsChanged |= ImGui::SliderFloat("Plane Height", &m_PlaneHeight, 5.0f, 100.0f, "%.1f");
+		ImGui::Text("Chunk Stats: Total %d / Visible %d / Culled %d", m_TotalChunks, m_VisibleChunks, m_CulledChunks);
+		ImGui::Checkbox("Frustum Culling", &m_EnableFrustumCulling);
+
 		ImGui::SliderFloat("Scale", &m_Scale, 0.3f, 20.0f, "%.2f");
-		if (ImGui::InputInt("Octaves", &m_Octaves))
-		{
-			if (m_Octaves < 0)
-			{
-				m_Octaves = 0;
-			}
-		}
+		ImGui::SliderInt("Octaves", &m_Octaves, 0, 16);
 		ImGui::SliderFloat("Persistence", &m_Persistence, 0.0f, 1.0f, "%.1f");
 		if (ImGui::InputFloat("Lacunarity", &m_Lacunarity, 0.0f, 0.0f, "%.1f")) 
 		{
@@ -181,14 +188,8 @@ namespace test
 		ImGui::SliderFloat("Offset Y", &m_Offset.y, 0.0f, 30.0f, "%.1f"); //m_heightMultiplier
 		ImGui::SliderFloat("Height Multiplier", &m_heightMultiplier, 0.0f, 10.0f, "%.2f");
 
-		if (dimensionsChanged) 
-		{
-			GeneratePlane();  // Use the efficient update method
-		}
-
 		ImGui::Text("Press below keys to enable/disable:\n");
 		ImGui::Text("`T` -> Rendering Plane in Wireframe\n");
-		//ImGui::Text("`M` -> Plane Movement\n");
 		ImGui::Text("Press `Q` to enable/disable Cursor (Mouse pointer)\n");
 	}
 }

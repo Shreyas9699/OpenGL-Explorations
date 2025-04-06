@@ -13,6 +13,7 @@ public:
 	void GenerateMesh();
 	void Render();
 	glm::mat4 GetModelMatrix() const;
+	AABB GetAABB(float maxHeight) const;
 
 private:
 	int m_X, m_Z;

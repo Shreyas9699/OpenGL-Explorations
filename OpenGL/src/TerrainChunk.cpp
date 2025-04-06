@@ -76,3 +76,11 @@ glm::mat4 TerrainChunk::GetModelMatrix() const
 {
 	return glm::translate(glm::mat4(1.0f), glm::vec3(m_X * m_ChunkSize, 0.0f, m_Z * m_ChunkSize));
 }
+
+AABB TerrainChunk::GetAABB(float maxHeight) const
+{
+	return {
+		glm::vec3(m_X * m_ChunkSize, 0.0f, m_Z * m_ChunkSize),
+		glm::vec3((m_X + 1) * m_ChunkSize, maxHeight, (m_Z + 1) * m_ChunkSize)
+	};
+}
