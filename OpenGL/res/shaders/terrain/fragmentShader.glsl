@@ -78,5 +78,5 @@ void main()
     {
         v_Color = GenerateColor(v_Height);
     }
-    FragColor = vec4(v_Color * diff, 1.0);
+    FragColor = vec4(v_Color, 1.0);
 }
