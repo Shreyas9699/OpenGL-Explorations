@@ -24,7 +24,8 @@ namespace test
 
 		std::unordered_map<std::pair<int, int>, std::unique_ptr<TerrainChunk>, PairHash> m_Chunks;
 		float m_ChunkSize = 100.0f;
-		int m_ViewDistance = 5;
+		int m_ViewDistance = 2;
+		int m_MaxViewDistance = 10;
 
 		std::unique_ptr<Shader> m_Shader;
 		Camera m_Camera;

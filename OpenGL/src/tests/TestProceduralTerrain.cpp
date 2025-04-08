@@ -63,13 +63,20 @@ namespace test
 	{
 		// Update chunks loading based on camera position
 		glm::vec3 cameraPos = m_Camera.Position;
+
+		float heightFactor = 1.0f + (cameraPos.y / m_heightMultiplier) * 0.1f;
+		int adaptiveViewDistance = static_cast<int>(m_ViewDistance * heightFactor);
+
+		// Clamp to reasonable values
+		adaptiveViewDistance = glm::clamp(adaptiveViewDistance, m_ViewDistance, m_MaxViewDistance);
+
 		int currentChunkX = static_cast<int>(std::floor(cameraPos.x / m_ChunkSize));
 		int currentChunkZ = static_cast<int>(std::floor(cameraPos.z / m_ChunkSize));
 
 		std::set<std::pair<int, int>> neededChunks;
-		for (int x = currentChunkX - m_ViewDistance; x <= currentChunkX + m_ViewDistance; x++)
+		for (int x = currentChunkX - adaptiveViewDistance; x <= currentChunkX + adaptiveViewDistance; x++)
 		{
-			for (int z = currentChunkZ - m_ViewDistance; z <= currentChunkZ + m_ViewDistance; z++)
+			for (int z = currentChunkZ - adaptiveViewDistance; z <= currentChunkZ + adaptiveViewDistance; z++)
 			{
 				neededChunks.insert({ x, z });
 			}
