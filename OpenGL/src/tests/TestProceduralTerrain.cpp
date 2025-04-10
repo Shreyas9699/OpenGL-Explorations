@@ -153,7 +153,7 @@ namespace test
 		m_Shader->setVec2("offset", m_Offset);
 		m_Shader->setFloat("heightMultiplier", m_heightMultiplier);
 		m_Shader->setFloat("wireframe", isWireFrame);
-
+		m_Shader->setInt("noiseType", m_NoiseType);
 		m_Shader->setFloat("seaLevel", sealevel); // Adjust for more or less water
 		m_Shader->setFloat("islandDensity", islandDensity); // 0 = no islands, 1 = many islands
 		m_Shader->setBool("enableIslands", enableIslands);
@@ -197,6 +197,9 @@ namespace test
 
 		ImGui::Text("Chunk Stats: Total %d / Visible %d / Culled %d", m_TotalChunks, m_VisibleChunks, m_CulledChunks);
 		ImGui::Checkbox("Frustum Culling", &m_EnableFrustumCulling);
+
+		static const char* noiseFunctionType[] = { "SimpleX", "Perlin" };
+		ImGui::Combo("Terrain Type", &m_NoiseType, noiseFunctionType, IM_ARRAYSIZE(noiseFunctionType));
 
 		ImGui::SliderFloat("Scale", &m_Scale, 0.3f, 20.0f, "%.2f");
 		ImGui::SliderInt("Octaves", &m_Octaves, 0, 16);

@@ -51,7 +51,7 @@ namespace test
 		bool isWireFrame = false;
 		bool cusorEnable = false;
 		float lastTtime = 0.0f;
-
+		int m_NoiseType = 0;
 		float sealevel = 0.45f;
 		float islandDensity = 0.3f;
 		bool enableIslands = true;

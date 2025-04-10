@@ -18,6 +18,7 @@ uniform float lacunarity;
 uniform vec2 offset;
 uniform float heightMultiplier;
 
+uniform int noiseType = 0; // 0 = Simplex, 1 = Perlin
 uniform float seaLevel; // Controls water coverage (0.3-0.7 is good range)
 uniform float islandDensity; // Controls number of small islands (0.0-1.0)
 uniform bool enableIslands; // Toggle island features
@@ -92,7 +93,7 @@ vec2 grad(vec2 p)
     return vec2(cos(angle), sin(angle)); // unit vector
 }
 
-float noise(vec2 p) 
+float pnoise(vec2 p) 
 {
   /* Calculate lattice points. */
   vec2 p0 = floor(p);
@@ -165,7 +166,16 @@ void main()
     for (int i = 0; i < octaves; i++) 
     {
         vec2 octaveOffsets = getOctaveOffsets(i, seed);
-        float noise = snoise((st + octaveOffsets) * frequency / scale);
+        float noise;
+        if (noiseType == 0)
+        {
+            noise = snoise((st + octaveOffsets) * frequency / scale);
+        }
+        else if (noiseType == 1)
+        {
+            noise = pnoise((st + octaveOffsets) * frequency / scale);
+        }
+        
         noise = noise * 0.5 + 0.5;
         
         height += noise * amplitude;
