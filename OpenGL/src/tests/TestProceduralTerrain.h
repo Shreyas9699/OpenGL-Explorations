@@ -52,6 +52,11 @@ namespace test
 		bool cusorEnable = false;
 		float lastTtime = 0.0f;
 
+		float sealevel = 0.45f;
+		float islandDensity = 0.3f;
+		bool enableIslands = true;
+		bool enableLandmassColoring = true;
+
 		void handleKeyPress(int key, int scancode, int action, int mods);
 
 	public:

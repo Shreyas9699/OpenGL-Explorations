@@ -153,6 +153,12 @@ namespace test
 		m_Shader->setVec2("offset", m_Offset);
 		m_Shader->setFloat("heightMultiplier", m_heightMultiplier);
 		m_Shader->setFloat("wireframe", isWireFrame);
+
+		m_Shader->setFloat("seaLevel", sealevel); // Adjust for more or less water
+		m_Shader->setFloat("islandDensity", islandDensity); // 0 = no islands, 1 = many islands
+		m_Shader->setBool("enableIslands", enableIslands);
+		m_Shader->setBool("enableLandmassColoring", enableLandmassColoring);
+
 		m_Shader->Unbind();
 
 		// Update frustum after setting up projection/view
@@ -206,6 +212,14 @@ namespace test
 		ImGui::SliderFloat("Offset X", &m_Offset.x, 0.0f, 30.0f, "%.1f");
 		ImGui::SliderFloat("Offset Y", &m_Offset.y, 0.0f, 30.0f, "%.1f"); //m_heightMultiplier
 		ImGui::SliderFloat("Height Multiplier", &m_heightMultiplier, 0.0f, 10.0f, "%.2f");
+
+		ImGui::Checkbox("Enable Islands", &enableIslands);
+		ImGui::BeginDisabled(!enableIslands);
+		ImGui::SliderFloat("Sea Level", &sealevel, 0.0f, 1.0f, "%.2f");
+		ImGui::SliderFloat("Island Density", &islandDensity, 0.0f, 1.0f, "%.1f");
+		ImGui::EndDisabled();
+
+		ImGui::Checkbox("Enable Landmass Coloring", &enableLandmassColoring);
 
 		ImGui::Text("Press below keys to enable/disable:\n");
 		ImGui::Text("`T` -> Rendering Plane in Wireframe\n");

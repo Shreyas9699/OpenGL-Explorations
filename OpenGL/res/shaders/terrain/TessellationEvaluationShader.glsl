@@ -5,6 +5,7 @@ in vec3 tcs_Pos[];
 
 out float v_Height;
 out vec3 v_Normal;
+out float v_LandMask;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -16,6 +17,10 @@ uniform float persistence;
 uniform float lacunarity;
 uniform vec2 offset;
 uniform float heightMultiplier;
+
+uniform float seaLevel; // Controls water coverage (0.3-0.7 is good range)
+uniform float islandDensity; // Controls number of small islands (0.0-1.0)
+uniform bool enableIslands; // Toggle island features
 
 vec3 mod289(vec3 x)  { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec2 mod289(vec2 x)  { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -73,7 +78,6 @@ float snoise(vec2 v)
     g.yz = a0.yz * x12.xz + h.yz * x12.yw;
     return 130.0 * dot(m, g);
 }
-// -------------------------- Simplex Noise range [-1, 1] --------------------------
 
 // -------------------------- Perlin Noise --------------------------
 float fade(float t) 
@@ -115,7 +119,29 @@ float noise(vec2 p)
   /* Calculate final result */
   return (1.0 - fade_t1) * p0p1 + fade_t1 * p2p3;
 }
-// -------------------------- Perlin Noise --------------------------
+
+// -------------------------- Domain warping for more natural coastlines --------------------------
+vec2 domainWarp(vec2 coord, float strength) 
+{
+    float noiseX = snoise(coord) * strength;
+    float noiseY = snoise(coord + vec2(5.2, 1.3)) * strength;
+    return coord + vec2(noiseX, noiseY);
+}
+
+// -------------------------- Creates continent/island masks --------------------------
+float landmassDistribution(vec2 coord, float seaLevel) 
+{
+    // Large-scale gradient for continent shapes
+    float continentShape = snoise(coord * 0.03) * 0.5 + 0.5;
+    
+    // Apply domain warping for natural coastlines
+    vec2 warped = domainWarp(coord * 0.1, 2.0);
+    float coastalDetail = snoise(warped * 0.2) * 0.5 + 0.5;
+    
+    // Combine and apply sea level threshold
+    float combined = continentShape * coastalDetail;
+    return smoothstep(seaLevel - 0.1, seaLevel + 0.1, combined);
+}
 
 void main() 
 {
@@ -129,19 +155,17 @@ void main()
     vec4 worldPos = model * vec4(pos, 1.0);
 
     // Generate height using FBM
-    vec2 st = worldPos.xz; //(worldPos.xz + 1.0) * 0.5; // Normalize coordinates
+    vec2 st = worldPos.xz;
     float height = 0.0;
     float amplitude = 1.0;
     float frequency = 1.0;
     float totalAmplitude = 0.0;
 
-     // Fractal Brownian Motion loop
+    // Fractal Brownian Motion loop (keep your existing loop)
     for (int i = 0; i < octaves; i++) 
     {
         vec2 octaveOffsets = getOctaveOffsets(i, seed);
-        // Scale coordinates: note the order of operations
         float noise = snoise((st + octaveOffsets) * frequency / scale);
-        // Remap from [-1, 1] to [0, 1]
         noise = noise * 0.5 + 0.5;
         
         height += noise * amplitude;
@@ -150,12 +174,37 @@ void main()
         amplitude *= persistence;
         frequency *= lacunarity;
     }
-    // Normalize final noise value to [0,1]
+    
+    // Normalize final noise value
     height /= totalAmplitude;
+    
+    // Apply landmass distribution mask
+    float landMask = 1.0;
+    if (enableIslands) 
+    {
+        landMask = landmassDistribution(st, seaLevel);
+        
+        // Add small islands based on a different noise scale
+        if (islandDensity > 0.0) 
+        {
+            float islands = snoise(st * 0.2) * 0.5 + 0.5;
+            float islandMask = smoothstep(1.0 - islandDensity * 0.3, 1.0, islands);
+            landMask = max(landMask, islandMask * 0.8); // Blend islands with main landmass
+        }
+        
+        // Apply the mask to height
+        float oceanDepth = 0.25; // Deep ocean baseline
+        height = mix(oceanDepth, height, landMask);
+    }
+    
+    // Store raw height before applying multiplier (for coloring)
+    float rawHeight = height;
+    
+    // Apply heightMultiplier with animation curve
     pos.y = getAnimationCurve(height) * heightMultiplier;
 
+    // Calculate normal (keep your existing normal calculation)
     float delta = 0.5;
-
     float hL = snoise(st + vec2(-delta, 0.0));
     float hR = snoise(st + vec2(delta, 0.0));
     float hD = snoise(st + vec2(0.0, -delta));
@@ -165,5 +214,8 @@ void main()
     v_Normal = normal;
 
     gl_Position = projection * view * vec4(pos, 1.0);
-    v_Height = height;
+    v_Height = rawHeight; // Pass the raw height for coloring
+    
+    // Add an output to fragment shader if you want to use landMask there
+    v_LandMask = landMask;
 }
