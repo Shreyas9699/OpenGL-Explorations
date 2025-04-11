@@ -73,11 +73,38 @@ namespace test
 		int currentChunkX = static_cast<int>(std::floor(cameraPos.x / m_ChunkSize));
 		int currentChunkZ = static_cast<int>(std::floor(cameraPos.z / m_ChunkSize));
 
+		// Update frustum for culling check
+		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), 0.1f, 10000.0f);
+		glm::mat4 view = m_Camera.GetViewMatrix();
+		glm::mat4 viewProj = projection * view;
+		m_Frustum->Update(viewProj);
+
+		m_TotalChunks = 0;
+		m_CulledChunks = 0;
+
 		std::set<std::pair<int, int>> neededChunks;
 		for (int x = currentChunkX - adaptiveViewDistance; x <= currentChunkX + adaptiveViewDistance; x++)
 		{
 			for (int z = currentChunkZ - adaptiveViewDistance; z <= currentChunkZ + adaptiveViewDistance; z++)
 			{
+				m_TotalChunks++;
+
+				// Create a temporary AABB for the chunk to check visibility
+				glm::vec3 chunkCenter(x * m_ChunkSize + m_ChunkSize / 2, 0, z * m_ChunkSize + m_ChunkSize / 2);
+				// Use an estimated height for the AABB
+				float estimatedMaxHeight = m_heightMultiplier; // You might want to adjust this
+
+				glm::vec3 min(x * m_ChunkSize, -estimatedMaxHeight, z * m_ChunkSize);
+				glm::vec3 max((x + 1) * m_ChunkSize, estimatedMaxHeight, (z + 1) * m_ChunkSize);
+
+				// Skip chunks outside the view frustum if culling is enabled
+				if (m_EnableFrustumCulling && !m_Frustum->IsAABBVisible(min, max))
+				{
+					m_CulledChunks++;
+					continue;
+				}
+
+
 				neededChunks.insert({ x, z });
 			}
 		}
@@ -105,28 +132,8 @@ namespace test
 				m_Chunks[chunk] = std::make_unique<TerrainChunk>(chunk.first, chunk.second, m_ChunkSize, m_Resolution);
 			}
 		}
-	}
 
-	void TestProceduralTerrain::ComputeVisiblePatchStarts()
-	{
-		m_VisibleChunks = 0;
-		m_CulledChunks = 0;
-		m_TotalChunks = m_Chunks.size();
-
-		for (auto& [coord, chunk] : m_Chunks)
-		{
-			AABB chunkAABB = chunk->GetAABB(m_heightMultiplier);
-
-			if (m_EnableFrustumCulling && !m_Frustum->IsAABBVisible(chunkAABB.min, chunkAABB.max))
-			{
-				m_CulledChunks++;
-				continue;
-			}
-
-			glm::mat4 model = chunk->GetModelMatrix();
-			chunk->Render();
-			m_VisibleChunks++;
-		}
+		m_VisibleChunks = neededChunks.size();
 	}
 
 	void TestProceduralTerrain::OnUpdate(Timestep deltaTime, GLFWwindow* window)
@@ -158,14 +165,7 @@ namespace test
 		m_Shader->setFloat("islandDensity", islandDensity); // 0 = no islands, 1 = many islands
 		m_Shader->setBool("enableIslands", enableIslands);
 		m_Shader->setBool("enableLandmassColoring", enableLandmassColoring);
-
 		m_Shader->Unbind();
-
-		// Update frustum after setting up projection/view
-		glm::mat4 viewProj = projection * view;
-		m_Frustum->Update(viewProj);
-
-		ComputeVisiblePatchStarts();
 	}
 
 	void TestProceduralTerrain::OnRender()

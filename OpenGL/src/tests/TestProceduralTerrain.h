@@ -33,8 +33,8 @@ namespace test
 
 		std::unique_ptr<Frustum> m_Frustum;
 		size_t m_TotalChunks = 0;
-		int m_VisibleChunks = 0;
-		int m_CulledChunks = 0;
+		size_t m_VisibleChunks = 0;
+		size_t m_CulledChunks = 0;
 		bool m_EnableFrustumCulling = true;
 
 		// Grid resolution - this is key for terrain detail
@@ -64,7 +64,6 @@ namespace test
 		~TestProceduralTerrain();
 
 		void UpdateChunks();
-		void ComputeVisiblePatchStarts();
 
 		void OnUpdate(Timestep deltaTime, GLFWwindow* window = nullptr) override;
 		void OnRender() override;
