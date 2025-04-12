@@ -38,15 +38,6 @@ void TerrainChunk::GenerateMesh()
             m_Vertices.push_back(xPos);
             m_Vertices.push_back(0.0f);
             m_Vertices.push_back(zPos);
-
-            // Edge flag for LOD transition
-            // 1.0 if it's an edge vertex, 0.0 otherwise
-            float isEdge = (x == 0 || x == m_Resolution - 1 || z == 0 || z == m_Resolution - 1) ? 1.0f : 0.0f;
-            m_Vertices.push_back(isEdge);
-
-            // Neighbor chunk indices for LOD morphing
-            m_Vertices.push_back(static_cast<float>(m_X));
-            m_Vertices.push_back(static_cast<float>(m_Z));
         }
     }
 
@@ -75,9 +66,6 @@ void TerrainChunk::GenerateMesh()
 
     VertexBufferLayout layout;
     layout.Push<float>(3);    // position (xyz)
-    layout.Push<float>(1);    // edge flag
-    layout.Push<float>(2);    // chunk coordinates
-
     m_Plane.VAO->AddBuffer(*m_Plane.VBO, layout);
 
     m_Plane.VAO->Bind();
