@@ -12,8 +12,11 @@ public:
 	TerrainChunk(int x, int z, float chunkSize, int rez);
 	void GenerateMesh();
 	void Render();
+
 	glm::mat4 GetModelMatrix() const;
 	AABB GetAABB(float maxHeight) const;
+	int GetResolution() const;
+	std::pair<int, int> GetChunkCoordinates() const;
 
 private:
 	int m_X, m_Z;

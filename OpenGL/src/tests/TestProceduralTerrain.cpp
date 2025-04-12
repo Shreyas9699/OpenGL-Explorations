@@ -61,79 +61,109 @@ namespace test
 
 	void TestProceduralTerrain::UpdateChunks()
 	{
-		// Update chunks loading based on camera position
+		// Get camera position
 		glm::vec3 cameraPos = m_Camera.Position;
 
-		float heightFactor = 1.0f + (cameraPos.y / m_heightMultiplier) * 0.1f;
-		int adaptiveViewDistance = static_cast<int>(m_ViewDistance * heightFactor);
-
-		// Clamp to reasonable values
-		adaptiveViewDistance = glm::clamp(adaptiveViewDistance, m_ViewDistance, m_MaxViewDistance);
-
+		// Calculate camera-relative chunk coordinates
 		int currentChunkX = static_cast<int>(std::floor(cameraPos.x / m_ChunkSize));
 		int currentChunkZ = static_cast<int>(std::floor(cameraPos.z / m_ChunkSize));
 
-		// Update frustum for culling check
+		// Calculate adaptive view distance based on height
+		float heightFactor = 1.0f + (cameraPos.y / m_heightMultiplier) * 0.2f;
+		int adaptiveViewDistance = static_cast<int>(m_ViewDistance * heightFactor);
+		adaptiveViewDistance = glm::clamp(adaptiveViewDistance, m_ViewDistance, m_MaxViewDistance);
+
+		// Update frustum for culling
 		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), 0.1f, 10000.0f);
 		glm::mat4 view = m_Camera.GetViewMatrix();
-		glm::mat4 viewProj = projection * view;
-		m_Frustum->Update(viewProj);
+		m_Frustum->Update(projection * view);
 
+		// Track which chunks we need this frame
+		std::set<std::pair<int, int>> neededChunks;
 		m_TotalChunks = 0;
 		m_CulledChunks = 0;
 
-		std::set<std::pair<int, int>> neededChunks;
-		for (int x = currentChunkX - adaptiveViewDistance; x <= currentChunkX + adaptiveViewDistance; x++)
+		// Spiral outward from player chunk for more even loading
+		for (int layer = 0; layer <= adaptiveViewDistance; layer++) 
 		{
-			for (int z = currentChunkZ - adaptiveViewDistance; z <= currentChunkZ + adaptiveViewDistance; z++)
+			for (int dx = -layer; dx <= layer; dx++) 
 			{
-				m_TotalChunks++;
-
-				// Create a temporary AABB for the chunk to check visibility
-				glm::vec3 chunkCenter(x * m_ChunkSize + m_ChunkSize / 2, 0, z * m_ChunkSize + m_ChunkSize / 2);
-				// Use an estimated height for the AABB
-				float estimatedMaxHeight = m_heightMultiplier; // You might want to adjust this
-
-				glm::vec3 min(x * m_ChunkSize, -estimatedMaxHeight, z * m_ChunkSize);
-				glm::vec3 max((x + 1) * m_ChunkSize, estimatedMaxHeight, (z + 1) * m_ChunkSize);
-
-				// Skip chunks outside the view frustum if culling is enabled
-				if (m_EnableFrustumCulling && !m_Frustum->IsAABBVisible(min, max))
+				for (int dz = -layer; dz <= layer; dz++) 
 				{
-					m_CulledChunks++;
-					continue;
+					// Only process the outer layer each iteration
+					if (layer > 0 && abs(dx) < layer && abs(dz) < layer)
+						continue;
+
+					int x = currentChunkX + dx;
+					int z = currentChunkZ + dz;
+					m_TotalChunks++;
+
+					// Create an AABB for the chunk to check visibility
+					glm::vec3 min(x * m_ChunkSize, -m_heightMultiplier, z * m_ChunkSize);
+					glm::vec3 max((x + 1) * m_ChunkSize, m_heightMultiplier, (z + 1) * m_ChunkSize);
+
+					// Skip chunks outside the view frustum if culling is enabled
+					if (m_EnableFrustumCulling && !m_Frustum->IsAABBVisible(min, max)) {
+						m_CulledChunks++;
+						continue;
+					}
+
+					neededChunks.insert({ x, z });
 				}
-
-
-				neededChunks.insert({ x, z });
 			}
 		}
 
-		// Remove old chunks
+		// Unload distant chunks
 		auto it = m_Chunks.begin();
-		while (it != m_Chunks.end())
+		while (it != m_Chunks.end()) 
 		{
-			if (neededChunks.find(it->first) == neededChunks.end())
+			if (neededChunks.find(it->first) == neededChunks.end()) 
 			{
 				auto toErase = it++;
 				m_Chunks.erase(toErase);
 			}
-			else
-			{
+			else {
 				++it;
 			}
 		}
 
 		// Add new chunks
-		for (const auto& chunk : neededChunks)
+		for (const auto& chunk : neededChunks) 
 		{
-			if (m_Chunks.find(chunk) == m_Chunks.end())
+			if (m_Chunks.find(chunk) == m_Chunks.end()) 
 			{
-				m_Chunks[chunk] = std::make_unique<TerrainChunk>(chunk.first, chunk.second, m_ChunkSize, m_Resolution);
+				// Calculate LOD level based on distance from camera
+				int distX = abs(chunk.first - currentChunkX);
+				int distZ = abs(chunk.second - currentChunkZ);
+				int dist = std::max(distX, distZ);
+
+				// Adaptive resolution based on distance and height
+				int chunkResolution = CalculateChunkResolution(dist, cameraPos.y);
+
+				m_Chunks[chunk] = std::make_unique<TerrainChunk>(chunk.first, chunk.second, m_ChunkSize, chunkResolution);
 			}
 		}
 
 		m_VisibleChunks = neededChunks.size();
+	}
+
+	int TestProceduralTerrain::CalculateChunkResolution(int distanceFromCamera, float cameraHeight)
+	{
+		// Base resolution from the class member
+		float baseResolution = static_cast<float>(m_Resolution);
+
+		// Reduce resolution based on distance (farther = lower resolution)
+		float distanceFactor = 1.0f - glm::clamp(static_cast<float>(distanceFromCamera) / m_MaxViewDistance, 0.0f, 0.9f);
+
+		// Reduce resolution based on height (higher = lower resolution)
+		float heightFactor = 1.0f - glm::clamp((cameraHeight - 10.0f) / 500.0f, 0.0f, 0.9f);
+
+		// Combine factors and make sure we have at least 4 vertices per side
+		int resolution = std::max(4, static_cast<int>(baseResolution * distanceFactor * heightFactor));
+
+		// Make sure resolution is always a power of 2 + 1
+		int power = static_cast<int>(log2(resolution - 1));
+		return (1 << power) + 1;
 	}
 
 	void TestProceduralTerrain::OnUpdate(Timestep deltaTime, GLFWwindow* window)
@@ -144,7 +174,7 @@ namespace test
 		
 		// Update Shaders
 		m_Shader->Bind();
-		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), 0.1f, 10000.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(m_Camera.Zoom), m_cameraController.GetAspectRatio(), 1.0f, 5000.0f);
 		glm::mat4 view = m_Camera.GetViewMatrix();
 		m_Shader->setVec2("u_resolution", { m_Window->GetWindowWidth(), m_Window->GetWindowHeight() });
 		m_Shader->setMat4("view", view);

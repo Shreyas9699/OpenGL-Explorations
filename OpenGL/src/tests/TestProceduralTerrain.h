@@ -64,6 +64,7 @@ namespace test
 		~TestProceduralTerrain();
 
 		void UpdateChunks();
+		int CalculateChunkResolution(int distanceFromCamera, float cameraHeight);
 
 		void OnUpdate(Timestep deltaTime, GLFWwindow* window = nullptr) override;
 		void OnRender() override;
