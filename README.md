@@ -53,6 +53,14 @@ Here are some project screenshots and a video:
   - Particles in 3D (Implements in GPU Nvidia GTX 1050)
     - Uses CPU to create, update and destroy particles from emitter
     - Max number of particle alive per frame is ~1.5 million (with Avg of 120 FPS)
+  - Fire Particle Simulation
+   - Uses GPU to create, update and destroy fire particles from emitter
+   - Each has its own temp and other properties.
+  - Procedural Terrain Generation
+    - Uses SimpleX/Perlin noise to generate height map
+    - Uses height map to generate 3D terrain
+    - Uses Frustum culling and Multithreading for bettern performacen
+    - Dynamic tessellation based on FOV and distance from camera for performace optimization.
 
 ## Getting Started
 You can follow same instructions on `https://github.com/Shreyas9699/opengl-base-template` to set it up.
