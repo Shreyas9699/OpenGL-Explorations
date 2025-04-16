@@ -1,21 +1,25 @@
 // Compute shader for updating particles
 #version 430 core
-
 layout(local_size_x = 256) in;
 
-struct Particle 
-{
-    vec4 position;    // xyz = position, w = size
-    vec4 velocity;    // xyz = velocity, w = lifeRemaining
-    vec4 colorBegin;
-    vec4 colorEnd;    // w = lifespan
+// Changed to Structure of Arrays
+layout(std430, binding = 1) buffer Positions {
+    vec4 positions[];
 };
 
-layout(std430, binding = 0) buffer ParticleBuffer {
-    Particle particles[];
+layout(std430, binding = 2) buffer Velocities {
+    vec4 velocities[];
 };
 
-layout(std430, binding = 1) buffer FreeListBuffer {
+layout(std430, binding = 3) buffer ColorBegin {
+    vec4 colorBegins[];
+};
+
+layout(std430, binding = 4) buffer ColorEnds {
+    vec4 colorEnds[];
+};
+
+layout(std430, binding = 0) buffer FreeListBuffer {
     int count;
     int indices[];
 } freelist;
@@ -28,13 +32,13 @@ uniform vec3 globalForce;
 uniform float sizeBegin;
 uniform float sizeEnd;
 
-void UpdateParticle(inout Particle particle, int index)
+void UpdateParticle(int index)
 {
     // Update life
-    particle.velocity.w -= deltaTime;
+   velocities[index].w -= deltaTime;
     
     // If particle just died, add to free list and return
-    if (particle.velocity.w <= 0.0) 
+    if (velocities[index].w <= 0.0) 
     {
         int idx = atomicAdd(freelist.count, 1);
         freelist.indices[idx] = index;
@@ -45,18 +49,18 @@ void UpdateParticle(inout Particle particle, int index)
     atomicCounterIncrement(activeParticleCount);
     
     // Apply global force to velocity
-    particle.velocity.xyz += globalForce * deltaTime;
+    velocities[index].xyz += globalForce * deltaTime;
     
     // Update position based on velocity
-    particle.position.xyz += particle.velocity.xyz * deltaTime;
+    positions[index].xyz += velocities[index].xyz * deltaTime;
     
     // Calculate life percentage
-    float lifespan = particle.colorEnd.w;
-    float lifeRemaining = particle.velocity.w;
+    float lifespan = colorEnds[index].w;
+    float lifeRemaining = velocities[index].w;
     float lifePercent = lifeRemaining / lifespan;
     
     // Update size based on life
-    particle.position.w = mix(sizeEnd, sizeBegin, lifePercent);
+    positions[index].w = mix(sizeEnd, sizeBegin, lifePercent);
 }
 
 void main()
@@ -64,11 +68,11 @@ void main()
     uint id = gl_GlobalInvocationID.x;
     
     // Check if we're in bounds
-    if (id >= particles.length())
+    if (id >= positions.length())
         return;
 
-    if (particles[id].velocity.w <= 0.0)
+    if (velocities[id].w <= 0.0)
         return;
 
-    UpdateParticle(particles[id], int(id));
+    UpdateParticle(int(id));
 }

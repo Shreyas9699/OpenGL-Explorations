@@ -506,6 +506,7 @@
     <None Include="res\shaders\terrain\vertexShader.glsl" />
     <None Include="res\shaders\terrain\TessellationEvaluationShader.glsl" />
     <None Include="res\shaders\terrain\TessellationControlShader.glsl" />
+    <None Include="..\..\..\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.43.34808\include\xmemory" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\textures\SSanW2.png">
@@ -1004,13 +1005,13 @@
     <ClCompile Include="src\Frustum.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\tests\TestFireSimulation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\tests\TestProceduralTerrain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\TerrainChunk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\TestFireSimulation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2005,16 +2006,10 @@
     <ClInclude Include="src\Frustum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\tests\TestFireSimulation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\DefaultParticleBehavior.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\EmitterProperties.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\FireParticleBehavior.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ParticleBehavior.h">
@@ -2030,6 +2025,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\UtilityStructs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AttributeBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FireParticleBehavior.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\TestFireSimulation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

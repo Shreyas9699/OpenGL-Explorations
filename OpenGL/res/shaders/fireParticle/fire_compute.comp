@@ -1,22 +1,28 @@
 #version 450
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
-struct FireParticle 
-{
-    vec4 position;    // xyz = position, w = size
-    vec4 velocity;    // xyz = velocity, w = lifeRemaining
-    float lifespan;
-    float temperature;
-    float smokeAmount;
-    float padding;
+// Changed to Structure of Arrays
+layout(std430, binding = 1) buffer Positions {
+    vec4 positions[];
 };
 
-
-layout(std430, binding = 0) buffer ParticleBuffer {
-    FireParticle particles[];
+layout(std430, binding = 2) buffer Velocities {
+    vec4 velocities[];
 };
 
-layout(std430, binding = 1) buffer FreeList {
+layout(std430, binding = 3) buffer Temperatures {
+    float temperatures[];
+};
+
+layout(std430, binding = 4) buffer SmokeAmounts {
+    float smokeAmounts[];
+};
+
+layout(std430, binding = 5) buffer Lifespans {
+    float lifespans[];
+};
+
+layout(std430, binding = 0) buffer FreeList {
     int count;
     int indices[];
 } freelist;
@@ -126,11 +132,11 @@ vec3 get_turbulence(vec3 pos)
     return turb * turbulenceScale;
 }
 
-void UpdateParticle(inout FireParticle p, int index) 
+void UpdateParticle(int index) 
 {
     // Lifetime management
-    p.velocity.w -= deltaTime;
-    if(p.velocity.w <= 0.0) 
+    velocities[index].w -= deltaTime;
+    if(velocities[index].w <= 0.0) 
     {
         int idx = atomicAdd(freelist.count, 1);
         freelist.indices[idx] = index;
@@ -139,8 +145,8 @@ void UpdateParticle(inout FireParticle p, int index)
     atomicCounterIncrement(activeParticleCount);
 
     // Age calculations
-    float age = 1.0 - (p.velocity.w / p.lifespan);
-    float tempFactor = p.temperature / 2500.0;
+    float age = 1.0 - (velocities[index].w / lifespans[index]);
+    float tempFactor = temperatures[index] / 2500.0;
 
     // Physics forces
     vec3 acceleration = globalForce * mass;
@@ -148,34 +154,33 @@ void UpdateParticle(inout FireParticle p, int index)
     
     // Controllable wind/turbulence
     vec3 wind = windDirection * windStrength;
-    vec3 turbulence = get_turbulence(p.position.xyz);
+    vec3 turbulence = get_turbulence(positions[index].xyz);
     
     // Combine forces
     acceleration += wind + turbulence;
     
     // Velocity integration
-    p.velocity.xyz += acceleration * deltaTime;
-    p.velocity.xyz *= exp(-airResistance * deltaTime);
-    p.position.xyz += p.velocity.xyz * deltaTime;
+    velocities[index].xyz += acceleration * deltaTime;
+    velocities[index].xyz *= exp(-airResistance * deltaTime);
+   positions[index].xyz += velocities[index].xyz * deltaTime;
 
     // Temperature cooling
-    p.temperature -= temperatureDecay * deltaTime * (1.0 + age*2.0);
-    p.temperature = max(p.temperature, 0.0);
+    temperatures[index] -= temperatureDecay * deltaTime * (1.0 + age*2.0);
+    temperatures[index] = max(temperatures[index], 0.0);
 
     // Size evolution
-    p.position.w = mix(sizeEnd, sizeBegin, 1.0 - age*age);
+    positions[index].w = mix(sizeEnd, sizeBegin, 1.0 - age*age);
 
     // Smoke generation
-    p.smokeAmount = smoothstep(0.5, 0.9, age) * (1.0 - tempFactor);
+    smokeAmounts[index] = smoothstep(0.5, 0.9, age) * (1.0 - tempFactor);
 }
 
 void main() 
 {
     uint id = gl_GlobalInvocationID.x;
-    if(id >= particles.length()) return;
+    if(id >= positions.length()) return;
 
-    FireParticle p = particles[id];
-    if(p.velocity.w <= 0.0) return;
+    if(velocities[id].w <= 0.0) return;
 
-    UpdateParticle(particles[id], int(id));
+    UpdateParticle(int(id));
 }

@@ -7,6 +7,18 @@
 class FireParticleBehavior : public ParticleBehavior 
 {
 private:
+    std::vector<glm::vec4> m_Positions;
+    std::vector<glm::vec4> m_Velocities;
+    std::vector<float> m_Temperatures;
+	std::vector<float> m_SmokeAmounts;
+	std::vector<float> m_Lifespans;
+
+	GLuint m_SSBO_Positions = 0;
+	GLuint m_SSBO_Velocities = 0;
+	GLuint m_SSBO_Temperatures = 0;
+	GLuint m_SSBO_SmokeAmounts = 0;
+	GLuint m_SSBO_Lifespans = 0;
+
     glm::vec3 m_GlobalForce = glm::vec3(0.0f, -9.8f, 0.0f);
     float m_RiseSpeed = 5.0f;
     float m_HeatDissipation = 0.8f;
@@ -22,6 +34,63 @@ private:
 public:
     void Initialize() override {}
 	void Cleanup() override {}
+
+    void CreateParticleBuffers(size_t maxParticles) override 
+    {
+        m_Positions.resize(maxParticles);
+        m_Velocities.resize(maxParticles);
+        m_Temperatures.resize(maxParticles);
+        m_SmokeAmounts.resize(maxParticles);
+        m_Lifespans.resize(maxParticles);
+
+        glGenBuffers(1, &m_SSBO_Positions);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Positions);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_Positions.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_Velocities);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Velocities);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_Velocities.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_Temperatures);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Temperatures);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(float), m_Temperatures.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_SmokeAmounts);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_SmokeAmounts);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(float), m_SmokeAmounts.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_Lifespans);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Lifespans);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(float), m_Lifespans.data(), GL_DYNAMIC_DRAW);
+    }
+
+    void UpdateParticleBuffers() override 
+    {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Positions);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Positions.size() * sizeof(glm::vec4), m_Positions.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Velocities);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Velocities.size() * sizeof(glm::vec4), m_Velocities.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Temperatures);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Temperatures.size() * sizeof(float), m_Temperatures.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_SmokeAmounts);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_SmokeAmounts.size() * sizeof(float), m_SmokeAmounts.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Lifespans);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Lifespans.size() * sizeof(float), m_Lifespans.data());
+    }
+
+    void BindParticleBuffers(GLuint baseBinding) override 
+    {
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 0, m_SSBO_Positions);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 1, m_SSBO_Velocities);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 2, m_SSBO_Temperatures);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 3, m_SSBO_SmokeAmounts);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 4, m_SSBO_Lifespans);
+    }
+
 
     void UpdateUniforms(ComputeShader& computeShader) override 
     {
@@ -50,14 +119,14 @@ public:
         return "res/shaders/fireParticle/fire_emitter.comp";
     }
 
-    void InitializeParticle(void* particleData, int index)
+    void InitializeParticle(int index)
     {
-		FireParticle* particle = static_cast<FireParticle*>(particleData);
-        particle->position = glm::vec4(0.0f);
-        particle->velocity = glm::vec4(0.0f);
-		particle->lifespan = 0.0f;
-		particle->temperature = 0.0f;
-		particle->smokeAmount = 0.0f;
+		// Initialize particle properties
+		m_Positions[index]    = glm::vec4(0.0f);
+		m_Velocities[index]   = glm::vec4(0.0f);
+		m_Temperatures[index] = 0.0f;
+		m_SmokeAmounts[index] = 0.0f;
+		m_Lifespans[index]    = 0.0f;
     }
 
     void SetTurbulence(float turbulence) 

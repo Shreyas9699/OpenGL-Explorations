@@ -2,20 +2,25 @@
 // We use the instance ID to look up particle data from the SSBO
 layout (location = 0) in uint particleID;
 
-// Updated structure for fire simulation
-struct FireParticle 
-{
-    vec4 position;    // xyz = position, w = size
-    vec4 velocity;    // xyz = velocity, w = lifeRemaining
-    float lifespan;
-    float temperature;
-    float smokeAmount;
-    float padding;
+// Changed to Structure of Arrays
+layout(std430, binding = 1) buffer Positions {
+    vec4 positions[];
 };
 
-// Bind the same SSBO that the compute shader uses
-layout(std430, binding = 0) readonly buffer ParticleBuffer {
-    FireParticle particles[];
+layout(std430, binding = 2) buffer Velocities {
+    vec4 velocities[];
+};
+
+layout(std430, binding = 3) buffer Temperatures {
+    float temperatures[];
+};
+
+layout(std430, binding = 4) buffer SmokeAmounts {
+    float smokeAmounts[];
+};
+
+layout(std430, binding = 5) buffer Lifespans {
+    float lifespans[];
 };
 
 uniform float radius;
@@ -32,18 +37,15 @@ out float particleAlpha;
 
 void main()
 {
-    // Get the particle data from the SSBO using the instance ID
-    FireParticle p = particles[particleID];
-
     // Skip rendering if particle is inactive
-    if (p.velocity.w <= 0.0) 
+    if (velocities[particleID].w <= 0.0) 
         return;
 
-    float lifePercent = p.velocity.w / p.lifespan;
+    float lifePercent = velocities[particleID].w / lifespans[particleID];
     
     // Use only the fields you need for rendering
-    vec3 pos = p.position.xyz;
-    float size = p.position.w;
+    vec3 pos = positions[particleID].xyz;
+    float size = positions[particleID].w;
     
     gl_Position = projection * view * model * vec4(pos, 1.0);
     

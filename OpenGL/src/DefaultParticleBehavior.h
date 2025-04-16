@@ -5,11 +5,68 @@
 class DefaultParticleBehavior : public ParticleBehavior 
 {
 private:
+    std::vector<glm::vec4> m_Positions;
+    std::vector<glm::vec4> m_Velocities;
+    std::vector<glm::vec4> m_ColorBegins;
+    std::vector<glm::vec4> m_ColorEnds;
+
+    GLuint m_SSBO_Positions = 0;
+    GLuint m_SSBO_Velocities = 0;
+    GLuint m_SSBO_ColorBegins = 0;
+    GLuint m_SSBO_ColorEnds = 0;
+
     glm::vec3 m_GlobalForce = glm::vec3(0.0f);
 
 public:
     void Initialize() override {}
     void Cleanup() override {}
+
+    void CreateParticleBuffers(size_t maxParticles) override 
+    {
+        m_Positions.resize(maxParticles);
+        m_Velocities.resize(maxParticles);
+        m_ColorBegins.resize(maxParticles);
+        m_ColorEnds.resize(maxParticles);
+
+        glGenBuffers(1, &m_SSBO_Positions);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Positions);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_Positions.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_Velocities);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Velocities);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_Velocities.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_ColorBegins);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_ColorBegins);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_ColorBegins.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_ColorEnds);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_ColorEnds);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_ColorEnds.data(), GL_DYNAMIC_DRAW);
+    }
+
+    void UpdateParticleBuffers() override 
+    {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Positions);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Positions.size() * sizeof(glm::vec4), m_Positions.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Velocities);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Velocities.size() * sizeof(glm::vec4), m_Velocities.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_ColorBegins);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_ColorBegins.size() * sizeof(glm::vec4), m_ColorBegins.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_ColorEnds);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_ColorEnds.size() * sizeof(glm::vec4), m_ColorEnds.data());
+    }
+
+    void BindParticleBuffers(GLuint baseBinding) override 
+    {
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 0, m_SSBO_Positions);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 1, m_SSBO_Velocities);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 2, m_SSBO_ColorBegins);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 3, m_SSBO_ColorEnds);
+    }
 
     void UpdateUniforms(ComputeShader& computeShader) override 
     {
@@ -32,13 +89,12 @@ public:
         return "res/shaders/ParticleSysGPU/emitter.comp";
     }
 
-    void InitializeParticle(void* particleData, int index)
+    void InitializeParticle(int index)
     {
-        GPUParticle* particle = static_cast<GPUParticle*>(particleData);
-        particle->position = glm::vec4(0.0f);
-        particle->velocity = glm::vec4(0.0f);
-        particle->colorBegin = glm::vec4(0.0f);
-        particle->colorEnd = glm::vec4(0.0f);
+		m_Positions[index]   = glm::vec4(0.0f);
+        m_Velocities[index]  = glm::vec4(0.0f);
+        m_ColorBegins[index] = glm::vec4(0.0f);
+        m_ColorEnds[index]   = glm::vec4(0.0f);
     }
 
     void SetGlobalForce(const glm::vec3& force) 

@@ -3,18 +3,21 @@
 // We use the instance ID to look up particle data from the SSBO
 layout (location = 0) in uint particleID;
 
-// Particle data structure matches the one in compute shader
-struct Particle 
-{
-    vec4 position;    // xyz = position, w = size
-    vec4 velocity;    // xyz = velocity, w = lifeRemaining
-    vec4 colorBegin;
-    vec4 colorEnd;    // w = lifespan
+// Changed to Structure of Arrays
+layout(std430, binding = 1) buffer Positions {
+    vec4 positions[];
 };
 
-// Bind the same SSBO that the compute shader uses
-layout(std430, binding = 0) readonly buffer ParticleBuffer {
-    Particle particles[];
+layout(std430, binding = 2) buffer Velocities {
+    vec4 velocities[];
+};
+
+layout(std430, binding = 3) buffer ColorBegin {
+    vec4 colorBegins[];
+};
+
+layout(std430, binding = 4) buffer ColorEnds {
+    vec4 colorEnds[];
 };
 
 // Matrices
@@ -29,21 +32,18 @@ out float particleAlpha;
 
 void main()
 {
-    // Get the particle data from the SSBO using the instance ID
-    Particle particle = particles[particleID];
-    
     // Skip rendering if particle is inactive
-    if (particle.velocity.w <= 0.0) 
+    if (velocities[particleID].w <= 0.0) 
         return;
     
     // Calculate life percentage for interpolation
-    float lifespan = particle.colorEnd.w;
-    float lifeRemaining = particle.velocity.w;
+    float lifespan = colorEnds[particleID].w;
+    float lifeRemaining = velocities[particleID].w;
     float lifePercent = lifeRemaining / lifespan;
     
     // Calculate position and size
-    vec3 position = particle.position.xyz;
-    float size = particle.position.w;
+    vec3 position = positions[particleID].xyz;
+    float size = positions[particleID].w;
     
     // Transform position to clip space
     gl_Position = projection * view * model * vec4(position, 1.0);
@@ -54,6 +54,6 @@ void main()
     gl_PointSize = size * lifePercent * scaling_factor / dist;
     
     // Calculate color based on life
-    particleColor = mix(particle.colorEnd, particle.colorBegin, lifePercent);
+    particleColor = mix(colorEnds[particleID], colorBegins[particleID], lifePercent);
     particleAlpha = particleColor.a * lifePercent; // Fade out as particles die
 }

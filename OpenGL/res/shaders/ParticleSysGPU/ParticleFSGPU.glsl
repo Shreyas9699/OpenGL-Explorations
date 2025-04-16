@@ -1,5 +1,4 @@
 #version 430 core
-
 in vec4 particleColor;
 in float particleAlpha;
 

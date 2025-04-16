@@ -2,24 +2,29 @@
 #version 430 core
 layout(local_size_x = 256) in;
 
-struct Particle 
-{
-    vec4 position;    // xyz = position, w = size
-    vec4 velocity;    // xyz = velocity, w = lifeRemaining
-    vec4 colorBegin;
-    vec4 colorEnd;    // w = lifespan
+// Changed to Structure of Arrays
+layout(std430, binding = 1) buffer Positions {
+    vec4 positions[];
 };
 
-// Particle storage buffer
-layout(binding = 0) uniform atomic_uint newParticleCounter;
-layout(std430, binding = 0) buffer ParticleBuffer {
-    Particle particles[];
+layout(std430, binding = 2) buffer Velocities {
+    vec4 velocities[];
 };
 
-layout(std430, binding = 1) buffer FreeListBuffer {
+layout(std430, binding = 3) buffer ColorBegin {
+    vec4 colorBegins[];
+};
+
+layout(std430, binding = 4) buffer ColorEnds {
+    vec4 colorEnds[];
+};
+
+layout(std430, binding = 0) buffer FreeListBuffer {
     int count;
     int indices[];
 } freelist;
+
+layout(binding = 1, offset = 0) uniform atomic_uint newParticleCounter;
 
 
 // Emitter properties
@@ -482,8 +487,8 @@ void main()
     vec3 velocity = generateVelocity(position);
     
     // Create the new particle
-    particles[particleIndex].position = vec4(position, particleSizeBegin);
-    particles[particleIndex].velocity = vec4(velocity, particleLifespan);
-    particles[particleIndex].colorBegin = particleColorBegin;
-    particles[particleIndex].colorEnd = vec4(particleColorEnd.rgb, particleLifespan);
+    positions[particleIndex] = vec4(position, particleSizeBegin);
+    velocities[particleIndex] = vec4(velocity, particleLifespan);
+    colorBegins[particleIndex] = particleColorBegin;
+    colorEnds[particleIndex] = vec4(particleColorEnd.rgb, particleLifespan);
 }

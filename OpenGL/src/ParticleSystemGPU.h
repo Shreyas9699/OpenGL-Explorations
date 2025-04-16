@@ -152,8 +152,7 @@ void ParticleSystemGPU<ParticleType>::initParticles()
     // Initialize shaders
     initializeShaders();
 
-    // Resize GPU particles buffer
-    m_GPUParticles.resize(m_MaxParticles);
+    m_CurrentBehavior->CreateParticleBuffers(m_MaxParticles);
 
     // Initialize buffers
     // Initialize particle count buffer
@@ -177,7 +176,7 @@ void ParticleSystemGPU<ParticleType>::initParticles()
     {
         freeIndices[i + 1] = m_MaxParticles - 1 - i;  // LIFO Free List
         particleIndices[i] = i;  // Particle indices
-        m_CurrentBehavior->InitializeParticle(&m_GPUParticles[i], i);
+        m_CurrentBehavior->InitializeParticle(i);
     }
 
     // Create free list buffer
@@ -188,12 +187,7 @@ void ParticleSystemGPU<ParticleType>::initParticles()
     );
 
     // Create particle SSBO
-    std::cout << "ParticleType size: " << sizeof(ParticleType) << std::endl; // Must print 72
-    m_ParticleSSBO = std::make_unique<VertexBuffer>(
-        m_GPUParticles.data(), 
-        static_cast<unsigned int>(m_MaxParticles * sizeof(ParticleType)), 
-        GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW
-    );
+    m_CurrentBehavior->UpdateParticleBuffers();
 
     m_ParticleVAO = std::make_unique<VertexArray>();
     m_InstanceVBO = std::make_unique<VertexBuffer>(particleIndices.data(), static_cast<unsigned int>(m_MaxParticles * sizeof(GLuint)));
@@ -208,38 +202,40 @@ void ParticleSystemGPU<ParticleType>::initParticles()
     m_NeedsReinitialization = false;
 
     // Ensure OpenGL state is correct before querying
-    GLint64 freeListBufferSize = 0;
-    if (m_ParticleCountBuffer) 
-    {
-        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_ParticleCountBuffer->GetBufferID());
-        glGetBufferParameteri64v(GL_ATOMIC_COUNTER_BUFFER, GL_BUFFER_SIZE, &freeListBufferSize);
-    }
-    std::cout << "Particle Count Buffer Size: " << freeListBufferSize << " bytes" << std::endl;
+    //{
+    //    GLint64 freeListBufferSize = 0;
+    //if (m_ParticleCountBuffer) 
+    //{
+    //    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_ParticleCountBuffer->GetBufferID());
+    //    glGetBufferParameteri64v(GL_ATOMIC_COUNTER_BUFFER, GL_BUFFER_SIZE, &freeListBufferSize);
+    //}
+    //std::cout << "Particle Count Buffer Size: " << freeListBufferSize << " bytes" << std::endl;
 
-    GLint64 atomicBufferSize = 0;
-    if (m_AtomicBuffer) {
-        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_AtomicBuffer->GetBufferID());
-        glGetBufferParameteri64v(GL_ATOMIC_COUNTER_BUFFER, GL_BUFFER_SIZE, &atomicBufferSize);
-    }
-    std::cout << "Atomic Buffer Size: " << atomicBufferSize << " bytes" << std::endl;
+    //GLint64 atomicBufferSize = 0;
+    //if (m_AtomicBuffer) {
+    //    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_AtomicBuffer->GetBufferID());
+    //    glGetBufferParameteri64v(GL_ATOMIC_COUNTER_BUFFER, GL_BUFFER_SIZE, &atomicBufferSize);
+    //}
+    //std::cout << "Atomic Buffer Size: " << atomicBufferSize << " bytes" << std::endl;
 
-    GLint64 particleSSBOSize = 0;
-    if (m_ParticleSSBO) {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ParticleSSBO->GetBufferID());
-        glGetBufferParameteri64v(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &particleSSBOSize);
-    }
-    std::cout << "Particle SSBO Buffer Size: " << particleSSBOSize << " bytes" << std::endl;
+    //GLint64 particleSSBOSize = 0;
+    //if (m_ParticleSSBO) {
+    //    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ParticleSSBO->GetBufferID());
+    //    glGetBufferParameteri64v(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &particleSSBOSize);
+    //}
+    //std::cout << "Particle SSBO Buffer Size: " << particleSSBOSize << " bytes" << std::endl;
 
-    GLint64 instanceVBOSize = 0;
-    if (m_InstanceVBO) {
-        glBindBuffer(GL_ARRAY_BUFFER, m_InstanceVBO->GetBufferID());
-        glGetBufferParameteri64v(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &instanceVBOSize);
-    }
-    std::cout << "Instance VBO Buffer Size: " << instanceVBOSize << " bytes" << std::endl;
+    //GLint64 instanceVBOSize = 0;
+    //if (m_InstanceVBO) {
+    //    glBindBuffer(GL_ARRAY_BUFFER, m_InstanceVBO->GetBufferID());
+    //    glGetBufferParameteri64v(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &instanceVBOSize);
+    //}
+    //std::cout << "Instance VBO Buffer Size: " << instanceVBOSize << " bytes" << std::endl;
 
-    // Compute total GPU memory used
-    double totalMemoryMB = static_cast<double>(particleSSBOSize + atomicBufferSize + freeListBufferSize + instanceVBOSize) / (1024.0 * 1024.0);
-    std::cout << "Total GPU Memory Used by Buffers: " << totalMemoryMB << " MB" << std::endl;
+    //// Compute total GPU memory used
+    //double totalMemoryMB = static_cast<double>(particleSSBOSize + atomicBufferSize + freeListBufferSize + instanceVBOSize) / (1024.0 * 1024.0);
+    //std::cout << "Total GPU Memory Used by Buffers: " << totalMemoryMB << " MB" << std::endl;
+    //}
 }
 
 template <typename ParticleType>
@@ -281,8 +277,8 @@ void ParticleSystemGPU<ParticleType>::Update(float delta, const glm::mat4& viewP
     {
         // Bind atomic counter for emitter shader to use
         m_AtomicBuffer->BindBase(GL_ATOMIC_COUNTER_BUFFER, 1);
-        m_ParticleSSBO->BindBase(GL_SHADER_STORAGE_BUFFER, 0);
-        m_FreeListBuffer->BindBase(GL_SHADER_STORAGE_BUFFER, 1);
+        m_FreeListBuffer->BindBase(GL_SHADER_STORAGE_BUFFER, 0);
+        m_CurrentBehavior->BindParticleBuffers(1);
 
         // Set emitter shader uniforms
         m_EmitterShader->Bind();
@@ -313,9 +309,9 @@ void ParticleSystemGPU<ParticleType>::Update(float delta, const glm::mat4& viewP
 
     // ---- UPDATE PARTICLES ON GPU ----
     // Bind the SSBO for the update shader
-    m_ParticleSSBO->BindBase(GL_SHADER_STORAGE_BUFFER, 0);
     m_ParticleCountBuffer->BindBase(GL_ATOMIC_COUNTER_BUFFER, 1);
-    m_FreeListBuffer->BindBase(GL_SHADER_STORAGE_BUFFER, 1);
+    m_FreeListBuffer->BindBase(GL_SHADER_STORAGE_BUFFER, 0);
+    m_CurrentBehavior->BindParticleBuffers(1);
 
     // Set compute shader uniforms
     m_ComputeShader->Bind();
@@ -350,7 +346,6 @@ template <typename ParticleType>
 void ParticleSystemGPU<ParticleType>::Render(Shader& shader)
 {
     shader.Bind();
-    m_ParticleSSBO->BindBase(GL_SHADER_STORAGE_BUFFER, 0);
     m_ParticleVAO->Bind();
     // Draw m_MaxParticles instances - the shader will discard inactive ones
     GLCall(glDrawArrays(GL_POINTS, 0, m_MaxParticles));

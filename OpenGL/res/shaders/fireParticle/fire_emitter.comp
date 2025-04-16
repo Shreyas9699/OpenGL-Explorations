@@ -2,25 +2,33 @@
 #version 430 core
 layout(local_size_x = 256) in;
 
-struct FireParticle 
-{
-    vec4 position;    // xyz = position, w = size
-    vec4 velocity;    // xyz = velocity, w = lifeRemaining
-    float lifespan;
-    float temperature;
-    float smokeAmount;
-    float padding;
+// Changed to Structure of Arrays
+layout(std430, binding = 1) buffer Positions {
+    vec4 positions[];
 };
 
-layout(binding = 0) uniform atomic_uint newParticleCounter;
-layout(std430, binding = 0) buffer ParticleBuffer {
-    FireParticle particles[];
+layout(std430, binding = 2) buffer Velocities {
+    vec4 velocities[];
 };
 
-layout(std430, binding = 1) buffer FreeListBuffer {
+layout(std430, binding = 3) buffer Temperatures {
+    float temperatures[];
+};
+
+layout(std430, binding = 4) buffer SmokeAmounts {
+    float smokeAmounts[];
+};
+
+layout(std430, binding = 5) buffer Lifespans {
+    float lifespans[];
+};
+
+layout(std430, binding = 0) buffer FreeListBuffer {
     int count;
     int indices[];
 } freelist;
+
+layout(binding = 5, offset = 0) uniform atomic_uint newParticleCounter;
 
 // Emitter parameters
 uniform int newParticleCount;
@@ -176,39 +184,33 @@ vec3 generateVelocity(vec3 position)
     return dir * speed;
 }
 
-void EmitParticle(int particleIndex)
+void EmitParticle(int idx)
 {
     // Initialize random seed based on particle index and time
-    seed = uint(particleIndex) + uint(time * 10000.0);
-    
-    // Get particle to initialize
-    FireParticle particle = particles[particleIndex];
+    seed = uint(idx) + uint(time * 10000.0);
     
     // Set position - distribute across emitter disk
     vec3 posOffset = randomInUnitDisk() * emitterRadius;
-    particle.position.xyz = generateCirclePosition();
+    positions[idx].xyz = generateCirclePosition();
     
     // Randomize particle size
-    particle.position.w = particleSizeBegin;
+    positions[idx].w = particleSizeBegin;
     
     // Set initial upward velocity with some randomness
-    particle.velocity.xyz = generateVelocity(particle.position.xyz);
+    velocities[idx].xyz = generateVelocity(positions[idx].xyz);
     
     // Set lifetime
-    particle.velocity.w = particleLifespan;  // Remaining lifetime
-    particle.lifespan = particleLifespan;  // Total lifespan
+    velocities[idx].w = particleLifespan;  // Remaining lifetime
+    lifespans[idx] = particleLifespan;  // Total lifespan
     
     // Set initial temperature - hotter near center
     float distFromCenter = length(posOffset) / emitterRadius;
     float tempRandom = rand() * 0.2 - 0.1; // 10% randomness
     float temp = mix(maxTemperature, minTemperature, distFromCenter) * (1.0 + tempRandom);
-    particle.temperature = temp;
+    temperatures[idx] = temp;
     
     // Initialize smoke amount to zero (pure flame)
-    particle.smokeAmount = 0.0;
-    
-    // Write back to buffer
-    particles[particleIndex] = particle;
+    smokeAmounts[idx] = 0.0;
 }
 
 void main()
@@ -247,9 +249,9 @@ void main()
     vec3 colorVar = vec3(rand()*0.15-0.075, rand()*0.3-0.15, 0.0);
     
     // Set particle properties
-    particles[particleIndex].position = vec4(position, particleSizeBegin);
-    particles[particleIndex].velocity = vec4(velocity, particleLifespan * (0.75 + rand()*0.5)); //Adds 25% lifetime variation for organic decay:
-    particles[particleIndex].lifespan = particleLifespan * (0.75 + rand()*0.5);
-    particles[particleIndex].temperature = temp;
-    particles[particleIndex].smokeAmount = 0.0;
+    positions[particleIndex] = vec4(position, particleSizeBegin);
+    velocities[particleIndex] = vec4(velocity, particleLifespan * (0.75 + rand()*0.5)); //Adds 25% lifetime variation for organic decay:
+    lifespans[particleIndex] = particleLifespan * (0.75 + rand()*0.5);
+    temperatures[particleIndex] = temp;
+    smokeAmounts[particleIndex] = 0.0;
 }

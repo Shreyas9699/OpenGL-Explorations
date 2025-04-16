@@ -76,6 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\..\..\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.43.34808\include\xmemory" />
     <None Include="imgui.ini" />
     <None Include="res\objects\1903WrightFlyer\wrightflyer_joined_fullRes.mtl" />
     <None Include="res\objects\apolloExterior\apollo_exterior-shell-master.mtl" />
@@ -447,12 +448,12 @@
     <ClCompile Include="src\Renderer.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\TerrainChunk.cpp" />
-    <ClCompile Include="src\tests\TestFireSimulation.cpp" />
     <ClCompile Include="src\tests\Test.cpp" />
     <ClCompile Include="src\tests\TestClearColor.cpp" />
     <ClCompile Include="src\tests\TestCubeRendering.cpp" />
     <ClCompile Include="src\tests\TestCubeRenderingWTex.cpp" />
     <ClCompile Include="src\tests\TestFBMPlane.cpp" />
+    <ClCompile Include="src\tests\TestFireSimulation.cpp" />
     <ClCompile Include="src\tests\TestHeightMap.cpp" />
     <ClCompile Include="src\tests\TestLoadModels.cpp" />
     <ClCompile Include="src\tests\TestParticleCPU.cpp" />
@@ -480,6 +481,7 @@
   <ItemGroup>
     <ClInclude Include="Core\Random.h" />
     <ClInclude Include="Core\Timestep.h" />
+    <ClInclude Include="src\AttributeBuffer.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\CameraController.h" />
     <ClInclude Include="src\ComputeShader.h" />
@@ -492,6 +494,7 @@
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Particle.h" />
     <ClInclude Include="src\ParticleBehavior.h" />
+    <ClInclude Include="src\ParticleData.h" />
     <ClInclude Include="src\ParticleSystemBase.h" />
     <ClInclude Include="src\ParticleSystemCPU.h" />
     <ClInclude Include="src\ParticleSystemGPU.h" />
@@ -500,12 +503,12 @@
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Sphere.h" />
     <ClInclude Include="src\TerrainChunk.h" />
-    <ClInclude Include="src\tests\TestFireSimulation.h" />
     <ClInclude Include="src\tests\Test.h" />
     <ClInclude Include="src\tests\TestClearColor.h" />
     <ClInclude Include="src\tests\TestCubeRendering.h" />
     <ClInclude Include="src\tests\TestCubeRenderingWTex.h" />
     <ClInclude Include="src\tests\TestFBMPlane.h" />
+    <ClInclude Include="src\tests\TestFireSimulation.h" />
     <ClInclude Include="src\tests\TestHeightMap.h" />
     <ClInclude Include="src\tests\TestIncludeHeader.h" />
     <ClInclude Include="src\tests\TestLoadModels.h" />
