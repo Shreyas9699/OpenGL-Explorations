@@ -61,6 +61,8 @@ Here are some project screenshots and a video:
     - Uses height map to generate 3D terrain
     - Uses Frustum culling before mesh generation, Multithreading, Dynamic tessellation based on FOV, and camera distance for performace optimization.
 
+Particle system: Initial Implemented using Array of Structures (AoS), with commit [cc8fe1647093a94a01c6ae96c84aa74215fd3172]
+
 ## Getting Started
 You can follow same instructions on `https://github.com/Shreyas9699/opengl-base-template` to set it up.
 <br/>__OR__<br/>
@@ -81,6 +83,12 @@ You can follow _The Cherno_ [_Instructions_](https://www.youtube.com/playlist?li
 - Use the ImGui interface to modify rendering parameters in real-time.
 - Explore different rendering techniques by selecting from the available demos.
 
+
+## Recent Changes
+- 2025-04-16: Update particle system from Array of Structures (AoS) to Structure of Arrays (SoA)
+
+![Last Commit](https://img.shields.io/github/last-commit/Shreyas9699/OpenGL-Explorations)
+![Commit Activity](https://img.shields.io/github/commit-activity/m/Shreyas9699/OpenGL-Explorations)
 
 ## Acknowledgments
 
