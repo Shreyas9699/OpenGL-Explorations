@@ -18,7 +18,7 @@ namespace test
 		m_Shader = std::make_unique<Shader>("res/shaders/fireParticle/fire_VS.glsl",
 			"res/shaders/fireParticle/fire_FS.glsl");
 		m_XZPlane = std::make_unique<XZPlaneGrid>(m_Window->GetAspectRatio(), m_GridSize, m_Near, m_Far);
-		m_ParticleSys = std::make_unique<ParticleSystemGPU<FireParticle>>("fire");
+		m_ParticleSys = std::make_unique<ParticleSystemGPU>("fire");
 
 		emitterProp.shape = EmitterShape::CIRCLE;
 		emitterProp.emissionRate = 20000;

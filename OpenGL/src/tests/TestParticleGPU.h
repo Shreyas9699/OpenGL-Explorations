@@ -16,7 +16,7 @@ namespace test
 		std::unique_ptr<Shader> m_Shader;
 		std::unique_ptr<Shader> m_ShaderGPU;
 		std::unique_ptr<XZPlaneGrid> m_XZPlane;
-		std::unique_ptr<ParticleSystemGPU<GPUParticle>> m_ParticleSys;
+		std::unique_ptr<ParticleSystemGPU> m_ParticleSys;
 		Camera m_Camera;
 		CameraController m_cameraController;
 		int m_GridSize = 100;

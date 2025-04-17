@@ -481,7 +481,6 @@
   <ItemGroup>
     <ClInclude Include="Core\Random.h" />
     <ClInclude Include="Core\Timestep.h" />
-    <ClInclude Include="src\AttributeBuffer.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\CameraController.h" />
     <ClInclude Include="src\ComputeShader.h" />
@@ -494,7 +493,6 @@
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Particle.h" />
     <ClInclude Include="src\ParticleBehavior.h" />
-    <ClInclude Include="src\ParticleData.h" />
     <ClInclude Include="src\ParticleSystemBase.h" />
     <ClInclude Include="src\ParticleSystemCPU.h" />
     <ClInclude Include="src\ParticleSystemGPU.h" />

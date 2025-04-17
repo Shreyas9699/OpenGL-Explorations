@@ -33,7 +33,21 @@ private:
 
 public:
     void Initialize() override {}
-	void Cleanup() override {}
+
+	void Cleanup() override 
+    {
+        m_Positions.clear();
+        m_Velocities.clear();
+        m_Temperatures.clear();
+        m_SmokeAmounts.clear();
+        m_Lifespans.clear();
+
+        m_SSBO_Positions = 0;
+        m_SSBO_Velocities = 0;
+        m_SSBO_Temperatures = 0;
+        m_SSBO_SmokeAmounts = 0;
+        m_SSBO_Lifespans = 0;
+    }
 
     void CreateParticleBuffers(size_t maxParticles) override 
     {

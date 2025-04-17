@@ -19,7 +19,20 @@ private:
 
 public:
     void Initialize() override {}
-    void Cleanup() override {}
+    void CustomGUI() override {}
+
+    void Cleanup() override 
+    {
+        m_Positions.clear();
+        m_Velocities.clear();
+        m_ColorBegins.clear();
+        m_ColorEnds.clear();
+
+        m_SSBO_Positions = 0;
+        m_SSBO_Velocities = 0;
+        m_SSBO_ColorBegins = 0;
+        m_SSBO_ColorEnds = 0;
+    }
 
     void CreateParticleBuffers(size_t maxParticles) override 
     {
@@ -101,4 +114,5 @@ public:
     {
         m_GlobalForce = force;
     }
+
 };

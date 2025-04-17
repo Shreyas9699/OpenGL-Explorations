@@ -2027,12 +2027,6 @@
     <ClInclude Include="src\UtilityStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\AttributeBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ParticleData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\FireParticleBehavior.h">
       <Filter>Header Files</Filter>
     </ClInclude>
