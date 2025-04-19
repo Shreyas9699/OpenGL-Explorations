@@ -29,7 +29,7 @@ void XZPlaneGrid::UpdateAspectRation(float aspectRatio)
 
 void XZPlaneGrid::UpdateGridSize(float gridSize)
 {
-    m_GridSize = gridSize;
+    m_GridSize = static_cast<size_t>(gridSize);
 }
 
 void XZPlaneGrid::UpdateNear(float near)

@@ -13,7 +13,6 @@ namespace test
 	{
 		Window* m_Window;
 		std::unique_ptr<Shader> m_Shader;
-		std::unique_ptr<Shader> m_ShaderGPU;
 		std::unique_ptr<XZPlaneGrid> m_XZPlane;
 		std::unique_ptr<ParticleSystemGPU> m_ParticleSys;
 		Camera m_Camera;
