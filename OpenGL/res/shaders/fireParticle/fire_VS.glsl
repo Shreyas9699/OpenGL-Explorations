@@ -11,14 +11,6 @@ layout(std430, binding = 2) buffer Velocities {
     vec4 velocities[];
 };
 
-layout(std430, binding = 3) buffer Temperatures {
-    float temperatures[];
-};
-
-layout(std430, binding = 4) buffer SmokeAmounts {
-    float smokeAmounts[];
-};
-
 layout(std430, binding = 5) buffer Lifespans {
     float lifespans[];
 };

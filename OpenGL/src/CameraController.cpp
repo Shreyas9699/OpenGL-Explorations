@@ -35,18 +35,23 @@ void CameraController::Update(float deltaTime)
 
 void CameraController::ProcessKeyboardInput(float deltaTime) 
 {
+    // Detect if Shift is held
+    bool shiftHeld = (glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) ||
+                     (glfwGetKey(m_window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS);
+    //m_camera.IncreaseOutlier(shiftHeld ? 5.0f : 1.0f); // 5x speed when Shift is held
+
     if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
-        m_camera.ProcessKeyboard(FORWARD, deltaTime);
+        m_camera.ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
-        m_camera.ProcessKeyboard(BACKWARD, deltaTime);
+        m_camera.ProcessKeyboard(Camera_Movement::BACKWARD, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
-        m_camera.ProcessKeyboard(LEFT, deltaTime);
+        m_camera.ProcessKeyboard(Camera_Movement::LEFT, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
-        m_camera.ProcessKeyboard(RIGHT, deltaTime);
+        m_camera.ProcessKeyboard(Camera_Movement::RIGHT, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        m_camera.ProcessKeyboard(UP, deltaTime);
+        m_camera.ProcessKeyboard(Camera_Movement::UP, deltaTime);
     if (glfwGetKey(m_window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
-        m_camera.ProcessKeyboard(DOWN, deltaTime);
+        m_camera.ProcessKeyboard(Camera_Movement::DOWN, deltaTime);
 
     static bool isCPressed = false;
     if (glfwGetKey(m_window, GLFW_KEY_C) == GLFW_PRESS) 

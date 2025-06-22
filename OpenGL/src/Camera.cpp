@@ -19,22 +19,71 @@ void Camera::LookAt(const glm::vec3& target)
     updateCameraVectors(); // Update right/up vectors
 }
 
+// Camera constructor with vectors
+Camera::Camera(
+    glm::vec3 position,
+    glm::vec3 up,
+    glm::vec3 front,
+    float yaw,
+    float pitch,
+    float movementSpeed,
+    float mouseSens,
+    float zoom)
+    : Position(position),
+      WorldUp(up),
+      Front(front),
+      Yaw(yaw),
+      Pitch(pitch),
+      MovementSpeed(movementSpeed),
+      MouseSensitivity(mouseSens),
+      Zoom(zoom)
+{
+    updateCameraVectors();
+}
+
+// Camera constructor with scalar values
+Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
+    : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+{
+    Position = glm::vec3(posX, posY, posZ);
+    WorldUp = glm::vec3(upX, upY, upZ);
+    Yaw = yaw;
+    Pitch = pitch;
+    updateCameraVectors();
+}
+
 // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
-    float velocity = MovementSpeed * deltaTime * outlier;
-    if (direction == FORWARD)
-        Position += Front * velocity;
-    if (direction == BACKWARD)
-        Position -= Front * velocity;
-    if (direction == LEFT)
-        Position -= Right * velocity;
-    if (direction == RIGHT)
-        Position += Right * velocity;
-    if (direction == UP)
-        Position += Up * velocity;
-    if (direction == DOWN)
-        Position -= Up * velocity;
+    if (Mode == Camera_Mode::FreeFly) {
+        if (SmoothMovement) {
+            glm::vec3 desired = glm::vec3(0.0f);
+            float velocity = MovementSpeed * outlier;
+            switch (direction) {
+                case Camera_Movement::FORWARD:  desired += Front * velocity; break;
+                case Camera_Movement::BACKWARD: desired -= Front * velocity; break;
+                case Camera_Movement::LEFT:     desired -= Right * velocity; break;
+                case Camera_Movement::RIGHT:    desired += Right * velocity; break;
+                case Camera_Movement::UP:       desired += Up * velocity; break;
+                case Camera_Movement::DOWN:     desired -= Up * velocity; break;
+            }
+            // Accelerate towards desired direction
+            Acceleration = (desired - Velocity) * Damping;
+        } else {
+            float velocity = MovementSpeed * deltaTime * outlier;
+            switch (direction) {
+                case Camera_Movement::FORWARD:  Position += Front * velocity; break;
+                case Camera_Movement::BACKWARD: Position -= Front * velocity; break;
+                case Camera_Movement::LEFT:     Position -= Right * velocity; break;
+                case Camera_Movement::RIGHT:    Position += Right * velocity; break;
+                case Camera_Movement::UP:       Position += Up * velocity; break;
+                case Camera_Movement::DOWN:     Position -= Up * velocity; break;
+            }
+        }
+    } else if (Mode == Camera_Mode::Orbit) {
+        // Stub: Orbit mode movement (implement as needed)
+        // For example, change OrbitDistance or OrbitTarget
+    }
 }
 
 // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -67,6 +116,30 @@ void Camera::ProcessMouseScroll(float yoffset)
         Zoom = 1.0f;
     if (Zoom > 45.0f)
         Zoom = 45.0f;
+}
+
+void Camera::UpdateCamera(float deltaTime)
+{
+    if (Mode == Camera_Mode::FreeFly && SmoothMovement) {
+        // Integrate velocity and position
+        Velocity += Acceleration * deltaTime;
+        Position += Velocity * deltaTime;
+        // Dampen velocity
+        Velocity *= 0.95f;
+        // Reset acceleration
+        Acceleration = glm::vec3(0.0f);
+    } else if (Mode == Camera_Mode::Orbit) {
+        // Stub: Orbit mode update (implement as needed)
+        // Example: update Position based on OrbitTarget, OrbitDistance, Yaw, Pitch
+        float yawRad = glm::radians(Yaw);
+        float pitchRad = glm::radians(Pitch);
+        Position = OrbitTarget + glm::vec3(
+            OrbitDistance * cos(pitchRad) * cos(yawRad),
+            OrbitDistance * sin(pitchRad),
+            OrbitDistance * cos(pitchRad) * sin(yawRad)
+        );
+        updateCameraVectors();
+    }
 }
 
 void Camera::updateCameraVectors()

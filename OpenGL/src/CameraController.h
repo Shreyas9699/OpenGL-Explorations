@@ -14,6 +14,10 @@ public:
     bool IsEnabled() const { return m_enabled; }
     float GetAspectRatio() const { return m_aspectRatio; }
 
+    // New: Enable/disable shift speed feature
+    void SetShiftSpeedEnabled(bool enabled) { m_shiftSpeedEnabled = enabled; }
+    bool IsShiftSpeedEnabled() const { return m_shiftSpeedEnabled; }
+
     // Static callback wrappers
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
     static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
@@ -42,4 +46,7 @@ private:
     // Previous callback functions (to maintain chain)
     GLFWcursorposfun m_previousMouseCallback;
     GLFWscrollfun m_previousScrollCallback;
+
+    // New: Shift speed feature toggle
+    bool m_shiftSpeedEnabled = true;
 };

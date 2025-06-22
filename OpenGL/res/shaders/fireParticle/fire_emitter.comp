@@ -23,6 +23,34 @@ layout(std430, binding = 5) buffer Lifespans {
     float lifespans[];
 };
 
+layout(std430, binding = 6) buffer Densities {
+    float densities[];
+};
+
+layout(std430, binding = 7) buffer Pressures {
+    float pressures[];
+};
+
+layout(std430, binding = 8) buffer SmoothingLengths {
+    float smoothingLengths[];
+};
+
+layout(std430, binding = 9) buffer GridHash {
+    float gridHash[];
+};
+
+layout(std430, binding = 10) buffer SortedIndices {
+    float sortedIndices[];
+};
+
+layout(std430, binding = 11) buffer CellStarts {
+    float cellStarts[];
+};
+
+layout(std430, binding = 12) buffer CellEnds {
+    float cellEnds[];
+};
+
 layout(std430, binding = 0) buffer FreeListBuffer {
     int count;
     int indices[];
@@ -49,6 +77,10 @@ uniform float time;
 // Fire temp properties
 uniform float minTemperature;
 uniform float maxTemperature;
+
+// SPH parameters
+uniform float h;
+uniform float restDensity;
 
 // Random number generation
 uint seed = 0;
@@ -254,4 +286,7 @@ void main()
     lifespans[particleIndex] = particleLifespan * (0.75 + rand()*0.5);
     temperatures[particleIndex] = temp;
     smokeAmounts[particleIndex] = 0.0;
+    densities[particleIndex] = restDensity;
+    pressures[particleIndex] = 0.0;
+    smoothingLengths[particleIndex] = h;
 }

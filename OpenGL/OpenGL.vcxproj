@@ -103,6 +103,7 @@
     <None Include="res\objects\porsche\skyline_GTR.cob" />
     <None Include="res\objects\spider\spider.mtl" />
     <None Include="res\objects\wb\WhiteBeard.mtl" />
+    <None Include="res\shaders\fireParticle\fire_grid_build.comp" />
     <None Include="res\shaders\Heightmap\minimapFS.glsl" />
     <None Include="res\shaders\Heightmap\minimapVS.glsl" />
     <None Include="res\shaders\ParticleSysGPU\culling.comp" />

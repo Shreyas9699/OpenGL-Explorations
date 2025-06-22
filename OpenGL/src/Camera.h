@@ -3,14 +3,20 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-enum Camera_Movement
-{
+// Camera movement types
+enum class Camera_Movement {
     FORWARD,
     BACKWARD,
     LEFT,
     RIGHT,
     UP,
     DOWN
+};
+
+// Camera control modes
+enum class Camera_Mode {
+    FreeFly,
+    Orbit
 };
 
 // Default camera values
@@ -20,8 +26,7 @@ const float SPEED = 2.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 
-class Camera
-{
+class Camera {
 public:
     glm::vec3 Position;
     glm::vec3 Front;
@@ -37,6 +42,18 @@ public:
     float MouseSensitivity;
     float Zoom;
 
+    // Smoothing/acceleration
+    bool SmoothMovement = false;
+    glm::vec3 Velocity = glm::vec3(0.0f);
+    glm::vec3 Acceleration = glm::vec3(0.0f);
+    float Damping = 10.0f; // Higher = snappier
+
+    // Camera mode
+    Camera_Mode Mode = Camera_Mode::FreeFly;
+    // Orbit/Arcball parameters (stubs)
+    glm::vec3 OrbitTarget = glm::vec3(0.0f);
+    float OrbitDistance = 10.0f;
+
     // constructor with vectors
     Camera(
         glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
@@ -47,29 +64,10 @@ public:
         float movementSpeed = SPEED,
         float mouseSens = SENSITIVITY,
         float zoom = ZOOM
-    )
-        : Position(position),
-          WorldUp(up),
-          Front(front),
-          Yaw(yaw),
-          Pitch(pitch),
-          MovementSpeed(movementSpeed),
-          MouseSensitivity(mouseSens),
-          Zoom(zoom)
-    {
-        updateCameraVectors();
-    }
+    );
 
     // constructor with scalar values
-    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
-        : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
-    {
-        Position = glm::vec3(posX, posY, posZ);
-        WorldUp = glm::vec3(upX, upY, upZ);
-        Yaw = yaw;
-        Pitch = pitch;
-        updateCameraVectors();
-    }
+    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
 
     // Camera movement methods
     glm::mat4 GetViewMatrix() const;
@@ -82,6 +80,17 @@ public:
     void SetCameraZoom(float val);
     void IncreaseOutlier(float val);
     void SetMouseSensitivity(float val);
+
+    // Smoothing and mode controls
+    void SetSmoothMovement(bool enable) { SmoothMovement = enable; }
+    bool IsSmoothMovement() const { return SmoothMovement; }
+    void SetCameraMode(Camera_Mode mode) { Mode = mode; }
+    Camera_Mode GetCameraMode() const { return Mode; }
+    void SetOrbitTarget(const glm::vec3& target) { OrbitTarget = target; }
+    void SetOrbitDistance(float dist) { OrbitDistance = dist; }
+
+    // Call this per-frame to update position if smoothing is enabled
+    void UpdateCamera(float deltaTime);
 
 private:
     void updateCameraVectors();

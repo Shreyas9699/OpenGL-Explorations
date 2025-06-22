@@ -12,12 +12,26 @@ private:
     std::vector<float> m_Temperatures;
 	std::vector<float> m_SmokeAmounts;
 	std::vector<float> m_Lifespans;
+    std::vector<float> m_Densities;
+    std::vector<float> m_Pressures;
+    std::vector<float> m_SmoothingLengths;
+	std::vector<glm::uvec2> m_GridHash;
+	std::vector<GLuint> m_SortedIndices;
+    std::vector<int> m_CellStarts;
+	std::vector<int> m_CellEnds;
 
 	GLuint m_SSBO_Positions = 0;
 	GLuint m_SSBO_Velocities = 0;
 	GLuint m_SSBO_Temperatures = 0;
 	GLuint m_SSBO_SmokeAmounts = 0;
 	GLuint m_SSBO_Lifespans = 0;
+    GLuint m_SSBO_Densities = 0;
+    GLuint m_SSBO_Pressures = 0;
+    GLuint m_SSBO_SmoothingLengths = 0;
+    GLuint m_SSBO_GridHash = 0;
+    GLuint m_SSBO_SortedIndices = 0;
+    GLuint m_SSBO_CellStarts = 0;
+    GLuint m_SSBO_CellEnds = 0;
 
     glm::vec3 m_GlobalForce = glm::vec3(0.0f, -9.8f, 0.0f);
     float m_RiseSpeed = 5.0f;
@@ -27,9 +41,12 @@ private:
     float m_UpwardForce = 3.0f;
     glm::vec3 m_WindDirection = glm::vec3(0.2f, 0.0f, 0.1f);
     float m_WindStrength = 0.0f;
-    float m_mass = 1.0e-8f;
+    float m_Mass = 1.0e-8f;
     float m_MinTemperature = 700.0f;
     float m_MaxTemperature = 1200.0f;
+	float m_SmoothingLength = 0.1f;
+	float m_RestDensity = 1.0f;
+    float m_GasConstant = 1.0f;
 
 public:
     void Initialize() override {}
@@ -41,12 +58,26 @@ public:
         m_Temperatures.clear();
         m_SmokeAmounts.clear();
         m_Lifespans.clear();
+        m_Densities.clear();
+        m_Pressures.clear();
+        m_SmoothingLengths.clear();
+        m_GridHash.clear();
+        m_SortedIndices.clear();
+        m_CellStarts.clear();
+        m_CellEnds.clear();
 
         m_SSBO_Positions = 0;
         m_SSBO_Velocities = 0;
         m_SSBO_Temperatures = 0;
         m_SSBO_SmokeAmounts = 0;
         m_SSBO_Lifespans = 0;
+        m_SSBO_Densities = 0;
+        m_SSBO_Pressures = 0;
+        m_SSBO_SmoothingLengths = 0;
+        m_SSBO_GridHash = 0;
+        m_SSBO_SortedIndices = 0;
+        m_SSBO_CellStarts = 0;
+        m_SSBO_CellEnds = 0;
     }
 
     void CreateParticleBuffers(size_t maxParticles) override 
@@ -56,6 +87,13 @@ public:
         m_Temperatures.resize(maxParticles);
         m_SmokeAmounts.resize(maxParticles);
         m_Lifespans.resize(maxParticles);
+        m_Densities.resize(maxParticles);
+        m_Pressures.resize(maxParticles);
+        m_SmoothingLengths.resize(maxParticles);
+        m_GridHash.resize(maxParticles);
+        m_SortedIndices.resize(maxParticles);
+        m_CellStarts.resize(maxParticles);
+        m_CellEnds.resize(maxParticles);
 
         glGenBuffers(1, &m_SSBO_Positions);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Positions);
@@ -76,6 +114,34 @@ public:
         glGenBuffers(1, &m_SSBO_Lifespans);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Lifespans);
         glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(float), m_Lifespans.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_Densities);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Densities);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(float), m_Densities.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_Pressures);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Pressures);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(float), m_Pressures.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_SmoothingLengths);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_SmoothingLengths);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(float), m_SmoothingLengths.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_GridHash);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_GridHash);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::uvec2), m_GridHash.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_SortedIndices);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_SortedIndices);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(GLuint), m_SortedIndices.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_CellStarts);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_CellStarts);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(int), m_CellStarts.data(), GL_DYNAMIC_DRAW);
+
+        glGenBuffers(1, &m_SSBO_CellEnds);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_CellEnds);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(int), m_CellEnds.data(), GL_DYNAMIC_DRAW);
     }
 
     void UpdateParticleBuffers() override 
@@ -94,6 +160,27 @@ public:
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Lifespans);
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Lifespans.size() * sizeof(float), m_Lifespans.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Densities);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Densities.size() * sizeof(float), m_Densities.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Pressures);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Pressures.size() * sizeof(float), m_Pressures.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_SmoothingLengths);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_SmoothingLengths.size() * sizeof(float), m_SmoothingLengths.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_GridHash);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_GridHash.size() * sizeof(glm::vec4), m_GridHash.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_SortedIndices);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_SortedIndices.size() * sizeof(GLuint), m_SortedIndices.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_CellStarts);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_CellStarts.size() * sizeof(int), m_CellStarts.data());
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_CellEnds);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_CellEnds.size() * sizeof(int), m_CellEnds.data());
     }
 
     void BindParticleBuffers(GLuint baseBinding) override 
@@ -103,8 +190,14 @@ public:
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 2, m_SSBO_Temperatures);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 3, m_SSBO_SmokeAmounts);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 4, m_SSBO_Lifespans);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 5, m_SSBO_Densities);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 6, m_SSBO_Pressures);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 7, m_SSBO_SmoothingLengths);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 8, m_SSBO_GridHash);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 9, m_SSBO_SortedIndices);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 10, m_SSBO_CellStarts);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 11, m_SSBO_CellEnds);
     }
-
 
     void UpdateUniforms(ComputeShader& computeShader) override 
     {
@@ -113,6 +206,7 @@ public:
         computeShader.setFloat("windStrength", m_WindStrength);
         computeShader.setFloat("turbulenceScale", m_Turbulence);
         computeShader.setFloat("flickerSpeed", m_FlickerSpeed);
+        computeShader.setFloat("gasConstant", m_GasConstant);
     }
 
     void UpdateEmitterUniforms(ComputeShader& emitterShader) override
@@ -120,7 +214,10 @@ public:
         // Set uniforms for fire emitter shader
         emitterShader.setFloat("minTemperature", m_MinTemperature);
         emitterShader.setFloat("maxTemperature", m_MaxTemperature);
-		emitterShader.setFloat("mass", m_mass);
+		emitterShader.setFloat("mass", m_Mass);
+        emitterShader.setFloat("h", m_SmoothingLength);
+        emitterShader.setFloat("restDensity", m_RestDensity);
+
     }
 
     std::string GetComputeShaderPath() const override 
