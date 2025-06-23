@@ -45,8 +45,13 @@ private:
     float m_MinTemperature = 700.0f;
     float m_MaxTemperature = 1200.0f;
 	float m_SmoothingLength = 0.1f;
-	float m_RestDensity = 1.0f;
+	float m_RestDensity = 0.5f;
     float m_GasConstant = 1.0f;
+    float m_Buoyancy = 4.0f;
+    float m_AirResistance = 0.12f;
+    float m_TemperatureDecay = 180.0f;
+    float m_TurbulenceScale = 0.8f;
+    float m_BaseVorticity = 2.5f;
 
 public:
     void Initialize() override {}
@@ -199,14 +204,19 @@ public:
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 11, m_SSBO_CellEnds);
     }
 
-    void UpdateUniforms(ComputeShader& computeShader) override 
+    void UpdateUniforms(ComputeShader& computeShader) override
     {
         computeShader.setVec3("globalForce", m_GlobalForce);
         computeShader.setVec3("windDirection", m_WindDirection);
         computeShader.setFloat("windStrength", m_WindStrength);
-        computeShader.setFloat("turbulenceScale", m_Turbulence);
+        computeShader.setFloat("turbulenceScale", m_TurbulenceScale);
         computeShader.setFloat("flickerSpeed", m_FlickerSpeed);
         computeShader.setFloat("gasConstant", m_GasConstant);
+        computeShader.setFloat("mass", m_Mass);
+        computeShader.setFloat("buoyancy", m_Buoyancy);
+        computeShader.setFloat("airResistance", m_AirResistance);
+        computeShader.setFloat("temperatureDecay", m_TemperatureDecay);
+        computeShader.setFloat("restDensity", m_RestDensity);
     }
 
     void UpdateEmitterUniforms(ComputeShader& emitterShader) override
@@ -259,17 +269,25 @@ public:
     {
         if (ImGui::CollapsingHeader("Fire Sim Properties", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            /*ImGui::SliderFloat("Rise Speed", &m_RiseSpeed, 0.0f, 10.0f);
-        ImGui::SliderFloat("Heat Dissipation", &m_HeatDissipation, 0.0f, 1.0f);*/
-            ImGui::SliderFloat("Turbulence", &m_Turbulence, 0.0f, 1.0f, "%.1f");
-            ImGui::SliderFloat("Upward Force", &m_UpwardForce, 0.0f, 10.0f, "%.1f");
-            ImGui::SliderFloat("Wind Strength", &m_WindStrength, 0.0f, 1.0f, "%.2f");
-            ImGui::SliderFloat("Wind Direction X", &m_WindDirection.x, -1.0f, 1.0f, "%.1f");
-            ImGui::SliderFloat("Wind Direction Y", &m_WindDirection.y, -1.0f, 1.0f, "%.1f");
-            ImGui::SliderFloat("Wind Direction Z", &m_WindDirection.z, -1.0f, 1.0f, "%.1f");
-            //ImGui::SliderFloat("Mass", &m_mass, 1.0e-8f, 1.0e-6f);
+            ImGui::SliderFloat("Turbulence", &m_TurbulenceScale, 0.0f, 2.0f, "%.1f");
+            ImGui::SliderFloat("Wind Strength", &m_WindStrength, 0.0f, 2.0f, "%.2f");
+            ImGui::SliderFloat3("Wind Direction", &m_WindDirection.x, -1.0f, 1.0f, "%.1f");
             ImGui::SliderFloat("Min Temperature", &m_MinTemperature, 0.0f, 2000.0f);
             ImGui::SliderFloat("Max Temperature", &m_MaxTemperature, 0.0f, 2000.0f);
+
+            if (ImGui::CollapsingHeader("SPH Parameters"))
+            {
+                ImGui::SliderFloat("Gas Constant", &m_GasConstant, 0.1f, 10.0f, "%.1f");
+                ImGui::SliderFloat("Rest Density", &m_RestDensity, 0.5f, 2.0f, "%.1f");
+                ImGui::SliderFloat("Smoothing Length", &m_SmoothingLength, 0.05f, 0.3f, "%.2f");
+                ImGui::SliderFloat("Buoyancy", &m_Buoyancy, 0.0f, 10.0f, "%.1f");
+            }
+
+            if (ImGui::CollapsingHeader("Physics Parameters"))
+            {
+                ImGui::SliderFloat("Air Resistance", &m_AirResistance, 0.0f, 1.0f, "%.2f");
+                ImGui::SliderFloat("Temperature Decay", &m_TemperatureDecay, 50.0f, 500.0f, "%.0f");
+            }
         }
     }
 };

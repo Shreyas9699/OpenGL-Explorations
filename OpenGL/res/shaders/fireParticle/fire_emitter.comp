@@ -36,19 +36,19 @@ layout(std430, binding = 8) buffer SmoothingLengths {
 };
 
 layout(std430, binding = 9) buffer GridHash {
-    float gridHash[];
+    uvec2 gridHash[];
 };
 
 layout(std430, binding = 10) buffer SortedIndices {
-    float sortedIndices[];
+    uint sortedIndices[];
 };
 
 layout(std430, binding = 11) buffer CellStarts {
-    float cellStarts[];
+    int cellStarts[];
 };
 
 layout(std430, binding = 12) buffer CellEnds {
-    float cellEnds[];
+    int cellEnds[];
 };
 
 layout(std430, binding = 0) buffer FreeListBuffer {

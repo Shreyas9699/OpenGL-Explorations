@@ -38,7 +38,8 @@ void CameraController::ProcessKeyboardInput(float deltaTime)
     // Detect if Shift is held
     bool shiftHeld = (glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) ||
                      (glfwGetKey(m_window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS);
-    //m_camera.IncreaseOutlier(shiftHeld ? 5.0f : 1.0f); // 5x speed when Shift is held
+    if(m_shiftSpeedEnabled)
+        m_camera.outlier = shiftHeld ? 5.0f : 1.0f; // 5x speed when Shift is held
 
     if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
         m_camera.ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);

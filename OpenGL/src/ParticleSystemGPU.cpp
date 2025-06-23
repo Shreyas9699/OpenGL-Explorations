@@ -260,7 +260,7 @@ void ParticleSystemGPU::Update(float delta, const glm::mat4& viewProj)
     std::cout << "Free list count: " << freeListCount << std::endl;*/
 
     // Ensure compute shader finishes before rendering
-    GLCall(glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT));
+    GLCall(glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_ATOMIC_COUNTER_BARRIER_BIT));
     GLCall(glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_ParticleCountBuffer->GetRendererID()));
     GLCall(glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &m_ActiveParticleCount));
 }
