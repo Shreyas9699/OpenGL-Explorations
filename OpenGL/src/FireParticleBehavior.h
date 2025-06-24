@@ -10,21 +10,22 @@ private:
     std::vector<glm::vec4> m_Positions;
     std::vector<glm::vec4> m_Velocities;
     std::vector<float> m_Temperatures;
-	std::vector<float> m_SmokeAmounts;
-	std::vector<float> m_Lifespans;
+    std::vector<float> m_SmokeAmounts;
+    std::vector<float> m_Lifespans;
     std::vector<float> m_Densities;
     std::vector<float> m_Pressures;
     std::vector<float> m_SmoothingLengths;
-	std::vector<glm::uvec2> m_GridHash;
-	std::vector<GLuint> m_SortedIndices;
+    std::vector<glm::uvec2> m_GridHash;
+    std::vector<GLuint> m_SortedIndices;
     std::vector<int> m_CellStarts;
-	std::vector<int> m_CellEnds;
+    std::vector<int> m_CellEnds;
 
-	GLuint m_SSBO_Positions = 0;
-	GLuint m_SSBO_Velocities = 0;
-	GLuint m_SSBO_Temperatures = 0;
-	GLuint m_SSBO_SmokeAmounts = 0;
-	GLuint m_SSBO_Lifespans = 0;
+    // GPU Buffers
+    GLuint m_SSBO_Positions = 0;
+    GLuint m_SSBO_Velocities = 0;
+    GLuint m_SSBO_Temperatures = 0;
+    GLuint m_SSBO_SmokeAmounts = 0;
+    GLuint m_SSBO_Lifespans = 0;
     GLuint m_SSBO_Densities = 0;
     GLuint m_SSBO_Pressures = 0;
     GLuint m_SSBO_SmoothingLengths = 0;
@@ -33,6 +34,7 @@ private:
     GLuint m_SSBO_CellStarts = 0;
     GLuint m_SSBO_CellEnds = 0;
 
+    // Physics parameters (optimized defaults)
     glm::vec3 m_GlobalForce = glm::vec3(0.0f, -9.8f, 0.0f);
     float m_RiseSpeed = 5.0f;
     float m_HeatDissipation = 0.8f;
@@ -44,20 +46,25 @@ private:
     float m_Mass = 1.0e-8f;
     float m_MinTemperature = 700.0f;
     float m_MaxTemperature = 1200.0f;
-	float m_SmoothingLength = 0.1f;
-	float m_RestDensity = 0.5f;
-    float m_GasConstant = 1.0f;
+    float m_SmoothingLength = 0.08f; // Reduced for better performance
+    float m_RestDensity = 0.5f;
+    float m_GasConstant = 0.5f; // Reduced for stability
     float m_Buoyancy = 4.0f;
     float m_AirResistance = 0.12f;
     float m_TemperatureDecay = 180.0f;
-    float m_TurbulenceScale = 0.8f;
+    float m_TurbulenceScale = 0.6f; // Reduced for performance
     float m_BaseVorticity = 2.5f;
+
+    // Grid parameters for optimized spatial hashing
+    float m_CellSize = 0.25f; // Optimized cell size
+    int m_GridResolution = 256; // Increased resolution
 
 public:
     void Initialize() override {}
 
-	void Cleanup() override 
+    void Cleanup() override
     {
+        // Clean up all vectors
         m_Positions.clear();
         m_Velocities.clear();
         m_Temperatures.clear();
@@ -71,6 +78,21 @@ public:
         m_CellStarts.clear();
         m_CellEnds.clear();
 
+        // Delete GPU buffers
+        if (m_SSBO_Positions) glDeleteBuffers(1, &m_SSBO_Positions);
+        if (m_SSBO_Velocities) glDeleteBuffers(1, &m_SSBO_Velocities);
+        if (m_SSBO_Temperatures) glDeleteBuffers(1, &m_SSBO_Temperatures);
+        if (m_SSBO_SmokeAmounts) glDeleteBuffers(1, &m_SSBO_SmokeAmounts);
+        if (m_SSBO_Lifespans) glDeleteBuffers(1, &m_SSBO_Lifespans);
+        if (m_SSBO_Densities) glDeleteBuffers(1, &m_SSBO_Densities);
+        if (m_SSBO_Pressures) glDeleteBuffers(1, &m_SSBO_Pressures);
+        if (m_SSBO_SmoothingLengths) glDeleteBuffers(1, &m_SSBO_SmoothingLengths);
+        if (m_SSBO_GridHash) glDeleteBuffers(1, &m_SSBO_GridHash);
+        if (m_SSBO_SortedIndices) glDeleteBuffers(1, &m_SSBO_SortedIndices);
+        if (m_SSBO_CellStarts) glDeleteBuffers(1, &m_SSBO_CellStarts);
+        if (m_SSBO_CellEnds) glDeleteBuffers(1, &m_SSBO_CellEnds);
+
+        // Reset all IDs
         m_SSBO_Positions = 0;
         m_SSBO_Velocities = 0;
         m_SSBO_Temperatures = 0;
@@ -99,6 +121,11 @@ public:
         m_SortedIndices.resize(maxParticles);
         m_CellStarts.resize(maxParticles);
         m_CellEnds.resize(maxParticles);
+
+        // Optimize grid size based on expected particle distribution
+        size_t gridSize = std::max(size_t(m_GridResolution * m_GridResolution), maxParticles / 4);
+        m_CellStarts.resize(gridSize, -1); // Initialize to -1
+        m_CellEnds.resize(gridSize, -1);
 
         glGenBuffers(1, &m_SSBO_Positions);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Positions);
@@ -160,13 +187,18 @@ public:
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Temperatures);
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Temperatures.size() * sizeof(float), m_Temperatures.data());
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_SmokeAmounts);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_SmokeAmounts.size() * sizeof(float), m_SmokeAmounts.data());
+        // Update other buffers less frequently if they don't change much
+        static int updateCounter = 0;
+        if (++updateCounter % 4 == 0)
+        {
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_SmokeAmounts);
+            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_SmokeAmounts.size() * sizeof(float), m_SmokeAmounts.data());
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Lifespans);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Lifespans.size() * sizeof(float), m_Lifespans.data());
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Lifespans);
+            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Lifespans.size() * sizeof(float), m_Lifespans.data());
+        }
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Densities);
+        /*glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Densities);
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Densities.size() * sizeof(float), m_Densities.data());
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Pressures);
@@ -185,7 +217,7 @@ public:
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_CellStarts.size() * sizeof(int), m_CellStarts.data());
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_CellEnds);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_CellEnds.size() * sizeof(int), m_CellEnds.data());
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_CellEnds.size() * sizeof(int), m_CellEnds.data());*/
     }
 
     void BindParticleBuffers(GLuint baseBinding) override 

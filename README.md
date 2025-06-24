@@ -56,6 +56,7 @@ Here are some project screenshots and a video:
   - Fire Particle Simulation
     - Uses GPU to create, update and destroy fire particles from emitter
     - Each has its own temp and other properties.
+	- Uses Smoothed-particle hydrodynamics (SPH) for more relastic particle simulation and have effect of particles on each other. 
   - Procedural Terrain Generation
     - Uses SimpleX/Perlin noise to generate height map
     - Uses height map to generate 3D terrain
@@ -76,6 +77,7 @@ You can follow _The Cherno_ [_Instructions_](https://www.youtube.com/playlist?li
 - GLEW
 - GLM
 - stb_image
+- Assimp
 - ImGui
 
 ## Usage
@@ -85,7 +87,7 @@ You can follow _The Cherno_ [_Instructions_](https://www.youtube.com/playlist?li
 
 
 ## Recent Changes
-- 2025-04-16: Update particle system from Array of Structures (AoS) to Structure of Arrays (SoA)
+- 2025-06-23: Using SPH calc, better fire simulation. Issue: Bad performance with large number of particles
 
 ![Last Commit](https://img.shields.io/github/last-commit/Shreyas9699/OpenGL-Explorations)
 ![Commit Activity](https://img.shields.io/github/commit-activity/m/Shreyas9699/OpenGL-Explorations)
