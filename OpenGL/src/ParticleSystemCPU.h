@@ -44,6 +44,7 @@ private:
     std::unordered_map<unsigned int, ParticleCPU> m_Particles;
     std::queue<unsigned int> m_ParticlePool;
     std::vector<float> m_Points;
+    size_t m_MaxBufferSize = 0;  // Track allocated capacity for pre-allocated vector optimization
 
     std::unique_ptr<VertexArray> m_VAO;
     std::unique_ptr<VertexBuffer> m_VBO;

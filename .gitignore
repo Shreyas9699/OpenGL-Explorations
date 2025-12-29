@@ -367,3 +367,6 @@ OpenGL/src/load_model_meshes.h
 OpenGL/src/RainParticleBehavior.h
 OpenGL/src/SnowParticleBehavior.h
 OpenGL/src/Windowold.h
+
+# Exclude TODO
+TODO.txt

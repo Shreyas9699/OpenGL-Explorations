@@ -40,7 +40,7 @@ public:
     // mesh Data
     std::vector<Vertex>       vertices;
     std::vector<unsigned int> indices;
-    std::vector<TextureData>      textures;
+    std::vector<TextureData>  textures;
     unsigned int VAO;
     bool hasTextures = false;
 

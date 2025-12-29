@@ -17,6 +17,12 @@ ParticleSystemCPU::ParticleSystemCPU()
     m_VelocityGenerator = [this]() { return this->GeneratePointVelocity(); };
 
     m_VAO = std::make_unique<VertexArray>();
+
+    
+    constexpr size_t MAX_CPU_PARTICLES = 20000;  // CPU-realistic limit (1500/sec × 20 sec, leaving 10K)
+    constexpr size_t FLOATS_PER_PARTICLE = 8;   // Each particle = 3 (position) + 4 (color) + 1 (size) = 8 floats
+    m_MaxBufferSize = MAX_CPU_PARTICLES * FLOATS_PER_PARTICLE; 
+    m_Points.reserve(m_MaxBufferSize);
 }
 
 ParticleSystemCPU::~ParticleSystemCPU()

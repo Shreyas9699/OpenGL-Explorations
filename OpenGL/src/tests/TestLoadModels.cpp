@@ -129,11 +129,9 @@ namespace test
 			currModelPath = selectedModel;
 			m_Model.reset();
 			m_Model = std::make_unique<Model>(std::filesystem::absolute(currModelPath).string());
-			std::string ObjName = selectedModel.substr(selectedModel.find_last_of("/") + 1);
-			//std::cout << ObjName;
-			if (strcmp(ObjName.c_str(), "bell_x1_mesh.obj") == 0
-				|| strcmp(ObjName.c_str(), "WhiteBeard.obj") == 0
-				)
+			std::string_view ObjName = selectedModel.substr(selectedModel.find_last_of("/") + 1);
+
+			if (ObjName == "bell_x1_mesh.obj" || ObjName == "WhiteBeard.obj")
 			{
 				m_cameraController.SetShiftSpeedEnabled(false);
 				m_Camera.IncreaseOutlier(200.0f);
@@ -241,11 +239,12 @@ namespace test
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		ImGui::Text("FPS: %.1f (%.3f ms)", io.Framerate, 1000.0f / io.Framerate);
 
-		ImGui::Text("Current Model : %s",
-			(currModelPath.substr(
-				(currModelPath.find_last_of("/\\") != std::string::npos) ?
-				currModelPath.find_last_of("/\\") + 1
-				: 0)).c_str());
+		// Extract model filename more cleanly
+		size_t lastSlash = currModelPath.find_last_of("/\\");
+		std::string_view modelName = (lastSlash != std::string::npos) 
+			? std::string_view(currModelPath).substr(lastSlash + 1)
+			: std::string_view(currModelPath);
+		ImGui::Text("Current Model : %.*s", static_cast<int>(modelName.length()), modelName.data());
 		ImGui::SameLine();
 
 		if (ImGui::Button("Select Object"))

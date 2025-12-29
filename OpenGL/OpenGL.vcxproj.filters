@@ -893,6 +893,7 @@
     <Text Include="res\objects\ClassicFormula1\README.txt" />
     <Text Include="res\objects\porsche\Porsche_911_GT2.txt" />
     <Text Include="res\objects\dabrovic-sponza\copyright.txt" />
+    <Text Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp">

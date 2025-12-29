@@ -436,6 +436,7 @@
     <Text Include="res\objects\dabrovic-sponza\copyright.txt" />
     <Text Include="res\objects\porsche\Porsche_911_GT2.txt" />
     <Text Include="res\textures\skybox\interstellar\README.TXT" />
+    <Text Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Random.cpp" />
