@@ -105,7 +105,7 @@ namespace test
 
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		ImGui::Text("FPS: %.1f (%.3f ms)", io.Framerate, 1000.0f / io.Framerate);
-		ImGui::Text("Number of particles alive: %d ", m_ParticleSys->GetActiveParticleCount());
+		ImGui::Text("Number of particles alive: %u ", m_ParticleSys->GetActiveParticleCount());
 
 		ImGui::Text("Press below keys to enable/disable:\n");
 

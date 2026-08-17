@@ -55,20 +55,12 @@ public:
         setupMesh();
     }
 
-    /*void CleanMesh()
+    ~Mesh() noexcept
     {
-        glDeleteBuffers(1, &EBO);
-        glDeleteBuffers(1, &VBO);
         glDeleteVertexArrays(1, &VAO);
-
-        EBO = 0;
-        VBO = 0;
-        VAO = 0;
-
-        vertices.clear();
-        indices.clear();
-        textures.clear();
-    }*/
+        glDeleteBuffers(1, &VBO);
+        glDeleteBuffers(1, &EBO);
+    }
 
     // render the mesh
     void Draw(Shader& shader)

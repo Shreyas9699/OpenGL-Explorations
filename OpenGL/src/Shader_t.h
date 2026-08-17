@@ -192,7 +192,17 @@ public:
         {
             glDeleteShader(geometry);
         }
+        if(tessControlPath != nullptr)
+        {
+            glDeleteShader(tessControl);
+		}
+        if(tessEvalPath != nullptr)
+        {
+            glDeleteShader(tessEval);
+		}
     }
+
+    ~Shader() { glDeleteProgram(ID); }
 
     // activate the shader
     // ------------------------------------------------------------------------

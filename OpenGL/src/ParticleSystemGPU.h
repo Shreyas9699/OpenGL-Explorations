@@ -6,9 +6,7 @@
 #include "VertexBufferLayout.h"
 #include "Random.h"
 #include "DefaultParticleBehavior.h"
-#include "RainParticleBehavior.h"
 #include "FireParticleBehavior.h"
-#include "SnowParticleBehavior.h"
 #include <unordered_map>
 
 class ParticleSystemGPU : public ParticleSystemBase
@@ -32,7 +30,7 @@ private:
     std::shared_ptr<ParticleBehavior> CreateBehaviorFromName(const std::string& name);
 
 public:
-    ParticleSystemGPU(const std::string& name = nullptr);
+    ParticleSystemGPU(const std::string& name = {});
     ~ParticleSystemGPU();
 
     // ParticleSystemGPU.h

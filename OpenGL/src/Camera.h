@@ -13,12 +13,6 @@ enum class Camera_Movement {
     DOWN
 };
 
-// Camera control modes
-enum class Camera_Mode {
-    FreeFly,
-    Orbit
-};
-
 // Default camera values
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
@@ -38,7 +32,7 @@ public:
     float Pitch;
     // camera options
     float MovementSpeed;
-    float outlier = 1.0f;
+    float m_SpeedMultiplier = 1.0f;
     float MouseSensitivity;
     float Zoom;
 
@@ -47,12 +41,6 @@ public:
     glm::vec3 Velocity = glm::vec3(0.0f);
     glm::vec3 Acceleration = glm::vec3(0.0f);
     float Damping = 10.0f; // Higher = snappier
-
-    // Camera mode
-    Camera_Mode Mode = Camera_Mode::FreeFly;
-    // Orbit/Arcball parameters (stubs)
-    glm::vec3 OrbitTarget = glm::vec3(0.0f);
-    float OrbitDistance = 10.0f;
 
     // constructor with vectors
     Camera(
@@ -78,16 +66,12 @@ public:
     void printCameraDetails() const;
 
     void SetCameraZoom(float val);
-    void IncreaseOutlier(float val);
+    void SetSpeedMultiplier(float val);
     void SetMouseSensitivity(float val);
 
     // Smoothing and mode controls
     void SetSmoothMovement(bool enable) { SmoothMovement = enable; }
     bool IsSmoothMovement() const { return SmoothMovement; }
-    void SetCameraMode(Camera_Mode mode) { Mode = mode; }
-    Camera_Mode GetCameraMode() const { return Mode; }
-    void SetOrbitTarget(const glm::vec3& target) { OrbitTarget = target; }
-    void SetOrbitDistance(float dist) { OrbitDistance = dist; }
 
     // Call this per-frame to update position if smoothing is enabled
     void UpdateCamera(float deltaTime);

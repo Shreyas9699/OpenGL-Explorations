@@ -1,9 +1,7 @@
 #include "ParticleSystemGPU.h"
 #include "Random.h"
 #include "DefaultParticleBehavior.h"
-#include "RainParticleBehavior.h"
 #include "FireParticleBehavior.h"
-#include "SnowParticleBehavior.h"
 
 #include <cmath>
 #include <glm/gtx/quaternion.hpp>
@@ -56,10 +54,6 @@ std::shared_ptr<ParticleBehavior> ParticleSystemGPU::CreateBehaviorFromName(cons
     {
         return std::make_shared<FireParticleBehavior>();
     }
-    /*else if (name == "rain")
-        return std::make_shared<RainParticleBehavior>();
-    else if (name == "snow")
-        return std::make_shared<SnowParticleBehavior>();*/
 
         // Return nullptr or throw exception if behavior not found
     std::cerr << "ERROR::ParticleSystemGPU::CreateBehaviorFromName    Unknown behavior: " << name << std::endl;

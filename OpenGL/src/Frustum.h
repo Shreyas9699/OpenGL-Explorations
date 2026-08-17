@@ -13,9 +13,6 @@ public:
     bool IsPointVisible(const glm::vec3& point) const;
     std::vector<glm::vec3> GetCorners() const;
 
-    /*void UpdateFrustumCorners(glm::mat4& projView);
-    void RenderFrustum(glm::mat4& projView);*/
-
     const std::array<glm::vec4, 6>& GetPlanes() const { return planes; }
 private:
     //std::vector<glm::vec3> m_FrustumCorners;

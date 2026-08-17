@@ -39,7 +39,7 @@ void CameraController::ProcessKeyboardInput(float deltaTime)
     bool shiftHeld = (glfwGetKey(m_window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) ||
                      (glfwGetKey(m_window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS);
     if(m_shiftSpeedEnabled)
-        m_camera.outlier = shiftHeld ? 5.0f : 1.0f; // 5x speed when Shift is held
+        m_camera.m_SpeedMultiplier = shiftHeld ? 5.0f : 1.0f; // 5x speed when Shift is held
 
     if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
         m_camera.ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);
@@ -100,7 +100,12 @@ void CameraController::MouseCallback(GLFWwindow* window, double xpos, double ypo
 {
     if (auto it = s_controllers.find(window); it != s_controllers.end()) 
     {
-        it->second->ProcessMouseMovement(xpos, ypos);
+        CameraController* controller = it->second;
+		controller->ProcessMouseMovement(xpos, ypos);
+        if (controller->m_previousMouseCallback)
+        {
+			controller->m_previousMouseCallback(window, xpos, ypos);
+        }
     }
 }
 
@@ -108,6 +113,11 @@ void CameraController::ScrollCallback(GLFWwindow* window, double xoffset, double
 {
     if (auto it = s_controllers.find(window); it != s_controllers.end()) 
     {
-        it->second->ProcessMouseScroll(yoffset);
+		CameraController* controller = it->second;
+        controller->ProcessMouseScroll(yoffset);
+        if (controller->m_previousScrollCallback)
+        {
+			controller->m_previousScrollCallback(window, xoffset, yoffset);
+        }
     }
 }

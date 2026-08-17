@@ -50,25 +50,15 @@ public:
 		glDeleteShader(compute);
 	}
 
-	void use() 
-	{ 
-		glUseProgram(ID); 
-	}
+	~ComputeShader() { glDeleteProgram(ID); }
 
-	void Bind()
-	{
-		glUseProgram(ID);
-	}
+	void use() { glUseProgram(ID); }
 
-	void Unbind()
-	{
-		glUseProgram(0);
-	}
+	void Bind() { glUseProgram(ID); }
 
-	void deleteProgram() const 
-	{ 
-		glDeleteProgram(ID); 
-	}
+	void Unbind() { glUseProgram(0); }
+
+	void deleteProgram() const { glDeleteProgram(ID); }
 
 	void dispatch(unsigned int x, unsigned int y, unsigned int z) const
 	{
@@ -76,10 +66,7 @@ public:
 		glDispatchCompute(x, y, z);
 	}
 
-	static void memoryBarrier(GLbitfield barriers)
-	{
-		glMemoryBarrier(barriers);
-	}
+	static void memoryBarrier(GLbitfield barriers) { glMemoryBarrier(barriers); }
 
 	// utility uniform functions
 	void setBool(const std::string& name, bool value) const

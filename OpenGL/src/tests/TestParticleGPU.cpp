@@ -8,7 +8,7 @@ namespace test
 		m_Camera(glm::vec3(20.0f, 0.0f, 15.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), -140),
 		m_cameraController(m_Window->GetWindow(), m_Camera)
 	{
-		m_Camera.IncreaseOutlier(50.0f);
+		m_Camera.SetSpeedMultiplier(50.0f);
 		m_Window->setCustomKeyCallback([this](int key, int scancode, int action, int mods)
 			{
 				this->handleKeyPress(key, scancode, action, mods);
@@ -110,7 +110,7 @@ namespace test
 
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		ImGui::Text("FPS: %.1f (%.3f ms)", io.Framerate, 1000.0f / io.Framerate);
-		ImGui::Text("Number of particles alive: %d ", m_ParticleSys->GetActiveParticleCount());
+		ImGui::Text("Number of particles alive: %u ", m_ParticleSys->GetActiveParticleCount());
 
 		ImGui::Text("Elapsed Time: %.2f seconds", m_ElapsedTime);
 

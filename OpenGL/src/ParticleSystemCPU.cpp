@@ -120,7 +120,7 @@ void ParticleSystemCPU::Render(Shader& m_Shader)
     m_Shader.Bind();
     m_Shader.setVec4("color", 1.0f, 1.0f, 1.0f, 1.0f);
     m_VAO->Bind();
-    glDrawArrays(GL_POINTS, 0, (GLsizei)m_Points.size() / 7); // Changed from /3 to /7 to account for position + color
+    glDrawArrays(GL_POINTS, 0, (GLsizei)m_Points.size() / 8); // Changed from /3 to /7 to account for position + color
     m_VAO->Unbind();
     m_Shader.Unbind();
 }

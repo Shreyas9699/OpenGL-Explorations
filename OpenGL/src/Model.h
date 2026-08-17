@@ -24,7 +24,7 @@ class Model
 public:
     // model data 
     std::vector<TextureData> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
-    std::vector<Mesh>    meshes;
+    std::vector<std::unique_ptr<Mesh>> meshes;
     std::string directory;
     bool gammaCorrection;
 
@@ -49,7 +49,7 @@ public:
     {
         for (unsigned int i = 0; i < meshes.size(); i++)
         {
-            meshes[i].Draw(shader);
+            meshes[i]->Draw(shader);
         }
     }
 
@@ -59,13 +59,13 @@ public:
         {
             // Bind the normal vertices
             //std::cout << "Inside drawNormals() function \n";
-            glBindVertexArray(mesh.VAO);
-            glDrawElements(GL_TRIANGLES, (GLsizei)mesh.indices.size(), GL_UNSIGNED_INT, 0);
+            glBindVertexArray(mesh->VAO);
+            glDrawElements(GL_TRIANGLES, (GLsizei)mesh->indices.size(), GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);
         }
     }
 
-    const std::vector<Mesh>& getMeshes() const 
+    const std::vector<std::unique_ptr<Mesh>>& getMeshes() const
     {
         return meshes;
     }
@@ -111,7 +111,7 @@ private:
 
     }
 
-    Mesh processMesh(aiMesh* mesh, const aiScene* scene)
+    std::unique_ptr<Mesh> processMesh(aiMesh* mesh, const aiScene* scene)
     {
         // data to fill
         std::vector<Vertex> vertices;
@@ -196,7 +196,7 @@ private:
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
         // return a mesh object created from the extracted mesh data
-        return Mesh(vertices, indices, textures);
+        return std::make_unique<Mesh>(vertices, indices, textures);
     }
 
     // checks all material textures of a given type and loads the textures if they're not loaded yet.

@@ -19,7 +19,7 @@ class ParticleSystemBase
 {
 protected:
     unsigned int id = 0;
-    size_t m_ActiveParticleCount = 0;
+    GLuint m_ActiveParticleCount = 0;
     bool isBegin = false;
     float lastCreateTime = 0.0f;
 

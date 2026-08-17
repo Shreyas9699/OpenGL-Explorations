@@ -3,7 +3,7 @@
 class IndexBuffer
 {
 private:
-	unsigned int m_RendereID;
+	unsigned int m_RendererID;
 	unsigned int m_Count;
 public:
 	// Creates IndexBuffer by Taking indices data and count of indices

@@ -134,14 +134,14 @@ namespace test
 			if (ObjName == "bell_x1_mesh.obj" || ObjName == "WhiteBeard.obj")
 			{
 				m_cameraController.SetShiftSpeedEnabled(false);
-				m_Camera.IncreaseOutlier(200.0f);
+				m_Camera.SetSpeedMultiplier(200.0f);
 				lightPosition = glm::vec3(0.0f, 1500.0f, -1500.0f);
 				normalLength = 2.0f;
 			}
 			else
 			{
 				m_cameraController.SetShiftSpeedEnabled(true);
-				m_Camera.IncreaseOutlier(1.0f);
+				m_Camera.SetSpeedMultiplier(1.0f);
 				m_Camera.Position = glm::vec3(0.0f, 0.0f, 5.0f);
 				lightPosition = glm::vec3(0.0f, 0.0f, 15.0f);
 				normalLength = 0.3f;

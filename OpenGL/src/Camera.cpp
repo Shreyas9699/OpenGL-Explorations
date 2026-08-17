@@ -55,34 +55,29 @@ Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float u
 // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
-    if (Mode == Camera_Mode::FreeFly) {
-        if (SmoothMovement) {
-            glm::vec3 desired = glm::vec3(0.0f);
-            float velocity = MovementSpeed * outlier;
-            switch (direction) {
-                case Camera_Movement::FORWARD:  desired += Front * velocity; break;
-                case Camera_Movement::BACKWARD: desired -= Front * velocity; break;
-                case Camera_Movement::LEFT:     desired -= Right * velocity; break;
-                case Camera_Movement::RIGHT:    desired += Right * velocity; break;
-                case Camera_Movement::UP:       desired += Up * velocity; break;
-                case Camera_Movement::DOWN:     desired -= Up * velocity; break;
-            }
-            // Accelerate towards desired direction
-            Acceleration = (desired - Velocity) * Damping;
-        } else {
-            float velocity = MovementSpeed * deltaTime * outlier;
-            switch (direction) {
-                case Camera_Movement::FORWARD:  Position += Front * velocity; break;
-                case Camera_Movement::BACKWARD: Position -= Front * velocity; break;
-                case Camera_Movement::LEFT:     Position -= Right * velocity; break;
-                case Camera_Movement::RIGHT:    Position += Right * velocity; break;
-                case Camera_Movement::UP:       Position += Up * velocity; break;
-                case Camera_Movement::DOWN:     Position -= Up * velocity; break;
-            }
+    if (SmoothMovement) {
+        glm::vec3 desired = glm::vec3(0.0f);
+        float velocity = MovementSpeed * m_SpeedMultiplier;
+        switch (direction) {
+            case Camera_Movement::FORWARD:  desired += Front * velocity; break;
+            case Camera_Movement::BACKWARD: desired -= Front * velocity; break;
+            case Camera_Movement::LEFT:     desired -= Right * velocity; break;
+            case Camera_Movement::RIGHT:    desired += Right * velocity; break;
+            case Camera_Movement::UP:       desired += Up * velocity; break;
+            case Camera_Movement::DOWN:     desired -= Up * velocity; break;
         }
-    } else if (Mode == Camera_Mode::Orbit) {
-        // Stub: Orbit mode movement (implement as needed)
-        // For example, change OrbitDistance or OrbitTarget
+        // Accelerate towards desired direction
+        Acceleration = (desired - Velocity) * Damping;
+    } else {
+        float velocity = MovementSpeed * deltaTime * m_SpeedMultiplier;
+        switch (direction) {
+            case Camera_Movement::FORWARD:  Position += Front * velocity; break;
+            case Camera_Movement::BACKWARD: Position -= Front * velocity; break;
+            case Camera_Movement::LEFT:     Position -= Right * velocity; break;
+            case Camera_Movement::RIGHT:    Position += Right * velocity; break;
+            case Camera_Movement::UP:       Position += Up * velocity; break;
+            case Camera_Movement::DOWN:     Position -= Up * velocity; break;
+        }
     }
 }
 
@@ -120,26 +115,14 @@ void Camera::ProcessMouseScroll(float yoffset)
 
 void Camera::UpdateCamera(float deltaTime)
 {
-    if (Mode == Camera_Mode::FreeFly && SmoothMovement) {
-        // Integrate velocity and position
-        Velocity += Acceleration * deltaTime;
-        Position += Velocity * deltaTime;
-        // Dampen velocity
-        Velocity *= 0.95f;
-        // Reset acceleration
-        Acceleration = glm::vec3(0.0f);
-    } else if (Mode == Camera_Mode::Orbit) {
-        // Stub: Orbit mode update (implement as needed)
-        // Example: update Position based on OrbitTarget, OrbitDistance, Yaw, Pitch
-        float yawRad = glm::radians(Yaw);
-        float pitchRad = glm::radians(Pitch);
-        Position = OrbitTarget + glm::vec3(
-            OrbitDistance * cos(pitchRad) * cos(yawRad),
-            OrbitDistance * sin(pitchRad),
-            OrbitDistance * cos(pitchRad) * sin(yawRad)
-        );
-        updateCameraVectors();
-    }
+    // Integrate velocity and position
+    Velocity += Acceleration * deltaTime;
+    Position += Velocity * deltaTime;
+    // Dampen velocity
+    Velocity *= 0.95f;
+    // Reset acceleration
+    Acceleration = glm::vec3(0.0f);
+    updateCameraVectors();
 }
 
 void Camera::updateCameraVectors()
@@ -186,6 +169,6 @@ void Camera::printCameraDetails() const
 
 void Camera::SetCameraZoom(float val) { Zoom = val; }
 
-void Camera::IncreaseOutlier(float val) { outlier = val; }
+void Camera::SetSpeedMultiplier(float val) { m_SpeedMultiplier = val; }
 
 void Camera::SetMouseSensitivity(float val) { MouseSensitivity = val; }

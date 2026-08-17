@@ -362,11 +362,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# Exclude old files, only present in local for reference
-OpenGL/src/load_model_meshes.h
-OpenGL/src/RainParticleBehavior.h
-OpenGL/src/SnowParticleBehavior.h
-OpenGL/src/Windowold.h
 
 # Exclude TODO
 TODO.txt
