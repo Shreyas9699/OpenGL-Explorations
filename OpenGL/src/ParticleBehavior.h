@@ -7,6 +7,12 @@
 class ParticleBehavior 
 {
 public:
+    struct RenderState
+    {
+        GLenum blendSrc = GL_SRC_ALPHA;
+        GLenum blendDst = GL_ONE_MINUS_SRC_ALPHA;
+    };
+
     virtual ~ParticleBehavior() {}
 
     // Initialize any behavior-specific resources
@@ -41,6 +47,9 @@ public:
 
     // Optional: Additional behavior-specific buffers or resources
     virtual void SetupAdditionalResources() {}
+
+    // Optional: Get render state for this behavior
+    virtual RenderState GetRenderState() const { return {}; }
 
     // Optional: Additional ImGUI options
     virtual void CustomGUI() {}

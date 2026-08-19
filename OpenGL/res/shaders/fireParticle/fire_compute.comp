@@ -23,35 +23,6 @@ layout(std430, binding = 5) buffer Lifespans {
     float lifespans[];
 };
 
-layout(std430, binding = 6) buffer Densities {
-    float densities[];
-};
-
-layout(std430, binding = 7) buffer Pressures {
-    float pressures[];
-};
-
-layout(std430, binding = 8) buffer SmoothingLengths {
-    float smoothingLengths[];
-};
-
-// Optimized spatial hashing buffers
-layout(std430, binding = 9) buffer GridHash {
-    uvec2 gridHash[]; // x = hash, y = particle index
-};
-
-layout(std430, binding = 10) buffer SortedIndices {
-    uint sortedIndices[];
-};
-
-layout(std430, binding = 11) buffer CellStarts {
-    int cellStarts[];
-};
-
-layout(std430, binding = 12) buffer CellEnds {
-    int cellEnds[];
-};
-
 layout(std430, binding = 0) buffer FreeList {
     int count;
     int indices[];
@@ -65,7 +36,6 @@ uniform float sizeBegin;
 uniform float sizeEnd;
 uniform float deltaTime;
 uniform float time;
-uniform float mass;
 uniform float buoyancy = 4.0;
 uniform float airResistance = 0.12;
 uniform float temperatureDecay = 180.0;
@@ -74,251 +44,103 @@ uniform vec3 windDirection;
 uniform float windStrength;
 uniform float baseVorticity = 2.5;
 uniform float flickerSpeed = 3.0;
-uniform float gasConstant;
-uniform float restDensity;
 
-// Grid parameters for spatial hashing
-uniform float cellSize = 0.25; // Reduced for better spatial resolution
-uniform int gridResolution = 256; // Increased for better distribution
+vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
+vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
 
-// Shared memory for local particle data (improves cache efficiency)
-shared vec3 sharedPositions[256];
-shared vec3 sharedVelocities[256];
-shared float sharedTemperatures[256];
+float snoise(vec3 v) {
+    const vec2 C = vec2(1.0 / 6.0, 1.0 / 3.0);
+    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
 
-// Fast hash function for 3D coordinates (improved)
-uint hash3D(ivec3 gridPos) 
-{
-    // Use larger prime numbers for better distribution
-    uvec3 p = uvec3(gridPos);
-    return ((p.x * 73856093u) ^ (p.y * 19349663u) ^ (p.z * 83492791u)) % uint(cellStarts.length());
+    vec3 i  = floor(v + dot(v, C.yyy));
+    vec3 x0 = v - i + dot(i, C.xxx);
+
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min(g.xyz, l.zxy);
+    vec3 i2 = max(g.xyz, l.zxy);
+
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy;
+    vec3 x3 = x0 - D.yyy;
+
+    i = mod289(i);
+    vec4 p = permute(permute(permute(
+                i.z + vec4(0.0, i1.z, i2.z, 1.0))
+              + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+              + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+
+    float n_ = 0.142857142857; // 1.0/7.0
+    vec3  ns = n_ * D.wyz - D.xzx;
+
+    vec4 j = p - 49.0 * floor(p * ns.z);
+
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_);
+
+    vec4 x = x_ * ns.x + ns.yyyy;
+    vec4 y = y_ * ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+
+    vec4 b0 = vec4(x.xy, y.xy);
+    vec4 b1 = vec4(x.zw, y.zw);
+
+    vec4 s0 = floor(b0) * 2.0 + 1.0;
+    vec4 s1 = floor(b1) * 2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+
+    vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+    vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+
+    vec3 p0 = vec3(a0.xy, h.x);
+    vec3 p1 = vec3(a0.zw, h.y);
+    vec3 p2 = vec3(a1.xy, h.z);
+    vec3 p3 = vec3(a1.zw, h.w);
+
+    vec4 norm = taylorInvSqrt(vec4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+
+    vec4 m = max(0.6 - vec4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0);
+    m = m * m;
+    return 42.0 * dot(m * m, vec4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3)));
 }
 
-// Get grid position from world position
-ivec3 getGridPos(vec3 pos) 
-{
-    return ivec3(floor(pos / cellSize));
+vec3 potential(vec3 p) {
+    // Spatial offsets to decorrelate x, y, z dimensions
+    const vec3 offsetA = vec3(0.0, 0.0, 0.0);
+    const vec3 offsetB = vec3(31.416, 47.853, 12.793);
+    const vec3 offsetC = vec3(93.112, 14.231, 67.519);
+
+    return vec3(
+        snoise(p + offsetA),
+        snoise(p + offsetB),
+        snoise(p + offsetC)
+    );
 }
 
-// Optimized 3D noise (reduced quality for performance)
-float fastNoise(vec3 pos) 
-{
-    vec3 p = floor(pos);
-    vec3 f = fract(pos);
-    f = f * f * (3.0 - 2.0 * f); // Smoothstep
+vec3 curlForce(vec3 p) {
+    const float e = 0.1; // Epsilon step size for finite differences
     
-    // Simplified noise calculation
-    float n = sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453;
-    return fract(n) * 2.0 - 1.0;
-}
+    vec3 dx = vec3(e, 0.0, 0.0);
+    vec3 dy = vec3(0.0, e, 0.0);
+    vec3 dz = vec3(0.0, 0.0, e);
 
-vec3 getTurbulence(vec3 pos) 
-{
-    // Reduced octaves for performance
-    vec3 turb = vec3(fastNoise(pos + time)) * 0.5;
-    turb += vec3(fastNoise(pos * 2.0 + time * 1.3)) * 0.25;
-    return turb * turbulenceScale;
-}
+    // Central difference calculation
+    float x = potential(p + dy).z - potential(p - dy).z
+            - potential(p + dz).y + potential(p - dz).y;
 
-// Simplified SPH kernels (reduced precision for performance)
-float poly6Kernel(float r2, float h) 
-{
-    float h2 = h * h;
-    if (r2 >= h2) return 0.0;
-    float factor = 4.77464829 / (h2 * h2 * h); // Pre-computed constant
-    float diff = h2 - r2;
-    return factor * diff * diff * diff;
-}
+    float y = potential(p + dz).x - potential(p - dz).x
+            - potential(p + dx).z + potential(p - dx).z;
 
-vec3 spikyGradient(vec3 r, float rLen, float h) 
-{
-    if (rLen >= h || rLen == 0.0) return vec3(0.0);
-    float factor = -14.32394487 / (h * h * h * h * h * h); // Pre-computed constant
-    float diff = h - rLen;
-    return factor * diff * diff * (r / rLen);
-}
+    float z = potential(p + dx).y - potential(p - dx).y
+            - potential(p + dy).x + potential(p - dy).x;
 
-// Optimized SPH density calculation with early termination
-void calculateSPHDensityAndPressure(int index) 
-{
-    vec3 pos = positions[index].xyz;
-    float h = smoothingLengths[index];
-    float h2 = h * h;
-    float density = mass * poly6Kernel(0.0, h); // Self contribution
-    
-    ivec3 gridPos = getGridPos(pos);
-    int neighborCount = 0;
-    const int MAX_NEIGHBORS = 32; // Limit neighbors for performance
-    
-    // Check only immediate neighbors (reduced from 27 to 7 cells)
-    for (int x = -1; x <= 1 && neighborCount < MAX_NEIGHBORS; x++) 
-    {
-        for (int y = -1; y <= 1 && neighborCount < MAX_NEIGHBORS; y++) 
-        {
-            for (int z = -1; z <= 1 && neighborCount < MAX_NEIGHBORS; z++) 
-            {
-                if (abs(x) + abs(y) + abs(z) > 2) continue; // Skip distant cells
-                
-                ivec3 neighborGrid = gridPos + ivec3(x, y, z);
-                uint cellHash = hash3D(neighborGrid);
-                
-                int start = cellStarts[cellHash];
-                int end = cellEnds[cellHash];
-                if (start >= end) continue;
-                
-                for (int i = start; i < end && neighborCount < MAX_NEIGHBORS; i++) 
-                {
-                    if (i < 0 || i >= sortedIndices.length()) continue;
-                    
-                    int neighborIndex = int(sortedIndices[i]);
-                    if (neighborIndex == index || velocities[neighborIndex].w <= 0.0) continue;
-                    
-                    vec3 diff = pos - positions[neighborIndex].xyz;
-                    float r2 = dot(diff, diff);
-                    
-                    if (r2 < h2) 
-                    {
-                        density += mass * poly6Kernel(r2, h);
-                        neighborCount++;
-                    }
-                }
-            }
-        }
-    }
-    
-    densities[index] = max(density, restDensity);
-    pressures[index] = gasConstant * (densities[index] - restDensity);
-}
-
-// Optimized SPH force calculation with reduced neighbor search
-vec3 calculateSPHForces(int index) 
-{
-    vec3 pos = positions[index].xyz;
-    vec3 vel = velocities[index].xyz;
-    float h = smoothingLengths[index];
-    float h2 = h * h;
-    float density = densities[index];
-    float pressure = pressures[index];
-    
-    vec3 pressureForce = vec3(0.0);
-    vec3 viscosityForce = vec3(0.0);
-    vec3 thermalForce = vec3(0.0);
-    
-    ivec3 gridPos = getGridPos(pos);
-    int neighborCount = 0;
-    const int MAX_NEIGHBORS = 16; // Further reduced for performance
-    
-    // Check fewer neighboring cells
-    for (int x = -1; x <= 1 && neighborCount < MAX_NEIGHBORS; x++) 
-    {
-        for (int y = -1; y <= 1 && neighborCount < MAX_NEIGHBORS; y++) 
-        {
-            for (int z = -1; z <= 1 && neighborCount < MAX_NEIGHBORS; z++) 
-            {
-                if (abs(x) + abs(y) + abs(z) > 1) continue; // Only immediate neighbors
-                
-                ivec3 neighborGrid = gridPos + ivec3(x, y, z);
-                uint cellHash = hash3D(neighborGrid);
-                
-                int start = cellStarts[cellHash];
-                int end = cellEnds[cellHash];
-                
-                for (int i = start; i < end && neighborCount < MAX_NEIGHBORS; i++)
-                {
-                    if (i < 0 || i >= sortedIndices.length()) continue;
-                    
-                    int neighborIndex = int(sortedIndices[i]);
-                    if (neighborIndex == index || velocities[neighborIndex].w <= 0.0) continue;
-                    
-                    vec3 r = pos - positions[neighborIndex].xyz;
-                    float r2 = dot(r, r);
-                    
-                    if (r2 < h2 && r2 > 0.0001) // Avoid division by zero
-                    {
-                        float rLen = sqrt(r2);
-                        vec3 rNorm = r / rLen;
-                        
-                        // Simplified force calculations
-                        vec3 gradient = spikyGradient(r, rLen, h);
-                        float neighborDensity = densities[neighborIndex];
-                        float neighborPressure = pressures[neighborIndex];
-                        
-                        // Pressure force
-                        pressureForce -= mass * (pressure + neighborPressure) * 0.5 / neighborDensity * gradient;
-                        
-                        // Simplified viscosity
-                        float viscosity = 0.05; // Reduced for performance
-                        vec3 velDiff = velocities[neighborIndex].xyz - vel;
-                        viscosityForce += mass * viscosity * velDiff / neighborDensity * (h - rLen);
-                        
-                        // Thermal buoyancy (simplified)
-                        float tempDiff = temperatures[neighborIndex] - temperatures[index];
-                        if (tempDiff > 0.0) 
-                        {
-                            thermalForce += rNorm * tempDiff * 0.0005;
-                        }
-                        
-                        neighborCount++;
-                    }
-                }
-            }
-        }
-    }
-    
-    return (pressureForce + viscosityForce + thermalForce) / density;
-}
-
-// Simplified neighbor heat influence (reduced search)
-float calculateNeighborHeatInfluence(int index) 
-{
-    vec3 pos = positions[index].xyz;
-    float h = smoothingLengths[index];
-    float h2 = h * h;
-    float neighborHeatInfluence = 0.0;
-    int hotNeighbors = 0;
-    const int MAX_HOT_NEIGHBORS = 4; // Greatly reduced
-    
-    ivec3 gridPos = getGridPos(pos);
-    
-    // Check only immediate neighbors
-    for (int x = -1; x <= 1 && hotNeighbors < MAX_HOT_NEIGHBORS; x++) 
-    {
-        for (int y = -1; y <= 1 && hotNeighbors < MAX_HOT_NEIGHBORS; y++) 
-        {
-            for (int z = -1; z <= 1 && hotNeighbors < MAX_HOT_NEIGHBORS; z++) 
-            {
-                if (x == 0 && y == 0 && z == 0) continue; // Skip self
-                
-                ivec3 neighborGrid = gridPos + ivec3(x, y, z);
-                uint cellHash = hash3D(neighborGrid);
-                
-                int start = cellStarts[cellHash];
-                int end = cellEnds[cellHash];
-                
-                for (int i = start; i < end && hotNeighbors < MAX_HOT_NEIGHBORS; i++) 
-                {
-                    if (i < 0 || i >= sortedIndices.length()) continue;
-                    
-                    int neighborIndex = int(sortedIndices[i]);
-                    if (neighborIndex == index || velocities[neighborIndex].w <= 0.0) continue;
-                    
-                    vec3 diff = pos - positions[neighborIndex].xyz;
-                    float r2 = dot(diff, diff);
-                    
-                    if (r2 < h2) 
-                    {
-                        if (temperatures[neighborIndex] > temperatures[index]) 
-                        {
-                            neighborHeatInfluence += (temperatures[neighborIndex] - temperatures[index]) * 0.05;
-                            hotNeighbors++;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    return neighborHeatInfluence;
+    return vec3(x, y, z) / (2.0 * e);
 }
 
 void updateParticle(int index) 
@@ -333,56 +155,40 @@ void updateParticle(int index)
     }
     atomicCounterIncrement(activeParticleCount);
 
-    // Load particle data into shared memory for better cache efficiency
-    int localIndex = int(gl_LocalInvocationIndex);
-    if (localIndex < 256) {
-        sharedPositions[localIndex] = positions[index].xyz;
-        sharedVelocities[localIndex] = velocities[index].xyz;
-        sharedTemperatures[localIndex] = temperatures[index];
-    }
-    barrier(); // Wait for all threads to load data
-
-    // Calculate SPH properties (less frequently for performance)
-    if ((index % 4) == 0) { // Update SPH every 4th frame
-        calculateSPHDensityAndPressure(index);
-    }
-    
-    vec3 sphForces = vec3(0.0);
-    if ((index % 2) == 0) { // Calculate forces every 2nd frame
-        sphForces = calculateSPHForces(index);
-    }
-
     // Age calculations
     float age = 1.0 - (velocities[index].w / lifespans[index]);
     float tempFactor = temperatures[index] * 0.0004; // Pre-computed division
 
     // Physics forces
-    vec3 acceleration = globalForce * mass;
-    acceleration.y += buoyancy * tempFactor;
+    float g = length(globalForce);
+    vec3 acceleration = globalForce;
+    acceleration.y += buoyancy * tempFactor * g;
     
-    // Add SPH forces (scaled for stability)
-    acceleration += sphForces * 0.25; // Reduced influence for stability
-    
-    // Wind and turbulence (simplified)
     vec3 wind = windDirection * windStrength;
-    vec3 turbulence = getTurbulence(positions[index].xyz);
-    acceleration += wind + turbulence;
+    vec2 radial = positions[index].xz;
+    float convergence = 3.0;
+
+    float scrollT = mod(time, 1000.0);
+    vec3 noisePos = (positions[index].xyz * turbulenceScale) - vec3(0.0, 0.3, 0.0) * scrollT;
+
+    vec3 curlForce = curlForce(noisePos);
+    curlForce = clamp(curlForce, vec3(-2.0), vec3(2.0));
+
+     // Temperature cooling (simplified)
+    float tempCooling = temperatureDecay * deltaTime * (1.0 + age);
+    float neighborHeatInfluence = 0.0;
+
+    temperatures[index] = max(temperatures[index] - tempCooling + neighborHeatInfluence * deltaTime, 0.0);
+    float heat = clamp(temperatures[index] / 1200.0, 0.0, 1.0); 
+
+    acceleration += wind;
+    acceleration.xz -= radial.x * convergence * heat;
+    acceleration += curlForce * baseVorticity * heat;
     
     // Velocity integration with improved damping
     velocities[index].xyz += acceleration * deltaTime;
     velocities[index].xyz *= exp(-airResistance * deltaTime);
     positions[index].xyz += velocities[index].xyz * deltaTime;
-
-    // Temperature cooling (simplified)
-    float tempCooling = temperatureDecay * deltaTime * (1.0 + age);
-    float neighborHeatInfluence = 0.0;
-    
-    // Calculate heat influence less frequently
-    if ((index % 8) == 0) {
-        neighborHeatInfluence = calculateNeighborHeatInfluence(index);
-    }
-    
-    temperatures[index] = max(temperatures[index] - tempCooling + neighborHeatInfluence * deltaTime, 0.0);
 
     // Size evolution (simplified)
     float ageSquared = age * age;

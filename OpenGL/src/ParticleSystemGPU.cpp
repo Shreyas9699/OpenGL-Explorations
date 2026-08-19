@@ -10,8 +10,6 @@ ParticleSystemGPU::ParticleSystemGPU(const std::string& name)
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if (!name.empty())
     {
@@ -263,8 +261,17 @@ void ParticleSystemGPU::Render(Shader& shader)
 {
     shader.Bind();
     m_ParticleVAO->Bind();
+
+	const ParticleBehavior::RenderState rs = m_CurrentBehavior->GetRenderState();
+    glEnable(GL_BLEND);
+	glBlendFunc(rs.blendSrc, rs.blendDst);
+	glDepthMask(GL_FALSE);
+
     // Draw m_MaxParticles instances - the shader will discard inactive ones
     GLCall(glDrawArrays(GL_POINTS, 0, m_MaxParticles));
+
+	glDepthMask(GL_TRUE);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     m_ParticleVAO->Unbind();
     shader.Unbind();
 }

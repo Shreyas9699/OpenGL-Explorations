@@ -11,6 +11,10 @@ layout(std430, binding = 2) buffer Velocities {
     vec4 velocities[];
 };
 
+layout(std430, binding = 3) buffer Temperatures {
+    float temperatures[];
+};
+
 layout(std430, binding = 5) buffer Lifespans {
     float lifespans[];
 };
@@ -42,34 +46,31 @@ void main()
     gl_Position = projection * view * model * vec4(pos, 1.0);
     
     float dist = length((view * model * vec4(pos, 1.0)).xyz);
-    gl_PointSize = size * lifePercent * scaling_factor / dist;
+    float sizefade = mix(0.6, 1.0, lifePercent);
+    gl_PointSize = size * sizefade * scaling_factor / dist;
 
     float yDist = length(pos.xz) / radius;
     //float height = clamp(abs(pos.y) / (particle.velocity.y * lifespan), 0.0, 1.0);
 
-    vec4 color = vec4(0.0);
-    if (lifePercent > 0.6)
-        {
-            float factor = (lifePercent - 0.6) / 0.3;
-            if (yDist < 0.85 && lifePercent > 0.9)
-            {
-                color = mix(vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 0.46, 0.0, 1.0), 1.0 - factor); // #FFFFFF to #FF7500
-            }
-            else
-            {
-                color = mix(vec4(0.98, 0.75, 0.0, 1.0), vec4(1.0, 0.46, 0.0, 1.0), 1.0 - factor); // #FAC000 to #FF7500
-            }
-        }
-        else if (lifePercent > 0.3)
-        {
-            float factor = (lifePercent - 0.3f) / 0.4f;
-            color = mix(vec4(1.0, 0.46, 0.0, 1.0), vec4(0.84, 0.21, 0.01, 1.0), 1.0 - factor); // #FF7500 to #D73502
-        }
-        else
-        {
-            float factor = lifePercent / 0.3;
-            color = mix(vec4(0.84, 0.21, 0.01, 1.0), vec4(0.50, 0.07, 0.0, 0.0), 1.0f - factor);
-        }
+    float t =clamp(temperatures[particleID] / 1200, 0.0, 1.0);
+
+    vec3 cBrown  = vec3(0.25, 0.06, 0.02);
+    vec3 cRed    = vec3(0.85, 0.16, 0.02);
+    vec3 cOrange = vec3(1.00, 0.45, 0.00);
+    vec3 cYellow = vec3(1.00, 0.85, 0.20);
+    vec3 cWhite  = vec3(1.00, 1.00, 1.00);
+
+    vec3 rgb;
+    if (t < 0.2) {
+        rgb = mix(cBrown, cRed, t / 0.2);
+    } else if (t < 0.4) {
+        rgb = mix(cRed, cOrange, (t - 0.2) / 0.2);
+    } else if (t < 0.6) {
+        rgb = mix(cOrange, cYellow, (t - 0.4) / 0.2);
+    } else {
+        rgb = mix(cYellow, cWhite, (t - 0.6) / 0.4);
+    }
+    vec4 color = vec4(rgb, 1.0);
 
     particleColor = color;
     particleAlpha = particleColor.a * lifePercent;
