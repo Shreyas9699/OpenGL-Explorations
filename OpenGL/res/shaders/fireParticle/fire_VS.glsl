@@ -31,6 +31,17 @@ uniform float scaling_factor;
 out vec4 particleColor;
 out float particleAlpha;
 
+// Blackbody color - planck's law
+vec3 blackbody(float tempK)
+{
+    float t = clamp(tempK, 1000.0, 40000.0) / 100.0;
+    vec3 c;
+    c.r = (t <= 66) ? 1.0 : clamp(1.29293618 * pow(t - 60.0, -0.1332047), 0.0, 1.0);
+    c.g = (t <= 66) ? clamp(0.390081578 * log(t) - 0.63184144, 0.0, 1.0) : clamp(1.12989086 * pow(t - 60.0, -0.0755148), 0.0, 1.0);
+    c.b = (t >= 66) ? 1.0 : (t <= 19) ? 0.0 : clamp(0.543206789 * log(t - 10.0) - 1.19625489, 0.0, 1.0);
+    return c;
+}
+
 void main()
 {
     // Skip rendering if particle is inactive
@@ -53,23 +64,9 @@ void main()
     //float height = clamp(abs(pos.y) / (particle.velocity.y * lifespan), 0.0, 1.0);
 
     float t =clamp(temperatures[particleID] / 1200, 0.0, 1.0);
-
-    vec3 cBrown  = vec3(0.25, 0.06, 0.02);
-    vec3 cRed    = vec3(0.85, 0.16, 0.02);
-    vec3 cOrange = vec3(1.00, 0.45, 0.00);
-    vec3 cYellow = vec3(1.00, 0.85, 0.20);
-    vec3 cWhite  = vec3(1.00, 1.00, 1.00);
-
-    vec3 rgb;
-    if (t < 0.2) {
-        rgb = mix(cBrown, cRed, t / 0.2);
-    } else if (t < 0.4) {
-        rgb = mix(cRed, cOrange, (t - 0.2) / 0.2);
-    } else if (t < 0.6) {
-        rgb = mix(cOrange, cYellow, (t - 0.4) / 0.2);
-    } else {
-        rgb = mix(cYellow, cWhite, (t - 0.6) / 0.4);
-    }
+    float kelvin = mix(1000.0, 2200.0, t);
+    float emission = 0.30 * (0.25 + 0.75 * t);
+    vec3 rgb = blackbody(kelvin) + emission;
     vec4 color = vec4(rgb, 1.0);
 
     particleColor = color;

@@ -39,6 +39,7 @@ uniform float time;
 uniform float buoyancy = 4.0;
 uniform float airResistance = 0.12;
 uniform float temperatureDecay = 180.0;
+uniform float brunTemperature = 1200.0;
 uniform float turbulenceScale = 0.8;
 uniform vec3 windDirection;
 uniform float windStrength;
@@ -147,7 +148,7 @@ void updateParticle(int index)
 {
     // Lifetime management
     velocities[index].w -= deltaTime;
-    if(velocities[index].w <= 0.0) 
+    if(velocities[index].w <= 0.0)
     {
         int idx = atomicAdd(freelist.count, 1);
         freelist.indices[idx] = index;
@@ -161,29 +162,32 @@ void updateParticle(int index)
 
     // Physics forces
     float g = length(globalForce);
-    vec3 acceleration = globalForce;
+    vec3 acceleration = vec3(0.0);
     acceleration.y += buoyancy * tempFactor * g;
     
     vec3 wind = windDirection * windStrength;
     vec2 radial = positions[index].xz;
-    float convergence = 3.0;
+    float convergence = 0.6;
 
     float scrollT = mod(time, 1000.0);
     vec3 noisePos = (positions[index].xyz * turbulenceScale) - vec3(0.0, 0.3, 0.0) * scrollT;
 
-    vec3 curlForce = curlForce(noisePos);
-    curlForce = clamp(curlForce, vec3(-2.0), vec3(2.0));
+    vec3 curl = curlForce(noisePos);
+    curl = clamp(curl, vec3(-2.0), vec3(2.0));
 
-     // Temperature cooling (simplified)
-    float tempCooling = temperatureDecay * deltaTime * (1.0 + age);
-    float neighborHeatInfluence = 0.0;
+    // Combustion
+    float fuel = 1.0 - age;
+    temperatures[index] = max(temperatures[index], fuel * brunTemperature);
 
-    temperatures[index] = max(temperatures[index] - tempCooling + neighborHeatInfluence * deltaTime, 0.0);
+    // Radiative cooling - stefan-Boltzmann
+    float tRatio = temperatures[index] / 1200.0;
+    float tempCooling = temperatureDecay + pow(tRatio, 4.0) * deltaTime;
+    temperatures[index] = max(temperatures[index] - tempCooling, 0.0);
     float heat = clamp(temperatures[index] / 1200.0, 0.0, 1.0); 
 
     acceleration += wind;
-    acceleration.xz -= radial.x * convergence * heat;
-    acceleration += curlForce * baseVorticity * heat;
+    acceleration.xz -= radial * convergence * heat;
+    acceleration += curl * baseVorticity * heat;
     
     // Velocity integration with improved damping
     velocities[index].xyz += acceleration * deltaTime;

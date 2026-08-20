@@ -34,7 +34,8 @@ private:
     float m_Buoyancy = 4.0f;
     float m_AirResistance = 0.8f;
     float m_TemperatureDecay = 180.0f;
-    float m_TurbulenceScale = 0.6f; // Reduced for performance
+	float m_BurnTemperature = 1200.0f;
+    float m_TurbulenceScale = 0.25f;
     float m_BaseVorticity = 0.5f;
 
 public:
@@ -135,6 +136,7 @@ public:
         computeShader.setFloat("buoyancy", m_Buoyancy);
         computeShader.setFloat("airResistance", m_AirResistance);
         computeShader.setFloat("temperatureDecay", m_TemperatureDecay);
+		computeShader.setFloat("burnTemperature", m_BurnTemperature);
 		computeShader.setFloat("baseVorticity", m_BaseVorticity);
     }
 
@@ -200,6 +202,7 @@ public:
             {
                 ImGui::SliderFloat("Air Resistance", &m_AirResistance, 0.0f, 1.0f, "%.2f");
                 ImGui::SliderFloat("Temperature Decay", &m_TemperatureDecay, 50.0f, 500.0f, "%.0f");
+				ImGui::SliderFloat("Burn Temperature", &m_BurnTemperature, 600.0f, 2000.0f, "%.0f");
                 ImGui::SliderFloat("Buoyancy", &m_Buoyancy, 0.0f, 10.0f, "%.1f");
             }
         }
