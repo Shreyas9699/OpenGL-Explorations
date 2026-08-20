@@ -365,3 +365,4 @@ FodyWeavers.xsd
 
 # Exclude TODO
 TODO.txt
+imgui.ini
