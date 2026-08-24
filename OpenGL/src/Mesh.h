@@ -41,7 +41,7 @@ public:
     std::vector<Vertex>       vertices;
     std::vector<unsigned int> indices;
     std::vector<TextureData>  textures;
-    unsigned int VAO;
+    unsigned int VAO = 0;
     bool hasTextures = false;
 
     // constructor
@@ -57,9 +57,50 @@ public:
 
     ~Mesh() noexcept
     {
-        glDeleteVertexArrays(1, &VAO);
-        glDeleteBuffers(1, &VBO);
-        glDeleteBuffers(1, &EBO);
+        if (VAO)
+        {
+            glDeleteVertexArrays(1, &VAO);
+        }
+        if (VBO)
+        {
+            glDeleteBuffers(1, &VBO);
+        }
+        if (EBO)
+        {
+            glDeleteBuffers(1, &EBO);
+        }
+    }
+
+    Mesh(const Mesh&)             = delete;
+    Mesh& operator=(const Mesh&) = delete;
+
+    Mesh(Mesh&& o) noexcept
+        : VAO(o.VAO), VBO(o.VBO), EBO(o.EBO), vertices(std::move(o.vertices)), indices(std::move(o.indices)), textures(std::move(o.textures)), hasTextures(o.hasTextures)
+    {
+        o.VAO = 0;
+        o.VBO = 0;
+        o.EBO = 0;
+    }
+
+    Mesh& operator=(Mesh&& o) noexcept
+    {
+        if (this != &o)
+        {
+            glDeleteVertexArrays(1, &VAO);
+            glDeleteBuffers(1, &VBO);
+            glDeleteBuffers(1, &EBO);
+            VAO = o.VAO;
+            VBO = o.VBO;
+            EBO = o.EBO;
+            vertices = std::move(o.vertices);
+            indices = std::move(o.indices);
+            textures = std::move(o.textures);
+            hasTextures = o.hasTextures;
+            o.VAO = 0;
+            o.VBO = 0;
+            o.EBO = 0;
+        }
+        return *this;
     }
 
     // render the mesh
@@ -103,7 +144,7 @@ public:
 
 private:
     // render data 
-    unsigned int VBO, EBO;
+    unsigned int VBO = 0, EBO = 0;
 
     // initializes all the buffer objects/arrays
     void setupMesh()

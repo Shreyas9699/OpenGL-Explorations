@@ -85,7 +85,6 @@ namespace test
 		lightProperties.baseColor = { 1.0f, 1.0f, 1.0f };
 		lightProperties.ambientStrength = 1.0f;
 		lightProperties.diffuseStrength = 1.0f;
-		lightProperties.specularStrength = 1.0f;
 	}
 
 	TestCubeRendering::~TestCubeRendering()
@@ -103,9 +102,7 @@ namespace test
 		m_cameraController.Update(deltaTime);
 
 		// update light color properties
-		lightProperties.ambient = lightProperties.baseColor * lightProperties.ambientStrength;
-		lightProperties.diffuse = lightProperties.baseColor * lightProperties.diffuseStrength;
-		lightProperties.specular = lightProperties.baseColor * lightProperties.specularStrength;
+		lightProperties.UpdateADS();
 	}
 
 	void TestCubeRendering::OnRender()

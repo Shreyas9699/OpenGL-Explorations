@@ -12,7 +12,28 @@ VertexBuffer::VertexBuffer(const void* data, unsigned int size, GLenum bufferTyp
 
 VertexBuffer::~VertexBuffer()
 {
-    GLCall(glDeleteBuffers(1, &m_RendererID));
+    if (m_RendererID)
+    {
+        GLCall(glDeleteBuffers(1, &m_RendererID));
+    }
+}
+
+VertexBuffer::VertexBuffer(VertexBuffer&& o) noexcept
+	: m_RendererID(o.m_RendererID), m_BufferType(o.m_BufferType)
+{
+	o.m_RendererID = 0;
+}
+
+VertexBuffer& VertexBuffer::operator=(VertexBuffer&& o) noexcept
+{
+	if (this != &o)
+	{
+		GLCall(glDeleteBuffers(1, &m_RendererID));
+		m_RendererID = o.m_RendererID;
+		m_BufferType = o.m_BufferType;
+		o.m_RendererID = 0;
+	}
+	return *this;
 }
 
 void VertexBuffer::Bind() const

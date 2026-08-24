@@ -41,28 +41,13 @@ private:
 public:
     void Initialize() override {}
 
-    void Cleanup() override
+    ~FireParticleBehavior() override
     {
-        // Clean up all vectors
-        m_Positions.clear();
-        m_Velocities.clear();
-        m_Temperatures.clear();
-        m_SmokeAmounts.clear();
-        m_Lifespans.clear();
-
-        // Delete GPU buffers
         if (m_SSBO_Positions) glDeleteBuffers(1, &m_SSBO_Positions);
         if (m_SSBO_Velocities) glDeleteBuffers(1, &m_SSBO_Velocities);
         if (m_SSBO_Temperatures) glDeleteBuffers(1, &m_SSBO_Temperatures);
         if (m_SSBO_SmokeAmounts) glDeleteBuffers(1, &m_SSBO_SmokeAmounts);
         if (m_SSBO_Lifespans) glDeleteBuffers(1, &m_SSBO_Lifespans);
- 
-        // Reset all IDs
-        m_SSBO_Positions = 0;
-        m_SSBO_Velocities = 0;
-        m_SSBO_Temperatures = 0;
-        m_SSBO_SmokeAmounts = 0;
-        m_SSBO_Lifespans = 0;
     }
 
     void CreateParticleBuffers(size_t maxParticles) override 

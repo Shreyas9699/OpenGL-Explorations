@@ -13,7 +13,7 @@
 class Shader
 {
 public:
-    unsigned int ID;
+    unsigned int ID = 0;
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
     Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr,
@@ -203,7 +203,34 @@ public:
 		}
     }
 
-    ~Shader() { glDeleteProgram(ID); }
+    ~Shader() 
+    { 
+        if (ID)
+        {
+            glDeleteProgram(ID);
+        }
+    }
+
+    Shader(const Shader&)            = delete;
+    Shader& operator=(const Shader&) = delete;
+
+    Shader(Shader&& o) noexcept
+        : ID(o.ID), m_UniformLocationCache(std::move(o.m_UniformLocationCache))
+    {
+        o.ID = 0;
+    }
+
+    Shader& operator=(Shader&& o) noexcept
+    {
+        if (this != &o)
+        {
+            glDeleteProgram(ID);
+            ID = o.ID;
+            m_UniformLocationCache = std::move(o.m_UniformLocationCache);
+            o.ID = 0;
+        }
+        return *this;
+    }
 
     // activate the shader
     // ------------------------------------------------------------------------

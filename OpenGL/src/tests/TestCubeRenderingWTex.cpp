@@ -124,9 +124,7 @@ namespace test
 		}
 
 		// update light color properties
-		lightProperties.ambient = lightProperties.baseColor * lightProperties.ambientStrength;
-		lightProperties.diffuse = lightProperties.baseColor * lightProperties.diffuseStrength;
-		lightProperties.specular = lightProperties.baseColor * lightProperties.specularStrength;
+		lightProperties.UpdateADS();
 	}
 
 	void TestCubeWithTex::OnRender()

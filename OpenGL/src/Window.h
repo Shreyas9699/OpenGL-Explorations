@@ -40,9 +40,41 @@ public:
 		if (m_Window)
 		{
 			glfwDestroyWindow(m_Window);
-			m_Window = nullptr;
+			glfwTerminate();
 		}
-		glfwTerminate();
+	}
+
+	Window(const Window&)			  = delete;
+	Window& operator=(const Window&) = delete;
+
+	Window(Window&& o) noexcept
+		: m_Title(o.m_Title), m_Fullscreen(o.m_Fullscreen), m_WindowWidth(o.m_WindowWidth), m_WindowHeight(o.m_WindowHeight),
+		m_Window(o.m_Window), m_AspectRatio(o.m_AspectRatio), m_WindowX(o.m_WindowX), m_WindowY(o.m_WindowY),
+		m_CustomKeyCallback(std::move(o.m_CustomKeyCallback)), m_WindowHints(std::move(o.m_WindowHints))
+	{
+		o.m_Window = nullptr;
+		glfwSetWindowUserPointer(m_Window, this);
+	}
+
+	Window& operator=(Window&& o) noexcept
+	{
+		if (this != &o)
+		{
+			glfwDestroyWindow(m_Window);
+			m_Window = o.m_Window;
+			m_Title = o.m_Title;
+			m_Fullscreen = o.m_Fullscreen;
+			m_WindowWidth = o.m_WindowWidth;
+			m_WindowHeight = o.m_WindowHeight;
+			m_AspectRatio = o.m_AspectRatio;
+			m_WindowX = o.m_WindowX;
+			m_WindowY = o.m_WindowY;
+			m_CustomKeyCallback = std::move(o.m_CustomKeyCallback);
+			m_WindowHints = std::move(o.m_WindowHints);
+			o.m_Window = nullptr;
+			glfwSetWindowUserPointer(m_Window, this);
+		}
+		return *this;
 	}
 
 	Window& setSize(int width, int height)

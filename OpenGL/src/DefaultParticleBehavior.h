@@ -18,21 +18,16 @@ private:
     glm::vec3 m_GlobalForce = glm::vec3(0.0f);
 
 public:
+    ~DefaultParticleBehavior() override
+    {
+        if (m_SSBO_Positions) glDeleteBuffers(1, &m_SSBO_Positions);
+        if (m_SSBO_Velocities) glDeleteBuffers(1, &m_SSBO_Velocities);
+        if (m_SSBO_ColorBegins) glDeleteBuffers(1, &m_SSBO_ColorBegins);
+        if (m_SSBO_ColorEnds) glDeleteBuffers(1, &m_SSBO_ColorEnds);
+    }
+
     void Initialize() override {}
     void CustomGUI() override {}
-
-    void Cleanup() override 
-    {
-        m_Positions.clear();
-        m_Velocities.clear();
-        m_ColorBegins.clear();
-        m_ColorEnds.clear();
-
-        m_SSBO_Positions = 0;
-        m_SSBO_Velocities = 0;
-        m_SSBO_ColorBegins = 0;
-        m_SSBO_ColorEnds = 0;
-    }
 
     void CreateParticleBuffers(size_t maxParticles) override 
     {

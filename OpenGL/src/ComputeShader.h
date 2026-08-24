@@ -52,15 +52,40 @@ public:
 		glDeleteShader(compute);
 	}
 
-	~ComputeShader() { glDeleteProgram(ID); }
+	~ComputeShader()
+	{
+		if (ID)
+		{
+			glDeleteProgram(ID);
+		}
+	}
+
+	ComputeShader(const ComputeShader&)			   = delete;
+	ComputeShader& operator=(const ComputeShader&) = delete;
+
+	ComputeShader(ComputeShader&& o) noexcept
+		: ID(o.ID), m_UniformLocationCache(std::move(o.m_UniformLocationCache))
+	{
+		o.ID = 0;
+	}
+
+	ComputeShader& operator=(ComputeShader&& o) noexcept
+	{
+		if (this != &o)
+		{
+			glDeleteProgram(ID);
+			ID = o.ID;
+			m_UniformLocationCache = std::move(o.m_UniformLocationCache);
+			o.ID = 0;
+		}
+		return *this;
+	}
 
 	void use() { glUseProgram(ID); }
 
 	void Bind() { glUseProgram(ID); }
 
 	void Unbind() { glUseProgram(0); }
-
-	void deleteProgram() const { glDeleteProgram(ID); }
 
 	void dispatch(unsigned int x, unsigned int y, unsigned int z) const
 	{

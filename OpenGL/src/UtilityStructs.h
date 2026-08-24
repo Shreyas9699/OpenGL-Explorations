@@ -7,45 +7,39 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 
-
-struct Light
+struct LightColor
 {
-	glm::vec3 position;
+	glm::vec3 baseColor{ 1.0f };
 
-	glm::vec3 baseColor;
-	glm::vec3 ambient;
-	glm::vec3 diffuse;
-	glm::vec3 specular;
+	glm::vec3 ambient{};
+	glm::vec3 diffuse{};
+	glm::vec3 specular{};
 
-	float ambientStrength;
-	float diffuseStrength;
-	float specularStrength;
+	float ambientStrength = 1.0f;
+	float diffuseStrength = 1.0f;
+	float specularStrength = 1.0f;
+
+	void UpdateADS()
+	{
+		ambient = baseColor * ambientStrength;
+		diffuse = baseColor * diffuseStrength;
+		specular = baseColor * specularStrength;
+	}
 };
 
-struct DirectionalLight
-{
-	glm::vec3 baseColor;
-	glm::vec3 ambient;
-	glm::vec3 diffuse;
-	glm::vec3 specular;
-
-	float ambientStrength;
-	float diffuseStrength;
-	float specularStrength;
-};
-
-struct PointLight
+struct Light : LightColor
 {
 	glm::vec3 position;
+};
 
-	glm::vec3 baseColor;
-	glm::vec3 ambient;
-	glm::vec3 diffuse;
-	glm::vec3 specular;
+struct DirectionalLight : LightColor
+{
+	glm::vec3 direction{};
+};
 
-	float ambientStrength;
-	float diffuseStrength;
-	float specularStrength;
+struct PointLight : LightColor
+{
+	glm::vec3 position;
 
 	float constant;
 	float linear;

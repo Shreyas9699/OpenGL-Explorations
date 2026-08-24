@@ -27,10 +27,6 @@ ParticleSystemGPU::ParticleSystemGPU(const std::string& name)
 
 ParticleSystemGPU::~ParticleSystemGPU()
 {
-    if (m_CurrentBehavior)
-    {
-        m_CurrentBehavior->Cleanup();
-    }
     m_ParticleVAO.reset();
     m_InstanceVBO.reset();
     m_ParticleSSBO.reset();
@@ -39,7 +35,6 @@ ParticleSystemGPU::~ParticleSystemGPU()
     m_FreeListBuffer.reset();
     m_ComputeShader.reset();
     m_EmitterShader.reset();
-    m_CurrentBehavior.reset();
 }
 
 std::shared_ptr<ParticleBehavior> ParticleSystemGPU::CreateBehaviorFromName(const std::string& name)
@@ -64,12 +59,6 @@ bool ParticleSystemGPU::SetBehavior(const std::string& name)
     if (!behavior)
     {
         return false;
-    }
-
-    // Clean up the old behavior if one exists
-    if (m_CurrentBehavior)
-    {
-        m_CurrentBehavior->Cleanup();
     }
 
     m_CurrentBehavior = behavior;

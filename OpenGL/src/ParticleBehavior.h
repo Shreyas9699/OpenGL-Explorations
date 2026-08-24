@@ -13,13 +13,14 @@ public:
         GLenum blendDst = GL_ONE_MINUS_SRC_ALPHA;
     };
 
-    virtual ~ParticleBehavior() {}
+    ParticleBehavior()          = default;
+    virtual ~ParticleBehavior() = default;
+
+    ParticleBehavior(const ParticleBehavior&) = delete;
+    ParticleBehavior& operator=(const ParticleBehavior&) = delete;
 
     // Initialize any behavior-specific resources
     virtual void Initialize() {}
-
-    // Clean up any behavior-specific resources
-    virtual void Cleanup() {}
 
     // Called once during particle system setup
     virtual void CreateParticleBuffers(size_t maxParticles) = 0;
