@@ -20,7 +20,6 @@ namespace test
 		std::unique_ptr<Renderer> m_Renderer;
 	public:
 		TestTriangle(Window* window);
-		~TestTriangle();
 
 		void OnUpdate(Timestep deltaTime, GLFWwindow* m_Window = nullptr) override;
 		void OnRender() override;

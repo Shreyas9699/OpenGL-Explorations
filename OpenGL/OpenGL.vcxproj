@@ -444,7 +444,9 @@
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\CameraController.cpp" />
     <ClCompile Include="src\Frustum.cpp" />
+    <ClCompile Include="src\ImGuiLayer.cpp" />
     <ClCompile Include="src\IndexBuffer.cpp" />
+    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ParticleSystemCPU.cpp" />
     <ClCompile Include="src\ParticleSystemGPU.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
@@ -482,7 +484,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Random.h" />
+    <ClInclude Include="Core\Timer.h" />
     <ClInclude Include="Core\Timestep.h" />
+    <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\CameraController.h" />
     <ClInclude Include="src\ComputeShader.h" />
@@ -490,6 +494,7 @@
     <ClInclude Include="src\EmitterProperties.h" />
     <ClInclude Include="src\FireParticleBehavior.h" />
     <ClInclude Include="src\Frustum.h" />
+    <ClInclude Include="src\ImGuiLayer.h" />
     <ClInclude Include="src\IndexBuffer.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Model.h" />

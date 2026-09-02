@@ -1,7 +1,7 @@
 #pragma once
 #include <GL/glew.h>
 
-#include "Camera.h"
+#include "VertexArray.h"
 #include "Shader_t.h"
 
 class XZPlaneGrid
@@ -11,16 +11,9 @@ private:
 	size_t m_GridSize;
 	float m_AspectRatio;
 	float m_Near, m_Far;
-	unsigned int m_VAO = 0;
+	VertexArray m_VAO;
 public:
 	XZPlaneGrid(float aspectRatio, size_t gridSize = -1, float near = 0.01f, float far = 1000.0f);
-	~XZPlaneGrid();
-
-	XZPlaneGrid(const XZPlaneGrid&) = delete;
-	XZPlaneGrid& operator=(const XZPlaneGrid&) = delete;
-
-	XZPlaneGrid(XZPlaneGrid&& o) noexcept;
-	XZPlaneGrid& operator=(XZPlaneGrid&& o) noexcept;
 
 	void UpdateAspectRation(float aspectRatio);
 	void UpdateGridSize(float gridSize);

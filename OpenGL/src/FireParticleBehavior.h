@@ -14,11 +14,11 @@ private:
     std::vector<float> m_Lifespans;
 
     // GPU Buffers
-    GLuint m_SSBO_Positions = 0;
-    GLuint m_SSBO_Velocities = 0;
-    GLuint m_SSBO_Temperatures = 0;
-    GLuint m_SSBO_SmokeAmounts = 0;
-    GLuint m_SSBO_Lifespans = 0;
+    VertexBuffer m_SSBO_Positions;
+    VertexBuffer m_SSBO_Velocities;
+    VertexBuffer m_SSBO_Temperatures;
+    VertexBuffer m_SSBO_SmokeAmounts;
+    VertexBuffer m_SSBO_Lifespans;
 
     // Physics parameters (optimized defaults)
     glm::vec3 m_GlobalForce = glm::vec3(0.0f, -9.8f, 0.0f);
@@ -41,15 +41,6 @@ private:
 public:
     void Initialize() override {}
 
-    ~FireParticleBehavior() override
-    {
-        if (m_SSBO_Positions) glDeleteBuffers(1, &m_SSBO_Positions);
-        if (m_SSBO_Velocities) glDeleteBuffers(1, &m_SSBO_Velocities);
-        if (m_SSBO_Temperatures) glDeleteBuffers(1, &m_SSBO_Temperatures);
-        if (m_SSBO_SmokeAmounts) glDeleteBuffers(1, &m_SSBO_SmokeAmounts);
-        if (m_SSBO_Lifespans) glDeleteBuffers(1, &m_SSBO_Lifespans);
-    }
-
     void CreateParticleBuffers(size_t maxParticles) override 
     {
         m_Positions.resize(maxParticles);
@@ -58,57 +49,40 @@ public:
         m_SmokeAmounts.resize(maxParticles);
         m_Lifespans.resize(maxParticles);
 
-        glGenBuffers(1, &m_SSBO_Positions);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Positions);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_Positions.data(), GL_DYNAMIC_DRAW);
+        unsigned int bytes = static_cast<unsigned int>(maxParticles * sizeof(glm::vec4));
 
-        glGenBuffers(1, &m_SSBO_Velocities);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Velocities);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_Velocities.data(), GL_DYNAMIC_DRAW);
+        m_SSBO_Positions = VertexBuffer(m_Positions.data(), bytes, GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW);
+        m_SSBO_Velocities = VertexBuffer(m_Velocities.data(), bytes, GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW);
 
-        glGenBuffers(1, &m_SSBO_Temperatures);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Temperatures);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(float), m_Temperatures.data(), GL_DYNAMIC_DRAW);
+        bytes = static_cast<unsigned int>(maxParticles * sizeof(float));
 
-        glGenBuffers(1, &m_SSBO_SmokeAmounts);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_SmokeAmounts);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(float), m_SmokeAmounts.data(), GL_DYNAMIC_DRAW);
-
-        glGenBuffers(1, &m_SSBO_Lifespans);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Lifespans);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(float), m_Lifespans.data(), GL_DYNAMIC_DRAW);
+        m_SSBO_Temperatures = VertexBuffer(m_Temperatures.data(), bytes, GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW);
+        m_SSBO_SmokeAmounts = VertexBuffer(m_SmokeAmounts.data(), bytes, GL_DYNAMIC_DRAW);
+        m_SSBO_Lifespans = VertexBuffer(m_Lifespans.data(), bytes, GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW);
     }
 
     void UpdateParticleBuffers() override 
     {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Positions);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Positions.size() * sizeof(glm::vec4), m_Positions.data());
-
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Velocities);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Velocities.size() * sizeof(glm::vec4), m_Velocities.data());
-
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Temperatures);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Temperatures.size() * sizeof(float), m_Temperatures.data());
+        m_SSBO_Positions.UpdateData(m_Positions.data(), static_cast<unsigned int>(m_Positions.size() * sizeof(glm::vec4)));
+        m_SSBO_Velocities.UpdateData(m_Velocities.data(), static_cast<unsigned int>(m_Velocities.size() * sizeof(glm::vec4)));
+        m_SSBO_Temperatures.UpdateData(m_Temperatures.data(), static_cast<unsigned int>(m_Temperatures.size() * sizeof(float)));
 
         // Update other buffers less frequently if they don't change much
         static int updateCounter = 0;
         if (++updateCounter % 4 == 0)
         {
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_SmokeAmounts);
-            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_SmokeAmounts.size() * sizeof(float), m_SmokeAmounts.data());
-
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Lifespans);
-            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Lifespans.size() * sizeof(float), m_Lifespans.data());
+            m_SSBO_SmokeAmounts.UpdateData(m_SmokeAmounts.data(), static_cast<unsigned int>(m_SmokeAmounts.size() * sizeof(float)));
+            m_SSBO_Lifespans.UpdateData(m_Lifespans.data(), static_cast<unsigned int>(m_Lifespans.size() * sizeof(float)));
         }
     }
 
     void BindParticleBuffers(GLuint baseBinding) override 
     {
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 0, m_SSBO_Positions);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 1, m_SSBO_Velocities);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 2, m_SSBO_Temperatures);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 3, m_SSBO_SmokeAmounts);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 4, m_SSBO_Lifespans);
+        m_SSBO_Positions.BindBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 0);
+        m_SSBO_Velocities.BindBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 1);
+        m_SSBO_Temperatures.BindBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 2);
+        m_SSBO_SmokeAmounts.BindBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 3);
+        m_SSBO_Lifespans.BindBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 4);
     }
 
     void UpdateUniforms(ComputeShader& computeShader) override

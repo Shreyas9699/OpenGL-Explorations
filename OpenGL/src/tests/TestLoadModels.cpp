@@ -34,12 +34,6 @@ namespace test
 
 	TestLoadModels::~TestLoadModels()
 	{
-		m_Model.reset();
-		m_Shader->Unbind();
-		m_Shader.reset();
-		m_ShaderNormal->Unbind();
-		m_ShaderNormal.reset();
-
 		m_Window->setCustomKeyCallback(nullptr);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}

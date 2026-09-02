@@ -26,7 +26,6 @@ namespace test
 
 	public:
 		TestTexture2D();
-		~TestTexture2D();
 
 		void OnUpdate(Timestep deltaTime, GLFWwindow* win = nullptr) override;
 		void OnRender() override;

@@ -32,7 +32,6 @@ namespace test
 
 	public:
 		TestUVSphere(GLFWwindow* window);
-		~TestUVSphere();
 
 		void OnUpdate(Timestep deltaTime, GLFWwindow* win = nullptr) override;
 		void OnRender() override;

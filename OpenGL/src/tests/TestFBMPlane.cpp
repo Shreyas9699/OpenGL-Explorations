@@ -42,16 +42,6 @@ namespace test
 
 	TestFBMPlane::~TestFBMPlane()
 	{
-		m_plane.VAO.reset();
-		m_plane.VBO.reset();
-		m_plane.IBO.reset();
-		m_Sphere.reset();
-		m_ShaderPlane->Unbind();
-		m_ShaderPlane.reset();
-		m_ShaderLightSrc->Unbind();
-		m_ShaderLightSrc.reset();
-		m_Renderer.reset();
-
 		m_Window->setCustomKeyCallback(nullptr);
 	}
 

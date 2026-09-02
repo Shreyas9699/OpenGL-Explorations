@@ -10,9 +10,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 
 namespace test 
 {
@@ -30,13 +28,14 @@ namespace test
 	class TestMenu: public Test
 	{
 	private:
-		Test*& m_CurrentTest;
+		std::unique_ptr<Test> m_Selected;
 		std::vector<std::pair<std::string, std::function<std::unique_ptr<Test>()>>> m_Tests;
 	public:
-		TestMenu(Test*& currentTestPtr);
-		~TestMenu();
+		TestMenu() = default;
 
 		void OnImGuiRender() override;
+
+		std::unique_ptr<Test> TakeSelected() { return std::move(m_Selected); }
 
 		template <typename T, typename... Args>
 		void AddTest(const std::string& name, Args&&... args) {

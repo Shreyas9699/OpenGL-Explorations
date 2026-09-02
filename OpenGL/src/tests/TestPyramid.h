@@ -24,7 +24,6 @@ namespace test
 
 	public:
 		TestPyramid(GLFWwindow* window);
-		~TestPyramid();
 
 		void OnUpdate(Timestep deltaTime, GLFWwindow* win = nullptr) override;
 		void OnRender() override;

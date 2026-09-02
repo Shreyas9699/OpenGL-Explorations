@@ -28,10 +28,6 @@ namespace test
 
 	TestParticleCPU::~TestParticleCPU()
 	{
-		m_ParticleSys.reset();
-		m_XZPlane.reset();
-		m_Shader.reset();
-
 		m_Window->setCustomKeyCallback(nullptr);
 	}
 

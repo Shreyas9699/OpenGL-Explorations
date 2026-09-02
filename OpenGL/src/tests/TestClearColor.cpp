@@ -10,10 +10,6 @@ namespace test
 	{
 	}
 
-	TestClearColor::~TestClearColor()
-	{
-	}
-
 	void TestClearColor::OnUpdate(Timestep deltaTime, GLFWwindow* m_Window)
 	{}
 

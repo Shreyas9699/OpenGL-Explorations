@@ -24,16 +24,6 @@ namespace test
 		m_Shader->setVec4("u_Color", m_Color[0], m_Color[1], m_Color[2], m_Color[3]);
 	}
 
-	TestSquare::~TestSquare()
-	{
-		m_VA.reset();
-		m_VB.reset();
-		m_IB.reset();
-		m_Shader->Unbind();
-		m_Shader.reset();
-		m_Renderer.reset();
-	}
-
 	void TestSquare::OnUpdate(Timestep deltaTime, GLFWwindow* win) 
 	{
 		m_aspectRatio = m_Window->GetAspectRatio();

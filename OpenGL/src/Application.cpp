@@ -1,19 +1,9 @@
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 // refer to docs.gl to understand any function and its purpose
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_glfw.h>
-#include <imgui/imgui_impl_opengl3.h>
-
+#include "Application.h"
 #include "tests/TestClearColor.h"
 #include "tests/TestTriangle.h"
 #include "tests/TestTexture2D.h"
@@ -32,128 +22,113 @@
 
 #include "tests/TestProceduralTerrain.h"
 
-
-#include "Shader_t.h"
-#include "Camera.h"
-#include "CameraController.h"
-#include "Window.h"
-
-
-// below code enforece the use of Nvidia GPU
-extern "C"
+void Application::TestSetup()
 {
-    __declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
+    m_menu = std::make_unique<test::TestMenu>();
+
+    m_menu->AddTest<test::TestClearColor>("Clear Color");
+    m_menu->AddTest<test::TestTriangle>("Render 2D Traingle", m_win.get());
+    m_menu->AddTest<test::TestSquare>("Render 2D Square", m_win.get());
+    m_menu->AddTest<test::TestTexture2D>("2D Texture");
+    m_menu->AddTest<test::TestPyramid>("3D Textured Pyramid", m_win->GetWindow());
+    m_menu->AddTest<test::TestUVSphere>("Render Sphere", m_win->GetWindow());
+    m_menu->AddTest<test::TestCubeRendering>("Material Cube Rendering", m_win->GetWindow());
+    m_menu->AddTest<test::TestCubeWithTex>("Cube With Texture", m_win->GetWindow());
+    m_menu->AddTest<test::TestFBMPlane>("Fractal Brownian Motion Plane", m_win.get());
+    m_menu->AddTest<test::TestHeightMap>("Height Map", m_win.get());
+    m_menu->AddTest<test::TestLoadModels>("Load Models", m_win.get());
+    m_menu->AddTest<test::TestParticleCPU>("Particles System CPU", m_win.get());
+    m_menu->AddTest<test::TestParticleGPU>("Particles System GPU", m_win.get());
+    m_menu->AddTest<test::TestFireSimulation>("Fire Particles Sim", m_win.get()); //TestProceduralTerrain
+    m_menu->AddTest<test::TestProceduralTerrain>("Procedural Terrain", m_win.get());
 }
 
-int main(void)
+void Application::init()
 {
-    Window window("OpenGL Project", false);
-    window.displayGPUDetails(true);
+    m_win->displayGPUDetails(true);
+    TestSetup();
+}
 
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window.GetWindow(), true);
-    ImGui_ImplOpenGL3_Init();
+Application::Application(const std::string& title)
+{
+    m_win = std::make_unique<Window>(title);
+    init();
+}
 
-    test::Test* currentTest = nullptr;
-    test::TestMenu* menu = new test::TestMenu(currentTest);
-    currentTest = menu;
+Application::Application(const std::string& title, bool fullscreen)
+{
+    m_win = std::make_unique<Window>(title, fullscreen);
+    init();
+}
 
-    menu->AddTest<test::TestClearColor>("Clear Color");
-    menu->AddTest<test::TestTriangle>("Render 2D Traingle", &window);
-    menu->AddTest<test::TestSquare>("Render 2D Square", &window);
-    menu->AddTest<test::TestTexture2D>("2D Texture");
-    menu->AddTest<test::TestPyramid>("3D Textured Pyramid", window.GetWindow());
-    menu->AddTest<test::TestUVSphere>("Render Sphere", window.GetWindow());
-    menu->AddTest<test::TestCubeRendering>("Material Cube Rendering", window.GetWindow());
-    menu->AddTest<test::TestCubeWithTex>("Cube With Texture", window.GetWindow());
-    menu->AddTest<test::TestFBMPlane>("Fractal Brownian Motion Plane", &window);
-    menu->AddTest<test::TestHeightMap>("Height Map", &window);
-    menu->AddTest<test::TestLoadModels>("Load Models", &window);
-    menu->AddTest<test::TestParticleCPU>("Particles System CPU", &window);
-    menu->AddTest<test::TestParticleGPU>("Particles System GPU", &window);
-    menu->AddTest<test::TestFireSimulation>("Fire Particles Sim", &window); //TestProceduralTerrain
-    menu->AddTest<test::TestProceduralTerrain>("Procedural Terrain", &window);
+Application::Application(const std::string & title, int width, int height)
+{
+    m_win = std::make_unique<Window>(title, width, height);
+    init();
+}
 
-    float lastFrameTime = 0.0f;
+Application::Application(const std::string & title, int width, int height, bool fullscreen)
+{
+    m_win = std::make_unique<Window>(title, width, height, fullscreen);
+    init();
+}
+
+void Application::Run()
+{
+    m_imgui = std::make_unique<ImGuiLayer>(m_win->GetWindow());
+
     /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window.GetWindow()))
+    while (!glfwWindowShouldClose(m_win->GetWindow()))
     {
-        float currentFrameTime = float(glfwGetTime());
-        float deltaTime = currentFrameTime - lastFrameTime;
-        lastFrameTime = currentFrameTime;
+        bool goToMenu = false;
+        Timestep dt = m_timer.Tick();
 
         // Check for backspace press and go back to menu
-        if (glfwGetKey(window.GetWindow(), GLFW_KEY_BACKSPACE) == GLFW_PRESS)
+        if ( (glfwGetKey(m_win->GetWindow(), GLFW_KEY_BACKSPACE) == GLFW_PRESS) && m_currentTest)
         {
-            if (currentTest && currentTest != menu)
-            {
-                glfwSetInputMode(window.GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-                delete currentTest;
-                currentTest = menu;
-            }
+            goToMenu = true;
         }
 
         // Clear the screen
         GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
         GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-        // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode); // Full-screen docking space
+        m_imgui->Begin();
 
-        if (currentTest)
+        test::Test* active = m_currentTest ? m_currentTest.get() : m_menu.get();
+        if (active)
         {
-            currentTest->OnUpdate(deltaTime, window.GetWindow());
+            active->OnUpdate(dt, m_win->GetWindow());
             // Create your main rendering area window (no decorations)
             ImGui::Begin("Render View", nullptr,
                 ImGuiWindowFlags_NoDecoration |
                 ImGuiWindowFlags_NoInputs |
                 ImGuiWindowFlags_NoBackground);
-            currentTest->OnRender();
+            active->OnRender();
             ImGui::End();
 
             ImGui::Begin("Test");
-            if (currentTest != menu && ImGui::Button("<- or Backspace"))
+            if (m_currentTest && ImGui::Button("<- or Backspace"))
             {
-                glfwSetInputMode(window.GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-                delete currentTest;
-                currentTest = menu;
+                goToMenu = true;
             }
-            currentTest->OnImGuiRender();
+            active->OnImGuiRender();
             ImGui::End();
         }
-        
-        // IMGUI Rendering
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        m_imgui->End();
+
+        if (auto sel = m_menu->TakeSelected())
         {
-            GLFWwindow* backup_current_context = glfwGetCurrentContext();
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
-            glfwMakeContextCurrent(backup_current_context);
+            m_currentTest = std::move(sel);
         }
 
-        window.Update();
+        if (goToMenu)
+        {
+            glfwSetInputMode(m_win->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            m_currentTest.reset();
+        }
+
+        m_win->Update();
     }
-
-    if (currentTest != menu)
-        delete menu;
-    delete currentTest;
-
-    // Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    exit(EXIT_SUCCESS);
 }

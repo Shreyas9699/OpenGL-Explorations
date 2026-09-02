@@ -32,8 +32,6 @@ namespace test
 
 	TestProceduralTerrain::~TestProceduralTerrain()
 	{
-		m_Shader.reset();
-
 		m_Window->setCustomKeyCallback(nullptr);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}

@@ -41,17 +41,6 @@ namespace test
         m_Shader->Unbind();
 	}
 
-	TestTexture2D::~TestTexture2D() 
-    {
-        m_VA.reset();
-        m_VB.reset();
-        m_IB.reset();
-        m_Texture.reset();
-        m_Shader->Unbind();
-		m_Shader.reset();
-		m_Renderer.reset();
-    }
-
 	void TestTexture2D::OnUpdate(Timestep deltaTime, GLFWwindow* m_Window)
 	{}
 

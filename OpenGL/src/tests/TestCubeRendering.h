@@ -29,7 +29,6 @@ namespace test
 
 	public:
 		TestCubeRendering(GLFWwindow* window);
-		~TestCubeRendering();
 
 		struct VertexWithNormal
 		{

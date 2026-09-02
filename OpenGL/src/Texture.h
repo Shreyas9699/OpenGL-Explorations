@@ -11,6 +11,7 @@ private:
 
 public:
 	Texture(const char* filepath);
+	Texture(unsigned int existingId, int w = 0, int h = 0);
 	~Texture();
 
 	Texture(const Texture&) = delete;

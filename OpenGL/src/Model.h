@@ -34,16 +34,6 @@ public:
         loadModel(path);
     }
 
-    ~Model()
-    {
-        for (const auto& texture : textures_loaded)
-        {
-            glDeleteTextures(1, &texture.id);
-        }
-        textures_loaded.clear();
-        meshes.clear();
-    }
-
     // draws the model, and thus all its meshes
     void Draw(Shader& shader)
     {
@@ -59,9 +49,9 @@ public:
         {
             // Bind the normal vertices
             //std::cout << "Inside drawNormals() function \n";
-            glBindVertexArray(mesh->VAO);
+            mesh->VAO.Bind();
             glDrawElements(GL_TRIANGLES, (GLsizei)mesh->indices.size(), GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);
+            mesh->VAO.Unbind();
         }
     }
 
@@ -222,7 +212,8 @@ private:
             if (!skip)
             {   // if texture hasn't been loaded already, load it
                 TextureData texture;
-                texture.id = TextureFromFile(str.C_Str(), this->directory);
+                unsigned int id = TextureFromFile(str.C_Str(), this->directory);
+                texture.texture = std::make_shared<Texture>(id);
                 texture.type = typeName;
                 texture.path = str.C_Str();
                 textures.push_back(texture);

@@ -24,16 +24,6 @@ namespace test
 		m_Shader = std::make_unique<Shader>("res/shaders/Basic/BasicShaderVS.glsl", "res/shaders/Basic/BasicShaderFS.glsl");
 	}
 
-	TestTriangle::~TestTriangle()
-	{
-		m_VA.reset();
-		m_VB.reset();
-		m_IB.reset();
-		m_Shader->Unbind();
-		m_Shader.reset();
-		m_Renderer.reset();
-	}
-
 	void TestTriangle::OnUpdate(Timestep deltaTime, GLFWwindow* win)
 	{
 		m_aspectRatio = m_Window->GetAspectRatio();

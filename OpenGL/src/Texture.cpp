@@ -34,6 +34,10 @@ Texture::Texture(const char* filepath)
 	stbi_image_free(localBuffer);
 }
 
+Texture::Texture(unsigned int existingId, int w, int h)
+	: m_RendererID(existingId), m_FilePath(nullptr), m_W(w), m_H(h), m_BPP(0)
+{}
+
 Texture::~Texture()
 {
 	if (m_RendererID)

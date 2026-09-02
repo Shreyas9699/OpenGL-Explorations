@@ -26,16 +26,6 @@ namespace test
 		m_Renderer = std::make_unique<Renderer>();
 	}
 
-	TestUVSphere::~TestUVSphere()
-	{
-		m_VA.reset();
-		m_VB.reset();
-		m_IB.reset();
-		m_Shader->Unbind();
-		m_Shader.reset();
-		m_Renderer.reset();
-	}
-
 	void TestUVSphere::OnUpdate(Timestep deltaTime, GLFWwindow* m_Window)
 	{
 		m_cameraController.Update(deltaTime);

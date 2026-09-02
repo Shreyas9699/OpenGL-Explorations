@@ -5,8 +5,9 @@ class VertexBuffer
 {
 private:
 	unsigned int m_RendererID = 0;
-	GLenum m_BufferType;
+	GLenum m_BufferType = GL_ARRAY_BUFFER;
 public:
+	VertexBuffer() = default;
 	VertexBuffer(const void* data, unsigned int size, GLenum bufferType = GL_ARRAY_BUFFER, GLenum usage = GL_STATIC_DRAW);
 	~VertexBuffer();
 

@@ -68,17 +68,6 @@ namespace test
 
 	TestHeightMap::~TestHeightMap()
 	{
-		m_VA.reset();
-		m_VB.reset();
-		m_IB.reset();
-		m_Texture.reset();
-		m_Shader->Unbind();
-		m_Shader.reset();
-		m_Renderer.reset();
-		m_FrustumVAO.reset();
-		m_FrustumVBO.reset();
-		m_Frustum.reset();
-
 		m_Window->setCustomKeyCallback(nullptr);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}

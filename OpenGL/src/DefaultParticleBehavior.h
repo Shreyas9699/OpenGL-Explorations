@@ -10,22 +10,14 @@ private:
     std::vector<glm::vec4> m_ColorBegins;
     std::vector<glm::vec4> m_ColorEnds;
 
-    GLuint m_SSBO_Positions = 0;
-    GLuint m_SSBO_Velocities = 0;
-    GLuint m_SSBO_ColorBegins = 0;
-    GLuint m_SSBO_ColorEnds = 0;
+    VertexBuffer m_SSBO_Positions;
+    VertexBuffer m_SSBO_Velocities;
+    VertexBuffer m_SSBO_ColorBegins;
+    VertexBuffer m_SSBO_ColorEnds;
 
     glm::vec3 m_GlobalForce = glm::vec3(0.0f);
 
 public:
-    ~DefaultParticleBehavior() override
-    {
-        if (m_SSBO_Positions) glDeleteBuffers(1, &m_SSBO_Positions);
-        if (m_SSBO_Velocities) glDeleteBuffers(1, &m_SSBO_Velocities);
-        if (m_SSBO_ColorBegins) glDeleteBuffers(1, &m_SSBO_ColorBegins);
-        if (m_SSBO_ColorEnds) glDeleteBuffers(1, &m_SSBO_ColorEnds);
-    }
-
     void Initialize() override {}
     void CustomGUI() override {}
 
@@ -36,44 +28,28 @@ public:
         m_ColorBegins.resize(maxParticles);
         m_ColorEnds.resize(maxParticles);
 
-        glGenBuffers(1, &m_SSBO_Positions);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Positions);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_Positions.data(), GL_DYNAMIC_DRAW);
+        unsigned int bytes = static_cast<unsigned int>(maxParticles * sizeof(glm::vec4));
 
-        glGenBuffers(1, &m_SSBO_Velocities);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Velocities);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_Velocities.data(), GL_DYNAMIC_DRAW);
-
-        glGenBuffers(1, &m_SSBO_ColorBegins);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_ColorBegins);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_ColorBegins.data(), GL_DYNAMIC_DRAW);
-
-        glGenBuffers(1, &m_SSBO_ColorEnds);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_ColorEnds);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, maxParticles * sizeof(glm::vec4), m_ColorEnds.data(), GL_DYNAMIC_DRAW);
+        m_SSBO_Positions = VertexBuffer(m_Positions.data(), bytes, GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW);
+        m_SSBO_Velocities = VertexBuffer(m_Velocities.data(), bytes, GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW);
+        m_SSBO_ColorBegins = VertexBuffer(m_ColorBegins.data(), bytes, GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW);
+        m_SSBO_ColorEnds = VertexBuffer(m_ColorEnds.data(), bytes, GL_SHADER_STORAGE_BUFFER, GL_DYNAMIC_DRAW);
     }
 
     void UpdateParticleBuffers() override 
     {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Positions);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Positions.size() * sizeof(glm::vec4), m_Positions.data());
-
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_Velocities);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_Velocities.size() * sizeof(glm::vec4), m_Velocities.data());
-
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_ColorBegins);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_ColorBegins.size() * sizeof(glm::vec4), m_ColorBegins.data());
-
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SSBO_ColorEnds);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_ColorEnds.size() * sizeof(glm::vec4), m_ColorEnds.data());
+        m_SSBO_Positions.UpdateData(m_Positions.data(), static_cast<unsigned int>(m_Positions.size() * sizeof(glm::vec4)));
+        m_SSBO_Velocities.UpdateData(m_Velocities.data(), static_cast<unsigned int>(m_Velocities.size() * sizeof(glm::vec4)));
+        m_SSBO_ColorBegins.UpdateData(m_ColorBegins.data(), static_cast<unsigned int>(m_ColorBegins.size() * sizeof(glm::vec4)));
+        m_SSBO_ColorEnds.UpdateData(m_ColorEnds.data(), static_cast<unsigned int>(m_ColorEnds.size() * sizeof(glm::vec4)));
     }
 
     void BindParticleBuffers(GLuint baseBinding) override 
     {
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 0, m_SSBO_Positions);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 1, m_SSBO_Velocities);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 2, m_SSBO_ColorBegins);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 3, m_SSBO_ColorEnds);
+        m_SSBO_Positions.BindBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 0);
+        m_SSBO_Velocities.BindBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 1);
+        m_SSBO_ColorBegins.BindBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 2);
+        m_SSBO_ColorEnds.BindBase(GL_SHADER_STORAGE_BUFFER, baseBinding + 3);
     }
 
     void UpdateUniforms(ComputeShader& computeShader) override 
